@@ -1,0 +1,22 @@
+{
+ "schema": "redcairn.terrain/1",
+ "generatedBy": "tools/build_terrain.py",
+ "source": "https://trek.nasa.gov/mars/trekarcgis/rest/services/Gale_DEM_SMG_1m/ImageServer",
+ "credit": "NASA/JPL-Caltech/University of Arizona/USGS",
+ "file": "data/terrain.bin",
+ "encoding": "int16 little-endian, row-major, row 0 is the northern edge",
+ "cols": 266,
+ "rows": 549,
+ "bounds": {
+  "west": 137.377,
+  "east": 137.386,
+  "north": -4.798,
+  "south": -4.8165
+ },
+ "cellMX": 1.9985,
+ "cellMY": 1.9974,
+ "baseElevM": -3650,
+ "unitsPerMetre": 10,
+ "minElevM": -3649.39,
+ "maxElevM": -3515.47
+}

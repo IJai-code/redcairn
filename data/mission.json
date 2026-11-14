@@ -1,0 +1,415 @@
+{
+  "schema": "redcairn.mission/1",
+  "app": {
+    "name": "REDCAIRN",
+    "tagline": "Tactical surface navigation for crewed Mars EVAs",
+    "dataLockDate": "2026-11-14"
+  },
+
+  "site": {
+    "id": "gale-boxwork",
+    "name": "Boxwork Terrain",
+    "locality": "Lower Aeolis Mons (Mount Sharp), Gale crater",
+    "body": "Mars",
+    "center": { "lon": 137.3815, "lat": -4.8071 },
+    "bounds": { "west": 137.3770, "south": -4.8165, "east": 137.3860, "north": -4.7980 },
+    "crs": "IAU Mars 2000 geographic (EPSG:104905), planetocentric latitude, east-positive longitude",
+    "metresPerDegree": 59274.7,
+    "rationale": [
+      "Gale crater was put forward three separate times as a human Exploration Zone at the 2015 human landing site workshop.",
+      "It is the only place on Mars with a 1 m orbital elevation model, 25 cm orbital imagery, 14 years of surface radiation measurements and a rover-driven track all covering the same ground.",
+      "The boxwork ridges are mineral-cemented fracture networks left by ancient groundwater, found nowhere else on the mountain, and the science team's open question is why they hardened only here.",
+      "The corridor climbs 77 m in 1.5 km across a geologic contact, so slope, mineral targets and walk-back distance all matter on a single EVA."
+    ],
+    "explorationZoneProposals": [
+      { "abstract": 1020, "lon": 137.5, "lat": -4.5 },
+      { "abstract": 1022, "lon": 137.087, "lat": -4.74 },
+      { "abstract": 1040, "lon": 137.12, "lat": -4.64 }
+    ],
+    "explorationZoneSource": "trek-ezmars"
+  },
+
+  "basemaps": [
+    {
+      "id": "hirise",
+      "label": "HiRISE 25 cm orbital mosaic",
+      "type": "wmts-equirectangular",
+      "url": "https://trek.nasa.gov/tiles/Mars/EQ/curiosity_hirise_mosaic/1.0.0/default/default028mm/{z}/{y}/{x}.png",
+      "tileSize": 256,
+      "tileGrid": "2x1 tiles at zoom 0, origin (-180, 90)",
+      "minZoom": 9,
+      "maxNativeZoom": 16,
+      "metresPerPixelAtMaxZoom": 0.64,
+      "bounds": { "west": 137.1224669, "south": -4.9254743, "east": 137.7298129, "north": -4.2489588 },
+      "cors": true,
+      "credit": "NASA/JPL-Caltech/University of Arizona",
+      "source": "trek"
+    },
+    {
+      "id": "ctx",
+      "label": "CTX regional context mosaic",
+      "type": "wmts-equirectangular",
+      "url": "https://trek.nasa.gov/tiles/Mars/EQ/curiosity_ctx_mosaic/1.0.0/default/default028mm/{z}/{y}/{x}.png",
+      "tileSize": 256,
+      "minZoom": 5,
+      "maxNativeZoom": 10,
+      "bounds": { "west": 136.2768326, "south": -7.2137273, "east": 139.3864225, "north": -3.5804738 },
+      "credit": "NASA/JPL-Caltech/MSSS",
+      "source": "trek"
+    },
+    {
+      "id": "mola",
+      "label": "MOLA global colour shaded relief",
+      "type": "wmts-equirectangular",
+      "url": "https://trek.nasa.gov/tiles/Mars/EQ/Mars_MGS_MOLA_ClrShade_merge_global_463m/1.0.0/default/default028mm/{z}/{y}/{x}.jpg",
+      "tileSize": 256,
+      "minZoom": 0,
+      "maxNativeZoom": 7,
+      "credit": "NASA/JPL-Caltech/GSFC",
+      "source": "trek"
+    }
+  ],
+
+  "layers": {
+    "slope": {
+      "label": "Slope / mobility",
+      "status": "live",
+      "thresholdsDeg": { "caution": 15, "noGo": 20 },
+      "classes": [
+        { "id": "safe", "label": "Safe", "rule": "< 15°", "color": "#3ddc84" },
+        { "id": "caution", "label": "Caution", "rule": "15°–20°", "color": "#ffb020" },
+        { "id": "nogo", "label": "No-go", "rule": "> 20°", "color": "#ff4d4d" }
+      ],
+      "elevationService": {
+        "url": "https://trek.nasa.gov/mars/trekarcgis/rest/services/Gale_DEM_SMG_1m/ImageServer",
+        "operations": ["identify", "getSamples"],
+        "pixelSizeM": 1.0,
+        "pixelType": "32-bit float metres",
+        "note": "GET only; sends no CORS header, so sample at build time and ship the result as static data."
+      },
+      "validation": {
+        "method": "Orbital DEM compared with rover localisation at 324 points along the EVA route",
+        "datumOffsetM": 17.16,
+        "rmsResidualM": 0.99
+      },
+      "source": "trek-gale-dem"
+    },
+    "minerals": {
+      "label": "Mineral / science targets",
+      "status": "live: waypoint and unit annotations from surface findings",
+      "note": "Orbital spectrometer footprints (CRISM, about 18 m per pixel) are too coarse for a 1.5 km walk, so targets here are tied to what the rover measured on the ground.",
+      "units": [
+        {
+          "id": "boxwork",
+          "label": "Boxwork terrain",
+          "color": "#4cc9f0",
+          "routeFromM": 0,
+          "routeToM": 1284.4,
+          "summary": "Low ridges enclosing sandy hollows, in a layer rich in magnesium sulfates. Bedrock between the ridges carries white calcium sulfate veins.",
+          "sources": ["jpl-boxwork-2025"]
+        },
+        {
+          "id": "layered-sulfate",
+          "label": "Layered sulfate unit",
+          "color": "#f4a261",
+          "routeFromM": 1284.4,
+          "routeToM": 1515.9,
+          "summary": "Layered sulfate-bearing bedrock above the boxwork terrain. The same unit was last sampled about 160 m lower on the mountain.",
+          "sources": ["blog-4845", "blog-4873"]
+        }
+      ],
+      "orbitalContext": {
+        "hydrousMineralDetections": "https://trek.nasa.gov/mars/trekarcgis/rest/services/Hydrous_Mineral_Detections_OMEGA_CRISM_clon0/MapServer/0",
+        "crismTargetedFootprints": "https://trek.nasa.gov/mars/trekarcgis/rest/services/mars_mro_crism_mtrdr_c0a_humex_frt_sites/MapServer/0",
+        "globalGeologicMap": "https://trek.nasa.gov/mars/trekarcgis/rest/services/SIM3292_Global_Geology/MapServer"
+      }
+    },
+    "hazard": {
+      "label": "Radiation / weather",
+      "status": "live",
+      "simulated": true
+    }
+  },
+
+  "eva": {
+    "id": "eva-01",
+    "name": "Boxwork to Sulfate Contact",
+    "dockWaypointId": "DOCK",
+    "routeFile": "data/route.json",
+    "profile": "out-and-back",
+    "oneWayM": 1515.9,
+    "roundTripM": 3031.8,
+    "elevGainM": 76.6,
+    "maxSlopeDeg": 14.9,
+    "meanSlopeDeg": 4.9,
+    "basis": "Follows ground driven by the Curiosity rover between mission sols 4560 and 4868, with the rover's spurs and back-tracks removed."
+  },
+
+  "waypoints": [
+    {
+      "id": "DOCK",
+      "name": "Altadena Staging",
+      "type": "dock",
+      "lon": 137.3835414,
+      "lat": -4.79984723,
+      "elevM": -3647.18,
+      "routeDistM": 0,
+      "rover": { "sol": 4560, "rmc": "116_1944", "tiltDeg": 8.33 },
+      "plannedStayMin": 0,
+      "science": {
+        "priority": 2,
+        "unit": "boxwork",
+        "headline": "Edge of the boxwork terrain",
+        "why": "Bedrock at the edge of the boxwork, drilled here in June 2025 as the mission's 43rd drill hole. It gives the baseline to compare against rock inside the ridge network.",
+        "targets": ["Altadena"],
+        "tasks": ["Suit and comms check", "Photograph the old drill hole for change detection"],
+        "sources": ["blog-4568", "jpl-boxwork-2025"]
+      },
+      "pov": {
+        "imageUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/04560/opgs/edr/ncam/NLB_802307527EDR_F1161944NCAM00264M_.JPG",
+        "camera": "Left Navigation Camera",
+        "sol": 4560,
+        "utc": "2025-06-04T12:17:55Z",
+        "takenAtRmc": "116_1944",
+        "caption": "Fractured bedrock and sand looking out from the staging point.",
+        "credit": "NASA/JPL-Caltech"
+      },
+      "model": { "src": "assets/models/dock.glb", "status": "placeholder", "alt": "Pressurised rover scale model" }
+    },
+    {
+      "id": "WP1",
+      "name": "Ridge Ascent",
+      "type": "mobility",
+      "lon": 137.3796858,
+      "lat": -4.804189,
+      "elevM": -3632.88,
+      "routeDistM": 423.3,
+      "rover": { "sol": 4600, "rmc": "117_2370", "tiltDeg": 16.96 },
+      "plannedStayMin": 10,
+      "science": {
+        "priority": 3,
+        "unit": "boxwork",
+        "headline": "Steepest ground on the route",
+        "why": "The rover recorded a 17° tilt at this stop and the orbital model shows 14.9° on the approach, just under the caution limit. It is the pace and footing check before the ridge network.",
+        "targets": [],
+        "tasks": ["Footing and pace check", "Photograph the ridge flank in cross-section"],
+        "sources": ["msl-waypoints"]
+      },
+      "pov": {
+        "imageUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/04600/opgs/edr/ncam/NLB_805865441EDR_F1172352NCAM00485M_.JPG",
+        "camera": "Left Navigation Camera",
+        "sol": 4600,
+        "utc": "2025-07-15T16:37:03Z",
+        "takenAtRmc": "117_2352",
+        "caption": "Sloping bedrock on the climb toward the first ridges.",
+        "credit": "NASA/JPL-Caltech"
+      },
+      "model": { "src": "assets/models/wp1-ridge-flank.glb", "status": "placeholder", "alt": "Terrain cross-section of the ridge flank" }
+    },
+    {
+      "id": "WP2",
+      "name": "Monte Grande",
+      "type": "science",
+      "lon": 137.3810041,
+      "lat": -4.80800755,
+      "elevM": -3607.72,
+      "routeDistM": 852.2,
+      "rover": { "sol": 4711, "rmc": "120_82", "tiltDeg": 11.0 },
+      "plannedStayMin": 45,
+      "science": {
+        "priority": 1,
+        "unit": "boxwork",
+        "headline": "Paired hollow and ridge samples",
+        "why": "A ridge top and the hollow floor beside it sit about 10 m apart with 2 m of relief. Sampling both tests what cemented the ridges and left the hollows to erode. The rover found fine veins in both, with bright white and grey vein fill.",
+        "targets": ["Valle de la Luna (hollow floor)", "Nevado Sajama (ridge top)"],
+        "tasks": ["Core the ridge top", "Core the hollow floor", "Sample white and grey vein fill separately"],
+        "sources": ["blog-4709", "blog-4716"]
+      },
+      "pov": {
+        "imageUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/04709/opgs/edr/ncam/NLB_815536970EDR_F1200000NCAM00261M_.JPG",
+        "camera": "Left Navigation Camera",
+        "sol": 4709,
+        "utc": "2025-11-04T15:10:44Z",
+        "takenAtRmc": "120_0",
+        "caption": "Ridge bedrock in the foreground with the sandy Monte Grande hollow behind it.",
+        "credit": "NASA/JPL-Caltech"
+      },
+      "model": { "src": "assets/models/wp2-hollow-ridge.glb", "status": "placeholder", "alt": "Cross-section through a boxwork ridge and hollow" }
+    },
+    {
+      "id": "WP3",
+      "name": "Southern Ridges",
+      "type": "science",
+      "lon": 137.3817563,
+      "lat": -4.81042121,
+      "elevM": -3595.81,
+      "routeDistM": 1209.3,
+      "rover": { "sol": 4841, "rmc": "121_762", "tiltDeg": 12.89 },
+      "plannedStayMin": 20,
+      "science": {
+        "priority": 2,
+        "unit": "boxwork",
+        "headline": "Layered ridges at the southern reaches",
+        "why": "The southern end of the boxwork terrain, where the rover imaged ridges and stepped ledges on its way to the contact. Good exposure for mapping how ridge layering changes toward the boundary.",
+        "targets": [],
+        "tasks": ["Panorama of ridge layering", "Grab sample from an exposed ledge"],
+        "sources": ["blog-4838"]
+      },
+      "pov": {
+        "imageUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/04841/opgs/edr/ncam/NLB_827252026EDR_F1210726NCAM00385M_.JPG",
+        "camera": "Left Navigation Camera",
+        "sol": 4841,
+        "utc": "2026-03-20T05:23:32Z",
+        "takenAtRmc": "121_726",
+        "caption": "Stepped, layered ledges in the southern boxwork.",
+        "credit": "NASA/JPL-Caltech"
+      },
+      "model": { "src": "assets/models/wp3-ledges.glb", "status": "placeholder", "alt": "Terrain cross-section of layered ledges" }
+    },
+    {
+      "id": "WP4",
+      "name": "Southern Contact",
+      "type": "science",
+      "lon": 137.3818117,
+      "lat": -4.81155245,
+      "elevM": -3590.12,
+      "routeDistM": 1284.4,
+      "rover": { "sol": 4848, "rmc": "121_1446", "tiltDeg": 8.84 },
+      "plannedStayMin": 25,
+      "science": {
+        "priority": 1,
+        "unit": "layered-sulfate",
+        "headline": "Where boxwork meets layered sulfate",
+        "why": "The rover crossed the southern boundary of the boxwork terrain here. A contact is where two rock units can be sampled within arm's reach, which pins down their order and the conditions that changed between them.",
+        "targets": [],
+        "tasks": ["Sample both sides of the contact", "Measure and photograph the boundary"],
+        "sources": ["blog-4845"]
+      },
+      "pov": {
+        "imageUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/04848/opgs/edr/ncam/NLB_827874696EDR_F1211446NCAM00278M_.JPG",
+        "camera": "Left Navigation Camera",
+        "sol": 4848,
+        "utc": "2026-03-27T10:21:28Z",
+        "takenAtRmc": "121_1446",
+        "caption": "Platy bedrock slabs and sand just past the boxwork boundary.",
+        "credit": "NASA/JPL-Caltech"
+      },
+      "model": { "src": "assets/models/wp4-contact.glb", "status": "placeholder", "alt": "Terrain cross-section across the contact" }
+    },
+    {
+      "id": "WP5",
+      "name": "Atacama",
+      "type": "science",
+      "lon": 137.3817063,
+      "lat": -4.8142672,
+      "elevM": -3570.45,
+      "routeDistM": 1515.9,
+      "rover": { "sol": 4868, "rmc": "122_0", "tiltDeg": 8.49 },
+      "plannedStayMin": 30,
+      "science": {
+        "priority": 1,
+        "unit": "layered-sulfate",
+        "headline": "Layered sulfate bedrock, turnaround point",
+        "why": "First layered-sulfate bedrock above the boxwork, drilled by the rover in April 2026 and again nearby at Campo Marte. It sits about 160 m above the last sample of the same unit, so it records how the unit changes with height. Rocks here show polygonal fractures and fine lamination, and the layered Paniri butte is in view.",
+        "targets": ["Atacama", "Campo Marte", "Queen of the Andes (laminated rock)", "Curaco (polygonal fractures)"],
+        "tasks": ["Core the layered bedrock", "Sample a polygon-fractured slab", "Image Paniri butte layering"],
+        "sources": ["blog-4873", "blog-4893"]
+      },
+      "pov": {
+        "imageUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/04868/opgs/edr/ncam/NLB_829645943EDR_F1212928NCAM00385M_.JPG",
+        "camera": "Left Navigation Camera",
+        "sol": 4868,
+        "utc": "2026-04-16T22:22:32Z",
+        "takenAtRmc": "121_2928",
+        "caption": "Polygon-textured bedrock slabs separated by sand at the Atacama site.",
+        "credit": "NASA/JPL-Caltech"
+      },
+      "model": { "src": "assets/models/wp5-polygons.glb", "status": "placeholder", "alt": "Terrain model of polygonal bedrock" }
+    }
+  ],
+
+  "suit": {
+    "simulated": true,
+    "note": "Planning assumptions for the demo, not flight values. Each one is editable and labelled as simulated in the app.",
+    "oxygen": { "primaryMin": 480, "reserveMin": 30 },
+    "battery": { "capacityMin": 510 },
+    "speed": {
+      "model": "tobler-scaled",
+      "formula": "kmh = suitFactor * baseKmh * exp(-k * abs(tan(slope) + offset))",
+      "baseKmh": 6.0,
+      "k": 3.5,
+      "offset": 0.05,
+      "suitFactor": 0.6,
+      "flatKmh": 3.0
+    },
+    "metabolic": { "consumptionGainPerUphillDeg": 0.04, "consumptionGainPerDownhillDeg": 0.01 },
+    "slopeLimitsDeg": { "caution": 15, "noGo": 20 },
+    "walkBackRule": "Consumables remaining must always cover the walk back to the dock at current pace, plus the oxygen reserve."
+  },
+
+  "hazards": {
+    "radiation": {
+      "backgroundMSvPerDay": 0.67,
+      "backgroundBasis": "Average galactic cosmic ray dose equivalent measured on the surface at Gale crater by the rover's radiation detector.",
+      "backgroundSource": "hassler-2014",
+      "careerLimitMSv": 600,
+      "careerLimitNote": "Agency career limit adopted in 2022; confirm the figure before quoting it in the presentation.",
+      "terrainShielding": {
+        "observedDoseReductionPct": 4,
+        "basis": "Measured while the rover was parked at the foot of a cliff at Murray Buttes, 9–21 September 2016.",
+        "source": "nasa-rad-safer",
+        "model": "Dose reduction = efficiency x fraction of sky hidden by terrain, scanned in 16 directions out to 80 m on the elevation grid.",
+        "efficiency": 0.5,
+        "efficiencyNote": "Assumption. Blocking sky does not remove ground-scattered particles, so only half the blocked fraction is credited.",
+        "candidates": ["Paniri butte (near WP5; to be located on the HiRISE mosaic)", "Pressurised rover at the dock"]
+      }
+    },
+    "scenarios": [
+      {
+        "id": "spe-2017-analog",
+        "label": "Solar particle event",
+        "simulated": true,
+        "basis": "Shaped on the September 2017 event, when surface radiation at Gale roughly doubled; later analysis put the peak near three times background.",
+        "observedPeakMultiplier": { "low": 2, "high": 3 },
+        "demoSeverityMultiplier": 20,
+        "demoSeverityNote": "Exaggerated on purpose so the reroute logic is visible in a short demo. Shown as simulated.",
+        "response": "Recalculate the fastest safe return to the dock and flag terrain shielding on the way.",
+        "source": "jpl-sept-2017"
+      },
+      {
+        "id": "dust-storm",
+        "label": "Dust storm",
+        "simulated": true,
+        "basis": "Rising atmospheric dust cuts visibility and solar power. Opacity values are demo assumptions.",
+        "opacityTau": { "nominal": 0.6, "storm": 4.0 },
+        "response": "Reduce pace, tighten the walk-back margin and recommend return before visibility drops below waypoint spacing."
+      }
+    ]
+  },
+
+  "sources": [
+    { "id": "trek", "title": "Mars Trek tile services", "org": "NASA/JPL-Caltech", "url": "https://trek.nasa.gov/mars/", "use": "Orbital basemaps" },
+    { "id": "trek-gale-dem", "title": "MRO HiRISE Gale Crater DEM, 1 m", "org": "NASA/JPL-Caltech/University of Arizona/USGS", "url": "https://trek.nasa.gov/mars/trekarcgis/rest/services/Gale_DEM_SMG_1m/ImageServer", "use": "Slope along the EVA route" },
+    { "id": "trek-ezmars", "title": "Exploration Zones layer (2015 human landing site workshop)", "org": "NASA", "url": "https://trek.nasa.gov/mars/trekarcgis/rest/services/EZMars/MapServer", "use": "Landing site rationale" },
+    { "id": "usgs-geology", "title": "Geologic Map of Mars, SIM 3292", "org": "USGS", "url": "https://astrogeology-usgs.hub.arcgis.com/pages/interactive-maps-mars", "use": "Regional geologic context" },
+    { "id": "msl-traverse", "title": "Curiosity traverse path", "org": "NASA/JPL-Caltech", "url": "https://mars.nasa.gov/mmgis-maps/MSL/Layers/json/MSL_traverse.json", "use": "EVA corridor geometry" },
+    { "id": "msl-waypoints", "title": "Curiosity waypoints", "org": "NASA/JPL-Caltech", "url": "https://mars.nasa.gov/mmgis-maps/MSL/Layers/json/MSL_waypoints.json", "use": "Waypoint positions, elevations and rover tilt" },
+    { "id": "msl-raw", "title": "Curiosity raw images", "org": "NASA/JPL-Caltech", "url": "https://mars.nasa.gov/msl/multimedia/raw-images/", "use": "Eye-level photography at each waypoint" },
+    { "id": "mount-sharp-route", "title": "Curiosity's Proposed Path up Mount Sharp", "org": "NASA/JPL-Caltech", "url": "https://science.nasa.gov/resource/curiositys-proposed-path-up-mount-sharp/", "use": "Route concept and unit sequence" },
+    { "id": "jpl-boxwork-2025", "title": "Curiosity Mars Rover Starts Unpacking Boxwork Formations", "org": "NASA/JPL-Caltech", "url": "https://www.nasa.gov/centers-and-facilities/nasas-curiosity-mars-rover-starts-unpacking-boxwork-formations/", "use": "Boxwork origin and vein mineralogy" },
+    { "id": "blog-4568", "title": "Curiosity Blog, Sols 4568-4569: A Close Look at the Altadena Drill Hole and Tailings", "org": "NASA", "url": "https://science.nasa.gov/blog/curiosity-blog-sols-4568-4569-a-close-look-at-the-altadena-drill-hole-and-tailings/", "use": "DOCK" },
+    { "id": "blog-4709", "title": "Curiosity Blog, Sols 4709-4715: Drilling High and Low in the Boxwork Unit", "org": "NASA", "url": "https://science.nasa.gov/blog/curiosity-blog-sols-4709-4715-drilling-high-and-low-in-the-boxwork-unit", "use": "WP2" },
+    { "id": "blog-4716", "title": "Curiosity Blog, Sols 4716-4722: Drilling Success at Nevado Sajama", "org": "NASA", "url": "https://science.nasa.gov/solar-system/curiosity-blog-sols-4716-4722-drilling-success-at-nevado-sajama", "use": "WP2" },
+    { "id": "blog-4838", "title": "Curiosity Blog, Sols 4838-4844: Wrapping Up the Boxwork Terrain", "org": "NASA", "url": "https://science.nasa.gov/blog/curiosity-blog-sols-4838-4844-wrapping-up-the-boxwork-terrain/", "use": "WP3" },
+    { "id": "blog-4845", "title": "Curiosity Blog, Sols 4845-4851: Bye-Bye Boxwork, Bye-Bye", "org": "NASA", "url": "https://astrobiology.com/2026/04/20/mars-curiosity-blog-sols-4845-4851-bye-bye-boxwork-bye-bye/", "use": "WP4", "note": "Mirror of the mission blog post; replace with the science.nasa.gov link before submission." },
+    { "id": "blog-4873", "title": "Curiosity Blog, Sols 4873-4878: Welcome to the Atacama Drill Target", "org": "NASA", "url": "https://science.nasa.gov/blog/curiosity-blog-sols-4873-4878-welcome-to-the-atacama-drill-target/", "use": "WP5" },
+    { "id": "blog-4893", "title": "Curiosity Blog, Sols 4893-4899: Drilling at Campo Marte and a Visit From the Psyche Spacecraft", "org": "NASA", "url": "https://science.nasa.gov/blog/curiosity-blog-sols-4893-4899-drilling-at-campo-marte-and-a-visit-from-the-psyche-spacecraft/", "use": "WP5" },
+    { "id": "hassler-2014", "title": "Mars' Surface Radiation Environment Measured with the Mars Science Laboratory's Curiosity Rover", "org": "Hassler et al., Science 343, 2014", "url": "https://doi.org/10.1126/science.1244797", "use": "Background dose rate" },
+    { "id": "nasa-rad-safer", "title": "How NASA's Curiosity Rover Is Making Mars Safer for Astronauts", "org": "NASA", "url": "https://www.nasa.gov/missions/mars-science-laboratory/how-nasas-curiosity-rover-is-making-mars-safer-for-astronauts/", "use": "Terrain shielding measurement" },
+    { "id": "jpl-sept-2017", "title": "Large Solar Storm Sparks Global Aurora and Doubles Radiation Levels on the Martian Surface", "org": "NASA/JPL-Caltech", "url": "https://www.jpl.nasa.gov/news/large-solar-storm-sparks-global-aurora-and-doubles-radiation-levels-on-the-martian-surface/", "use": "Solar particle event scenario" },
+    { "id": "worldview", "title": "Worldview", "org": "NASA Earthdata", "url": "https://worldview.earthdata.nasa.gov/", "use": "Reference for the layer-toggle interaction model; no Earth data is used" },
+    { "id": "m2020-raw", "title": "Mars 2020 Perseverance raw images", "org": "NASA/JPL-Caltech", "url": "https://mars.nasa.gov/mars2020/multimedia/raw-images/", "use": "Sister image service; reserved for a second site at Jezero crater" }
+  ],
+
+  "aiDisclosure": "AI coding assistants were used to accelerate scaffolding, data retrieval scripts, code generation and review. All positions, elevations, imagery and mission findings come from the public sources listed. Suit telemetry and space-weather scenarios are simulated and labelled as such."
+}

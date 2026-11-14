@@ -1,0 +1,13 @@
+.DS_Store
+.claude/
+.vscode/
+.idea/
+node_modules/
+*.log
+.env
+.env.*
+# Raw CAD / Blender sources stay local; only exported .glb files ship
+*.blend
+*.blend1
+*.f3d
+*.step
