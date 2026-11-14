@@ -254,6 +254,7 @@ export function drawProfile(canvas, pts, marks, units, cursorD) {
 export function renderBriefing(mission, facts, onStart) {
   const b = mission.briefing;
   $('brief-card').innerHTML = `
+    <span class="brief__challenge">2026 NASA International Space Apps Challenge · The Next Frontier</span>
     <span class="brief__kicker">${esc(b.kicker)}</span>
     <h1>${esc(b.title)}</h1>
     ${b.body.map((p) => `<p>${esc(p)}</p>`).join('')}
@@ -270,6 +271,10 @@ export function renderBriefing(mission, facts, onStart) {
 export function renderAbout(mission, stats) {
   const src = (id) => mission.sources.find((s) => s.id === id);
   $('about-body').innerHTML = `
+    <section>
+      <h3>The challenge</h3>
+      <p>Built for the 2026 NASA International Space Apps Challenge, theme “The Next Frontier”, which asks teams to develop tools that contribute to the science and technology carrying people to the Moon, Mars and beyond. Independent student project; not affiliated with or endorsed by NASA.</p>
+    </section>
     <section>
       <h3>The five anchor resources</h3>
       <ul class="anchor">${mission.anchorResources.map((a) => {

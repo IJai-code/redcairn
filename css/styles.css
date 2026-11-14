@@ -97,22 +97,31 @@ output { font-variant-numeric: tabular-nums; }
 /* ---------- buttons ---------- */
 .btn {
   min-height: var(--tap);
-  padding: 0 14px;
+  padding: 0 15px;
   background: var(--panel-2);
   border: 1px solid var(--line-2);
-  border-radius: 2px;
+  border-radius: 6px;
   cursor: pointer;
-  font: 600 12px/1.2 var(--mono);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  color: var(--text);
+  font: 600 13.5px/1.2 var(--sans);
+  letter-spacing: 0;
+  text-transform: none;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.045) inset;
+  transition: background 0.18s, border-color 0.18s, transform 0.18s, box-shadow 0.18s, filter 0.18s;
 }
-.btn:hover:not(:disabled) { border-color: var(--dim); }
+.btn:hover:not(:disabled) { border-color: #47576a; background: #1b232b; transform: translateY(-1px); }
+.btn:active:not(:disabled) { transform: none; }
 .btn:disabled { opacity: 0.4; cursor: default; }
-.btn--ghost { background: transparent; }
-.btn--primary { background: var(--accent); border-color: var(--accent); color: #140a05; }
-.btn--primary:hover:not(:disabled) { filter: brightness(1.1); border-color: var(--accent); }
-.btn--danger { background: var(--danger); border-color: var(--danger); color: #1a0505; }
-.btn--hazard { display: grid; gap: 3px; text-align: left; padding: 9px 12px; width: 100%; text-transform: none; letter-spacing: 0; }
+.btn--ghost { background: transparent; border-color: transparent; color: var(--dim); }
+.btn--ghost:hover:not(:disabled) { background: rgba(233, 236, 239, 0.06); border-color: var(--line-2); color: var(--text); }
+.btn--primary {
+  background: var(--accent); border-color: var(--accent); color: #140a05;
+  font-weight: 700;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.35), 0 1px 0 rgba(255, 255, 255, 0.24) inset;
+}
+.btn--primary:hover:not(:disabled) { filter: brightness(1.06); border-color: var(--accent); box-shadow: 0 4px 12px rgba(255, 122, 69, 0.3); }
+.btn--danger { background: var(--danger); border-color: var(--danger); color: #1a0505; border-radius: 6px; }
+.btn--hazard { display: grid; gap: 3px; text-align: left; padding: 9px 12px; width: 100%; border-radius: 6px; }
 .btn--hazard b { font: 600 13px/1.2 var(--sans); }
 .btn--hazard small { font: 11.5px/1.2 var(--sans); color: var(--dim); }
 .btn--hazard[aria-pressed="true"] { border-color: var(--danger); background: rgba(255, 77, 77, 0.14); }
@@ -128,12 +137,15 @@ output { font-variant-numeric: tabular-nums; }
 .field { display: grid; gap: 6px; margin-bottom: 12px; }
 .note { font-size: 12px; color: var(--caution); margin-top: 10px; }
 
-.seg { display: flex; border: 1px solid var(--line-2); border-radius: 2px; overflow: hidden; }
+.seg { display: flex; border: 1px solid var(--line-2); border-radius: 6px; overflow: hidden; }
 .seg button {
   flex: 1; min-height: var(--tap); padding: 0 4px;
   background: transparent; border: 0; border-left: 1px solid var(--line-2);
-  cursor: pointer; font: 600 12px/1 var(--mono); color: var(--dim);
+  cursor: pointer; font: 600 12.5px/1 var(--sans); color: var(--dim);
+  letter-spacing: 0; text-transform: none;
+  transition: background 0.18s, color 0.18s;
 }
+.seg button:hover { color: var(--text); background: rgba(233, 236, 239, 0.05); }
 .seg button:first-child { border-left: 0; }
 .seg button[aria-checked="true"] { background: var(--accent); color: #140a05; }
 .seg--stack { flex-direction: column; }
@@ -291,6 +303,7 @@ output { font-variant-numeric: tabular-nums; }
 .brief[hidden] { display: none; }
 .brief__card { max-width: 640px; display: grid; gap: 18px; margin-left: clamp(0px, 6vw, 96px); }
 .brief__credit { position: fixed; right: 12px; bottom: 10px; font: 10.5px var(--mono); color: rgba(233, 236, 239, 0.7); max-width: 46ch; text-align: right; }
+.brief__challenge { font: 500 10.5px var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); }
 .brief__kicker { font: 600 11px var(--mono); letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); }
 .brief h1 { margin: 0; font-size: clamp(26px, 5vw, 40px); line-height: 1.12; font-weight: 650; letter-spacing: -0.01em; text-wrap: balance; }
 .brief p { font-size: 16px; line-height: 1.6; color: #cfd5db; max-width: 60ch; }
