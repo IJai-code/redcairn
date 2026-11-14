@@ -1,0 +1,126 @@
+{
+  "schema": "redcairn.story/1",
+  "hero": {
+    "kicker": "NASA Space Apps 2026 · Interplanetary Survival Guide: Martian Map",
+    "title": "Mars is full of machines that went quiet. They left us a trail.",
+    "lede": "REDCAIRN is a walking guide for the first humans on Mars. It is made from what those machines saw, stood on and measured. It begins by remembering them."
+  },
+  "pairs": {
+    "DOCK": "pathfinder",
+    "WP1": "spirit",
+    "WP2": "phoenix",
+    "WP3": "viking1",
+    "WP4": "insight",
+    "WP5": "ingenuity",
+    "HOME": "opportunity",
+    "END": "curiosity"
+  },
+  "rhymes": {
+    "DOCK": "Sojourner left the first wheel tracks on another world. Your walk starts on tracks too.",
+    "WP1": "Spirit learned that the ground decides. It lost a wheel, dragged it for years, and found out what the soil was made of by the furrow it left.",
+    "WP2": "Phoenix dug a trench to find out where the water was. You are about to core two rocks ten metres apart for the same reason.",
+    "WP3": "Viking asked whether anything had ever lived here. The rocks around you are the next answer: the water stayed longer than anyone thought.",
+    "WP4": "InSight listened to the inside of Mars until its power ran out. At this line in the rock you listen to the outside, to a page turning.",
+    "WP5": "Ingenuity flew ahead so a rover would not have to guess. You have climbed up to look back, and the way home is already marked.",
+    "HOME": "Opportunity did not lose to the ground. It lost to the sky.",
+    "END": "Every machine on Mars stopped somewhere. None of them stopped for nothing."
+  },
+  "mapNotes": {
+    "DOCK": { "layers": [], "text": "The ground is the real orbital photograph (HiRISE, 64 cm per pixel) laid over the real elevation model (1 m). Heights are stretched twice so the ridges are easy to read." },
+    "WP1": { "layers": ["slope"], "text": "Colour shows how steep the ground is for a person in a suit. Green is easy, amber needs care, red is too steep. The trail stays on green." },
+    "WP2": { "layers": ["rocks"], "text": "The coloured band is the kind of rock under the trail, from what the rover measured on the ground. Blue is boxwork: ridges cemented by ancient groundwater." },
+    "WP3": { "layers": ["track"], "text": "The dotted white line is Curiosity's own wheel tracks. Our trail follows ground the rover has already proved." },
+    "WP4": { "layers": ["rocks"], "text": "Watch the band change colour here. That change is the boundary between two rock units." },
+    "WP5": { "layers": ["slope"], "text": "Look back down the trail: all of it is green. The rover already proved this ground." }
+  },
+  "ghosts": [
+    {
+      "id": "viking1", "name": "Viking 1", "role": "Lander", "place": "Chryse Planitia",
+      "lon": -48.0, "lat": 22.5, "landed": "20 Jul 1976", "lastHeard": "11 Nov 1982",
+      "planned": 90, "worked": 2245, "unit": "sols", "status": "quiet",
+      "headline": "The first to stay.",
+      "body": [
+        "Viking 1 sent back the first clear pictures from the surface of Mars, then spent six years asking whether anything had ever lived there. Its experiments gave answers that scientists still argue about.",
+        "In November 1982 a faulty command from Earth left its antenna pointing away from home, and it never answered again. NASA had named it the Thomas A. Mutch Memorial Station, for the man who led its cameras and died climbing in the Himalaya."
+      ],
+      "url": "https://science.nasa.gov/mission/viking-1/"
+    },
+    {
+      "id": "pathfinder", "name": "Sojourner", "role": "Rover, with the Pathfinder lander", "place": "Ares Vallis",
+      "lon": -33.2, "lat": 19.1, "landed": "4 Jul 1997", "lastHeard": "27 Sep 1997",
+      "planned": 7, "worked": 83, "unit": "sols", "status": "quiet",
+      "headline": "The first wheel tracks.",
+      "body": [
+        "Sojourner was the size of a microwave oven and was meant to last a week. A twelve-year-old, Valerie Ambroise, had named it for Sojourner Truth, the abolitionist who spent her life on the road.",
+        "It crept around its lander for twelve weeks. The last signal came from the lander on 27 September 1997. Every rover since has followed its tracks."
+      ],
+      "url": "https://science.nasa.gov/mission/mars-pathfinder/"
+    },
+    {
+      "id": "phoenix", "name": "Phoenix", "role": "Lander", "place": "Vastitas Borealis, near the north pole",
+      "lon": -125.7, "lat": 68.2, "landed": "25 May 2008", "lastHeard": "2 Nov 2008",
+      "planned": 90, "worked": 152, "unit": "sols", "status": "quiet",
+      "headline": "It dug, and found ice.",
+      "body": [
+        "Phoenix landed near the north pole in the spring of 2008 and dug a trench. White lumps it uncovered vanished within days, and that is how the team knew they were ice.",
+        "Then the Sun began to leave. Each day it sat lower, the solar panels starved, and Phoenix made its last call on 2 November 2008, five months into a three-month mission."
+      ],
+      "url": "https://science.nasa.gov/mission/phoenix/"
+    },
+    {
+      "id": "spirit", "name": "Spirit", "role": "Rover", "place": "Gusev crater",
+      "lon": 175.5, "lat": -14.6, "landed": "4 Jan 2004", "lastHeard": "22 Mar 2010",
+      "planned": 90, "worked": 2210, "unit": "sols", "status": "quiet",
+      "headline": "She drove on with a dead wheel.",
+      "body": [
+        "In 2006 one of Spirit's wheels seized. She kept going, dragging it behind her, and the furrow it dug turned up bright silica: a sign of hot water in the past. Dragging a dead wheel was how she made her best discovery.",
+        "In 2009 she sank into soft sand at a place the team called Troy. They tried for months to free her. Winter came, her power failed, and the last message arrived on 22 March 2010. NASA kept calling until May 2011."
+      ],
+      "url": "https://science.nasa.gov/mission/mer-spirit/"
+    },
+    {
+      "id": "opportunity", "name": "Opportunity", "role": "Rover", "place": "Meridiani Planum, Perseverance Valley",
+      "lon": -5.5, "lat": -1.9, "landed": "25 Jan 2004", "lastHeard": "10 Jun 2018",
+      "planned": 90, "worked": 5111, "unit": "sols", "status": "quiet",
+      "headline": "Built for ninety days. Stayed for fourteen years.",
+      "body": [
+        "Opportunity found strong evidence that liquid water once soaked the ground of Mars, then kept driving. It covered more than a marathon, 45 kilometres, on a machine built for a season.",
+        "In June 2018 a dust storm covered the planet and its solar panels went dark. Controllers sent more than a thousand commands over eight months. On 13 February 2019 NASA declared the mission over. A reporter's poetic reading of its last data, “My battery is low and it's getting dark,” went around the world. It is not what the rover said. It is what everyone heard."
+      ],
+      "url": "https://science.nasa.gov/mission/mer-opportunity/"
+    },
+    {
+      "id": "insight", "name": "InSight", "role": "Lander", "place": "Elysium Planitia",
+      "lon": 135.6, "lat": 4.5, "landed": "26 Nov 2018", "lastHeard": "Dec 2022",
+      "planned": 669, "worked": 1440, "unit": "sols", "approx": true, "status": "quiet",
+      "headline": "It sat still and listened.",
+      "body": [
+        "InSight never drove. It sat still for four years and listened to the inside of Mars, and it heard more than a thousand marsquakes. From them, scientists measured the size of the planet's core.",
+        "Dust slowly buried its solar panels. In December 2022 it sent one last picture and wrote: “My power's really low, so this might be the last image I can send. Don't worry about me though: my time here has been both productive and serene.” It lies about 550 kilometres from where you will walk."
+      ],
+      "url": "https://science.nasa.gov/mission/insight/"
+    },
+    {
+      "id": "ingenuity", "name": "Ingenuity", "role": "Helicopter", "place": "Jezero crater",
+      "lon": 77.4, "lat": 18.4, "landed": "18 Feb 2021, with Perseverance", "lastHeard": "18 Jan 2024",
+      "planned": 5, "worked": 72, "unit": "flights", "status": "quiet",
+      "headline": "Five flights were planned. It flew seventy-two.",
+      "body": [
+        "Ingenuity rode to Mars strapped under Perseverance, with a budget for five flights to prove that flying here was possible. It flew seventy-two times and became the rover's scout, looking ahead for safe ground.",
+        "On its last flight, in January 2024, it damaged a rotor blade on landing. It could still talk, but it could never fly again. It stands at the end of its last airfield."
+      ],
+      "url": "https://science.nasa.gov/mission/mars-2020-perseverance/ingenuity-mars-helicopter/"
+    },
+    {
+      "id": "curiosity", "name": "Curiosity", "role": "Rover, still working", "place": "Gale crater, Mount Sharp",
+      "lon": 137.4, "lat": -4.6, "landed": "6 Aug 2012", "lastHeard": "Still reporting",
+      "planned": 669, "worked": 4995, "plus": true, "unit": "sols", "status": "walking",
+      "headline": "Still walking.",
+      "body": [
+        "Curiosity was built to last one Martian year. It has climbed Mount Sharp for more than fourteen years, and every place it stopped became a record: where it stood, how far it tilted, what the rock was made of.",
+        "One day it will go quiet too. This guide is made from what it left along the way: the track, the photographs, the measurements. Those are the cairns."
+      ],
+      "url": "https://science.nasa.gov/mission/msl-curiosity/"
+    }
+  ]
+}

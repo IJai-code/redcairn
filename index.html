@@ -3,97 +3,68 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="description" content="REDCAIRN — a trail guide for the first walk on Mars, built from real orbital and rover data. Made for the 2026 NASA International Space Apps Challenge, The Next Frontier.">
-  <meta name="theme-color" content="#f4eee3">
-  <title>REDCAIRN — a trail guide for the first walk on Mars · NASA Space Apps 2026</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23f4eee3'/%3E%3Cellipse cx='16' cy='24' rx='10' ry='3.6' fill='%23b4441f'/%3E%3Cellipse cx='16' cy='16.5' rx='7' ry='3.2' fill='%23b4441f'/%3E%3Cellipse cx='16' cy='9.8' rx='4.2' ry='2.8' fill='%23b4441f'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <meta name="description" content="REDCAIRN: a walking guide for the first humans on Mars, built from the tracks, photographs and measurements of the machines that went quiet. NASA Space Apps 2026, Interplanetary Survival Guide: Martian Map.">
+  <meta name="theme-color" content="#0d0a08">
+  <meta property="og:title" content="REDCAIRN: abandoned, but not forgotten">
+  <meta property="og:description" content="A guide for the first walk on Mars, made from what the machines left behind.">
+  <meta property="og:image" content="https://redcairn.netlify.app/assets/img/hero.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <title>REDCAIRN: abandoned, but not forgotten · a guide for the first walk on Mars</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230d0a08'/%3E%3Cellipse cx='16' cy='24' rx='10' ry='3.6' fill='%23e0683a'/%3E%3Cellipse cx='16' cy='16.5' rx='7' ry='3.2' fill='%23e0683a'/%3E%3Cellipse cx='16' cy='9.8' rx='4.2' ry='2.8' fill='%23e0683a'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="css/styles.css">
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script type="module" src="https://unpkg.com/@google/model-viewer@4.0.0/dist/model-viewer.min.js"></script>
 </head>
-<body>
-  <div class="app" id="app" data-booting>
+<body data-stage="globe" data-booting>
 
-    <header class="top">
-      <a class="logo" href="./" aria-label="REDCAIRN home">
-        <svg viewBox="0 0 32 30" width="30" height="28" aria-hidden="true"><ellipse cx="16" cy="24" rx="12" ry="4.4"/><ellipse cx="16" cy="15" rx="8.4" ry="3.8"/><ellipse cx="16" cy="7" rx="5" ry="3.3"/></svg>
-        <span>Redcairn</span>
-      </a>
-      <p class="top__tag">A trail guide for the first walk on Mars</p>
-      <button class="link-btn link-btn--strong" id="btn-strata" type="button">Read the mountain</button>
-      <button class="link-btn" id="btn-about" type="button">Where the data comes from</button>
-    </header>
+  <div class="stage" id="stage">
+    <canvas id="gl"></canvas>
+    <div class="pins" id="pins"></div>
 
-    <section class="story" aria-label="The walk, step by step">
-      <nav class="steps" id="steps" aria-label="Progress"></nav>
-      <div class="chapter" id="chapter" tabindex="-1"></div>
-      <div class="pager">
-        <button class="btn btn--quiet" id="btn-prev" type="button">Back</button>
-        <button class="btn btn--go" id="btn-next" type="button">Next</button>
-      </div>
-    </section>
+    <div class="stackbig" id="stackbig"><svg id="stack-svg" viewBox="0 20 740 650" preserveAspectRatio="xMidYMid meet"></svg></div>
 
-    <main class="mapside">
-      <div id="map" class="map" aria-label="Map of the walk"></div>
-
-      <div class="views" id="views" role="group" aria-label="How far to zoom out"></div>
-
-      <button class="layers-btn" id="btn-layers" type="button" aria-expanded="false" aria-controls="layers-panel">
-        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3 2 8.5 12 14l10-5.5L12 3Zm-7.2 9L2 13.5 12 19l10-5.5-2.8-1.5L12 16l-7.2-4Z"/></svg>
-        Map layers <span class="layers-btn__count" id="layers-count"></span>
-      </button>
-      <aside class="layers" id="layers-panel" hidden aria-label="Map layers"></aside>
-
+    <div class="hud" id="hud">
+      <div class="chips" id="chips" role="group" aria-label="Map layers"></div>
       <div class="legend" id="legend" hidden></div>
-      <div class="scale" id="scale" aria-hidden="true"><span class="scale__bar" id="scale-bar"></span><span id="scale-text"></span></div>
-
-      <section class="suit" id="suit" aria-label="Your suit right now" aria-live="polite">
+      <div class="mini" id="mini">
+        <svg id="mini-svg" viewBox="20 150 370 500" preserveAspectRatio="xMidYMax meet"></svg>
+        <p id="mini-note"></p>
+      </div>
+      <p class="hint">Drag to look around. Double-click to reset.</p>
+      <section class="suit" id="suit" aria-live="polite">
         <p class="suit__line" id="suit-line"></p>
         <dl class="suit__nums">
           <div><dt>Air left</dt><dd id="s-air">—</dd></div>
           <div><dt>Walk home</dt><dd id="s-home">—</dd></div>
           <div><dt>Time outside</dt><dd id="s-time">—</dd></div>
-          <div><dt>Radiation so far</dt><dd id="s-dose">—</dd></div>
+          <div><dt>Radiation</dt><dd id="s-dose">—</dd></div>
         </dl>
-        <p class="suit__note">Suit numbers are a simulation. The ground, the route and the radiation rate are real.</p>
+        <p class="suit__note">Suit numbers are simulated. The ground, the route and the radiation rate are real.</p>
       </section>
-
-      <div class="boot" id="boot"><span id="boot-text">Unfolding the map…</span></div>
-    </main>
+    </div>
   </div>
+  <div class="scrim"></div>
+
+  <header class="top">
+    <a class="logo" href="#top" aria-label="REDCAIRN, back to the start">
+      <svg viewBox="0 0 32 30" width="26" height="24" aria-hidden="true"><ellipse cx="16" cy="24" rx="12" ry="4.4"/><ellipse cx="16" cy="15" rx="8.4" ry="3.8"/><ellipse cx="16" cy="7" rx="5" ry="3.3"/></svg>
+      <span>Redcairn</span>
+    </a>
+    <nav class="acts" id="acts" aria-label="Chapters"></nav>
+    <button class="link link--top" id="btn-about" type="button">Sources &amp; honesty</button>
+    <div class="progress" id="progress"></div>
+  </header>
+
+  <main id="story"></main>
 
   <dialog class="about" id="about" aria-labelledby="about-title">
     <form method="dialog" class="about__head">
-      <h2 id="about-title">Where the data comes from</h2>
-      <button class="btn btn--quiet" type="submit">Close</button>
+      <h2 id="about-title">Sources and honesty</h2>
+      <button class="btn btn--ghost" type="submit">Close</button>
     </form>
     <div class="about__body" id="about-body"></div>
   </dialog>
 
-  <dialog class="strata" id="strata" aria-labelledby="strata-title">
-    <div class="strata__scene" id="strata-scene">
-      <svg id="strata-svg" viewBox="0 0 740 700" preserveAspectRatio="xMidYMid meet" role="group" aria-label="Six layers of Mount Sharp, drawn as a stack you can pull apart. Choose one to read about it."></svg>
-      <label class="strata__gap">Pull the layers apart <input type="range" id="strata-gap" min="0" max="100" value="0"></label>
-    </div>
-    <div class="strata__text">
-      <form method="dialog" class="strata__top">
-        <div>
-          <p class="eyebrow">Read the mountain</p>
-          <h1 id="strata-title"></h1>
-        </div>
-        <button class="btn btn--quiet" type="submit">Close</button>
-      </form>
-      <p class="strata__intro" id="strata-intro"></p>
-      <div class="strata__body" id="strata-body"></div>
-      <div class="pager">
-        <button class="btn btn--quiet" id="strata-prev" type="button">Back</button>
-        <button class="btn btn--go" id="strata-next" type="button">Next</button>
-      </div>
-    </div>
-  </dialog>
-
-  <noscript><p style="padding:20px">REDCAIRN needs JavaScript to load the map and the terrain.</p></noscript>
+  <div class="boot" id="boot"><span id="boot-text">Waking the map…</span></div>
+  <noscript><p style="padding:96px 24px;color:#f0e7d9">REDCAIRN needs JavaScript to draw Mars.</p></noscript>
   <script type="module" src="js/app.js"></script>
 </body>
 </html>
