@@ -340,6 +340,10 @@ function aboutHTML() {
   const src = (id) => m.sources.find((s) => s.id === id);
   return `
     <section>
+      <h3>The challenge</h3>
+      <p>Built for the 2026 NASA International Space Apps Challenge, theme “The Next Frontier”: tools that support the science and technology carrying people to the Moon, Mars and beyond.</p>
+    </section>
+    <section>
       <h3>The five resources we were given, and what each one does here</h3>
       <ul>${m.anchorResources.map((a) => `<li><b><a href="${esc(src(a.source).url)}" target="_blank" rel="noopener">${esc(a.name)}</a></b>${esc(a.role)}</li>`).join('')}</ul>
       <div class="live" id="m2020-live"></div>
