@@ -17,10 +17,10 @@ A hyper-local tactical navigation interface for the first human surface walks on
 No build step. Serve the folder with any static server:
 
 ```bash
-python3 -m http.server 8000
+python3 tools/serve.py
 ```
 
-Then open <http://localhost:8000>.
+Then open <http://localhost:8123>. Live build: <https://redcairn.netlify.app>.
 
 ## Project layout
 
@@ -30,6 +30,7 @@ css/                 Styles
 js/                  ES modules (no bundler)
 data/mission.json    Site, basemaps, layers, waypoints, suit and hazard models, sources
 data/route.json      EVA route with per-vertex distance, elevation and slope (generated)
+data/terrain.bin     2 m elevation grid for slope, shielding and routing (generated)
 tools/               Data build scripts
 assets/models/       .glb terrain cross-sections and scale models
 assets/img/          UI imagery
@@ -57,10 +58,14 @@ Full links are in the `sources` array of [`data/mission.json`](data/mission.json
 
 Suit telemetry and the solar-event and dust-storm scenarios are **simulated** and labelled as such in the app.
 
-To rebuild the route from the live sources:
+To rebuild the data from the live sources:
 
 ```bash
 python3 tools/build_route.py
+```
+
+```bash
+python3 tools/build_terrain.py
 ```
 
 ## AI use disclosure

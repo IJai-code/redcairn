@@ -54,7 +54,7 @@ export function smooth(line, passes = 2) {
 
 // Attach distance, elevation, along-track slope, slope class and shielding to a path.
 export function profile(terrain, line, limits, stepM = 5) {
-  const pts = resample(line, stepM).map((p) => ({ lon: p.lon, lat: p.lat }));
+  const pts = (stepM > 0 ? resample(line, stepM) : line).map((p) => ({ lon: p.lon, lat: p.lat }));
   let d = 0;
   for (let i = 0; i < pts.length; i++) {
     if (i > 0) d += groundMetres(pts[i - 1], pts[i]);
@@ -157,6 +157,7 @@ function snapshot(tl, a, b, f) {
     kind: a === b ? 'hold' : b.kind,
     wpId: b.kind === 'stay' ? b.wpId : null,
     ptIndex: f < 0.5 ? a.i : b.i,
+    nextIndex: b.i,
     done: false,
   };
 }
@@ -167,12 +168,13 @@ export function returnNeedMin(returnSeconds) {
 }
 
 export function summarise(tl, returnField, terrain, suit) {
-  let maxSlope = 0, caution = 0, nogo = 0, minMargin = Infinity;
+  let maxSlope = 0, caution = 0, nogo = 0, beside = 0, minMargin = Infinity;
   for (const p of tl.pts) {
     const a = Math.abs(p.slope);
     if (a > maxSlope) maxSlope = a;
     if (p.cls === 1) caution++;
-    if (p.cls === 2 || p.terrainCls === 2) nogo++;
+    if (p.cls === 2) nogo++;
+    else if (p.terrainCls === 2) beside++; // walkable along the line, but the ground falls away steeply to one side
   }
   for (const n of tl.nodes) {
     const p = tl.pts[n.i];
@@ -190,6 +192,7 @@ export function summarise(tl, returnField, terrain, suit) {
     maxSlopeDeg: maxSlope,
     cautionPts: caution,
     nogoPts: nogo,
+    besideNogoPts: beside,
     minMarginMin: minMargin,
   };
 }
