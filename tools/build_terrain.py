@@ -4,8 +4,8 @@
 Outputs
   data/terrain.bin     int16 little-endian elevations (decimetres above baseElevM), 2 m cells, row 0 = north
   data/terrain.json    grid georeferencing and encoding
-  assets/models/*.glb  60 m x 60 m true-scale terrain block around each waypoint (1 m posts),
-                       tinted by slope class, with a 1.8 m crew-height marker at the waypoint
+  art/blocks/*.glb     60 m x 60 m true-scale terrain block around each waypoint (1 m posts),
+                       tinted by slope class. tools/blender_scene.py then adds the crew figure and rover in Blender
 
 Source (public, no key): 1 m HiRISE stereo DEM of Gale crater served by Mars Trek
   https://trek.nasa.gov/mars/trekarcgis/rest/services/Gale_DEM_SMG_1m/ImageServer
@@ -166,22 +166,6 @@ def write_glb(path, grid, w, h, cx, cy, post_m):
             a, b, c, d = start + 2 * k, start + 2 * k + 1, start + 2 * k + 2, start + 2 * k + 3
             idx += ([a, c, b, b, c, d] if flip else [a, b, c, c, b, d])
 
-    # Crew-height marker: 1.8 m tall, 0.5 m square, standing on the waypoint.
-    r, top_y = 0.25, 1.8
-    marker = (0.25, 0.80, 0.95)
-    faces = [
-        ((0, 0, 1), [(-r, 0, r), (r, 0, r), (r, top_y, r), (-r, top_y, r)]),
-        ((0, 0, -1), [(r, 0, -r), (-r, 0, -r), (-r, top_y, -r), (r, top_y, -r)]),
-        ((1, 0, 0), [(r, 0, r), (r, 0, -r), (r, top_y, -r), (r, top_y, r)]),
-        ((-1, 0, 0), [(-r, 0, -r), (-r, 0, r), (-r, top_y, r), (-r, top_y, -r)]),
-        ((0, 1, 0), [(-r, top_y, r), (r, top_y, r), (r, top_y, -r), (-r, top_y, -r)]),
-    ]
-    for normal, quad in faces:
-        start = len(pos)
-        for v in quad:
-            pos.append(v); nrm.append(tuple(float(c) for c in normal)); col.append(marker)
-        idx += [start, start + 1, start + 2, start, start + 2, start + 3]
-
     if len(pos) > 65535:
         raise ValueError("too many vertices for 16-bit indices")
     buf_pos = b"".join(struct.pack("<3f", *p) for p in pos)
@@ -282,7 +266,7 @@ def main():
     for wp in mission["waypoints"]:
         cx = int(round((wp["lon"] - b["west"]) / (b["east"] - b["west"]) * w - 0.5))
         cy = int(round((b["north"] - wp["lat"]) / (b["north"] - b["south"]) * h - 0.5))
-        path = os.path.join(ROOT, wp["model"]["src"])
+        path = os.path.join(ROOT, "art", "blocks", os.path.basename(wp["model"]["src"]))  # raw block; Blender writes the final model
         os.makedirs(os.path.dirname(path), exist_ok=True)
         nv, nt, size = write_glb(path, grid, w, h, cx, cy, post_m)
         print("%s  %s  dem %.1f m  %d verts %d tris %d bytes" % (wp["id"], wp["model"]["src"], grid[cy][cx], nv, nt, size))

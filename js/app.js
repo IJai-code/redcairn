@@ -382,6 +382,7 @@ async function boot() {
   $('btn-reset').addEventListener('click', reset);
   $('btn-spe').addEventListener('click', (e) => toggleHazard('spe', e.currentTarget));
   $('btn-dust').addEventListener('click', (e) => toggleHazard('dust', e.currentTarget));
+  $('btn-site3d').addEventListener('click', () => { ui.renderSite3D(); $('site3d').showModal(); });
   for (const id of ['btn-about', 'btn-about-2']) $(id).addEventListener('click', () => $('about').showModal());
 
   const layers = [

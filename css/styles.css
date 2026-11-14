@@ -287,9 +287,10 @@ output { font-variant-numeric: tabular-nums; }
 .option .btn { margin-top: 4px; }
 
 /* ---------- briefing ---------- */
-.brief { position: fixed; inset: 0; z-index: 2000; background: rgba(5, 6, 7, 0.94); display: grid; place-items: center; padding: 20px; overflow-y: auto; }
+.brief { justify-items: start; position: fixed; inset: 0; z-index: 2000; background: linear-gradient(90deg, rgba(5, 6, 7, 0.94) 0%, rgba(5, 6, 7, 0.82) 45%, rgba(5, 6, 7, 0.35) 100%), url("../assets/img/hero.jpg") center / cover no-repeat #090b0d; display: grid; place-items: center; padding: 20px; overflow-y: auto; }
 .brief[hidden] { display: none; }
-.brief__card { max-width: 640px; display: grid; gap: 18px; }
+.brief__card { max-width: 640px; display: grid; gap: 18px; margin-left: clamp(0px, 6vw, 96px); }
+.brief__credit { position: fixed; right: 12px; bottom: 10px; font: 10.5px var(--mono); color: rgba(233, 236, 239, 0.7); max-width: 46ch; text-align: right; }
 .brief__kicker { font: 600 11px var(--mono); letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); }
 .brief h1 { margin: 0; font-size: clamp(26px, 5vw, 40px); line-height: 1.12; font-weight: 650; letter-spacing: -0.01em; text-wrap: balance; }
 .brief p { font-size: 16px; line-height: 1.6; color: #cfd5db; max-width: 60ch; }
@@ -298,6 +299,12 @@ output { font-variant-numeric: tabular-nums; }
 .brief__facts b { display: block; font: 600 22px var(--mono); }
 .brief__facts span { font-size: 12px; color: var(--dim); }
 .brief .btn { justify-self: start; padding: 0 22px; }
+
+/* ---------- 3D site ---------- */
+.site3d-btn { position: absolute; z-index: 500; right: 10px; bottom: 26px; background: rgba(9, 11, 13, 0.85); }
+.site3d { width: min(1100px, calc(100vw - 24px)); }
+.site3d__body model-viewer { display: block; width: 100%; height: min(68dvh, 640px); background: radial-gradient(ellipse at 50% 20%, #2a2019, #090b0d 75%); }
+.site3d__body p { padding: 10px 16px 14px; font-size: 12.5px; color: var(--dim); }
 
 /* ---------- about dialog ---------- */
 .about { width: min(860px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); padding: 0; background: var(--panel); color: var(--text); border: 1px solid var(--line-2); border-radius: 2px; }

@@ -134,8 +134,9 @@ export function renderWaypoint(wp, ctx) {
         </figure>
         <figure>
           <model-viewer src="${esc(wp.model.src)}" alt="${esc(wp.model.alt)}" camera-controls touch-action="pan-y" interaction-prompt="none"
-            camera-orbit="-35deg 62deg auto" shadow-intensity="0" exposure="1.15" loading="lazy" reveal="auto"></model-viewer>
-          <figcaption><b>3D terrain · true scale</b>60 m block cut from the 1 m orbital elevation model, tinted by slope class. The blue post is 1.8 m, crew height. Drag to orbit.</figcaption>
+            camera-target="1.5m 1m 0m" camera-orbit="-40deg 70deg 24m" min-camera-orbit="auto auto 6m" max-camera-orbit="auto auto 110m"
+            shadow-intensity="0" exposure="1.15" loading="lazy" reveal="auto"></model-viewer>
+          <figcaption><b>3D terrain · true scale</b>60 m block cut from the 1 m orbital elevation model, tinted by slope class, assembled in Blender. The suited figure is 1.8 m tall.${isDock ? ' The rover is our team\'s own model, scaled to a Curiosity-class 2.9 m.' : ''} Drag to orbit, pinch or scroll to pull back to the full block.</figcaption>
         </figure>
       </div>
       <div class="wp__section">
@@ -257,7 +258,8 @@ export function renderBriefing(mission, facts, onStart) {
     <h1>${esc(b.title)}</h1>
     ${b.body.map((p) => `<p>${esc(p)}</p>`).join('')}
     <div class="brief__facts">${facts.map(([v, k]) => `<div><b>${esc(v)}</b><span>${esc(k)}</span></div>`).join('')}</div>
-    <button class="btn btn--primary" type="button" id="brief-go">${esc(b.cta)}</button>`;
+    <button class="btn btn--primary" type="button" id="brief-go">${esc(b.cta)}</button>
+    <span class="brief__credit">Background: this site rendered in Blender from the 1 m orbital elevation model and HiRISE imagery (tinted). The orange line is the walk.</span>`;
   const el = $('brief');
   el.hidden = false;
   $('brief-go').addEventListener('click', () => { el.hidden = true; onStart(); });
@@ -282,7 +284,7 @@ export function renderAbout(mission, stats) {
         <li><b>1 · Public mission data</b>Orbital imagery and elevation, rover track and photos, mission reports.</li>
         <li><b>2 · Build scripts</b><code>tools/build_route.py</code> and <code>tools/build_terrain.py</code> fetch and bake them into static files. Nothing is typed in by hand.</li>
         <li><b>3 · In your browser</b>${esc(stats.cells)} terrain cells: slope, sky shielding, walk-back time and least-cost routes are computed here, with no server.</li>
-        <li><b>4 · Blender</b>3D terrain and scale models are assembled and rendered in Blender from the same elevation data.</li>
+        <li><b>4 · Blender</b><code>tools/blender_scene.py</code> drapes the imagery on the elevation model, adds the route, cairns, a 1.8 m figure and our rover model, exports every 3D model and renders the opening image. Scene file: <code>art/redcairn.blend</code>.</li>
       </ul>
     </section>
     <section>
@@ -311,4 +313,12 @@ export function renderLiveFeed(img) {
     <img src="${esc(img.url)}" alt="Latest navigation camera frame from the Perseverance rover" style="display:block;width:100%" loading="lazy" referrerpolicy="no-referrer">
     <figcaption style="padding:7px 9px;font-size:11.5px;color:var(--dim)">Live: the other rover's newest frame, Jezero crater, sol ${esc(img.sol)} (${esc(img.date)}). Credit: ${esc(img.credit)}</figcaption>
   </figure>`;
+}
+
+export function renderSite3D() {
+  const host = $('site3d-body');
+  if (host.firstChild) return;
+  host.innerHTML = `<model-viewer src="assets/models/site.glb" alt="3D model of the EVA site with the route and six cairns" camera-controls touch-action="pan-y"
+      interaction-prompt="none" camera-orbit="20deg 62deg auto" shadow-intensity="0" exposure="1.1" auto-rotate rotation-per-second="6deg"></model-viewer>
+    <p>True-scale terrain from the 1 m orbital elevation model, draped with HiRISE imagery (greyscale data, tinted). The orange line is the walk; the cairns mark the six stops and are drawn 14 m tall so they read at this scale. Built in Blender.</p>`;
 }

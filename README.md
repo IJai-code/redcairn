@@ -32,7 +32,8 @@ data/mission.json    Site, basemaps, layers, waypoints, suit and hazard models, 
 data/route.json      EVA route with per-vertex distance, elevation and slope (generated)
 data/terrain.bin     2 m elevation grid for slope, shielding and routing (generated)
 tools/               Data build scripts
-assets/models/       .glb terrain cross-sections and scale models
+assets/models/       .glb terrain blocks, site model and scale models (exported from Blender)
+art/                 Blender scene, source tiles and raw terrain blocks
 assets/img/          UI imagery
 ```
 
@@ -57,6 +58,16 @@ The route is not hand-drawn. It follows ground the Curiosity rover drove between
 Full links are in the `sources` array of [`data/mission.json`](data/mission.json). Imagery credit: NASA/JPL-Caltech, NASA/JPL-Caltech/MSSS, NASA/JPL-Caltech/University of Arizona, USGS.
 
 Suit telemetry and the solar-event and dust-storm scenarios are **simulated** and labelled as such in the app.
+
+## Blender
+
+3D work runs through Blender, headless, from the same elevation and imagery as the app:
+
+```bash
+/Applications/Blender.app/Contents/MacOS/Blender -b --python tools/blender_scene.py -- --rover path/to/rover.blend
+```
+
+It drapes the orbital mosaic on the elevation model, adds the route, a cairn at each stop, a 1.8 m suited figure and the team's rover model, exports every `.glb` in `assets/models/`, renders `assets/img/hero.jpg`, and saves the scene to `art/redcairn.blend`.
 
 To rebuild the data from the live sources:
 
