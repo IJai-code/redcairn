@@ -1,0 +1,60 @@
+{
+ "schema": "redcairn.conditions/1",
+ "generatedBy": "tools/build_conditions.py",
+ "weather": {
+  "sol": 4995,
+  "earthDate": "2026-08-25",
+  "airMinC": -71.0,
+  "airMaxC": -5.0,
+  "groundMinC": -84.0,
+  "groundMaxC": 4.0,
+  "pressurePa": 777.0,
+  "sky": "Sunny",
+  "uv": "Moderate",
+  "sunrise": "06:46",
+  "sunset": "18:51",
+  "source": "https://mars.nasa.gov/rss/api/?feed=weather&category=msl&feedtype=json",
+  "instrument": "REMS weather station on the Curiosity rover"
+ },
+ "hydrousMinerals": {
+  "source": "https://trek.nasa.gov/mars/trekarcgis/rest/services/Hydrous_Mineral_Detections_OMEGA_CRISM_clon0/MapServer/0/query",
+  "note": "Places where orbiting spectrometers detected minerals that form in water.",
+  "points": [
+   {
+    "lon": 137.2,
+    "lat": -5,
+    "instrument": "OMEGA"
+   },
+   {
+    "lon": 137.8,
+    "lat": -4.1,
+    "instrument": "OMEGA"
+   },
+   {
+    "lon": 138.2,
+    "lat": -5.3,
+    "instrument": "OMEGA"
+   },
+   {
+    "lon": 138.5,
+    "lat": -5.5,
+    "instrument": "OMEGA"
+   },
+   {
+    "lon": 138.6,
+    "lat": -5.5,
+    "instrument": "OMEGA"
+   },
+   {
+    "lon": 137.2,
+    "lat": -5,
+    "instrument": "CRISM"
+   },
+   {
+    "lon": 138.2,
+    "lat": -5.3,
+    "instrument": "CRISM"
+   }
+  ]
+ }
+}

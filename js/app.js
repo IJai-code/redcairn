@@ -1,438 +1,452 @@
-// REDCAIRN — entry point. Loads the site, builds the plan, runs the EVA playback
-// and re-plans the walk home when conditions change.
+// REDCAIRN — a guided walk. One story column, one map, one question at a time.
 
 import { Terrain, Router, fetchJson, groundMetres } from './terrain.js';
 import * as sim from './sim.js';
 import { MapView } from './map.js';
-import * as ui from './ui.js';
 
 const $ = (id) => document.getElementById(id);
-const CLASS_NAMES = ['safe', 'caution', 'NO-GO'];
-const DUST_PACE = 0.7;
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const mins = (m) => { const v = Math.max(0, Math.round(m)); return v < 60 ? `${v} min` : `${Math.floor(v / 60)} h ${String(v % 60).padStart(2, '0')} min`; };
+const metres = (m) => (m >= 1000 ? `${(m / 1000).toFixed(2)} km` : `${Math.round(m / 10) * 10} m`);
 
-const S = {
-  env: { spe: false, dust: false },
-  mode: 'proven',
-  targetId: 'WP5',
-  selectedId: 'DOCK',
-  slopeOn: true,
-  legs: {},
-  run: { active: false, playing: false, done: false, aborted: false, speed: 240, t: 0, last: 0, uiAt: 0, alertAt: 0 },
-};
+// Every layer says, in plain words, what it shows, what kind of data it is and which mission it came from.
+const LAYERS = [
+  { id: 'slope', group: 'trail', name: 'Where can I walk?', desc: 'How steep the ground is for someone in a spacesuit.', kind: 'Topographic', from: 'Mars Reconnaissance Orbiter · HiRISE stereo',
+    legend: [['#2f8a57', 'Easy walking (under 15°)'], ['#e0a11b', 'Take care (15–20°)'], ['#d7402f', 'Too steep (over 20°)']] },
+  { id: 'rocks', group: 'trail', name: 'What rock is this?', desc: 'The rock under the trail, from the rover’s drill and laser.', kind: 'Chemical', from: 'Curiosity rover',
+    legend: [['#4cc9f0', 'Ridged rock: water moved underground'], ['#f4a261', 'Layered salty rock: Mars drying out']] },
+  { id: 'relief', group: 'trail', name: 'Shape of the land', desc: 'Hills and ridges, as if lit from the side.', kind: 'Topographic', from: 'Mars Reconnaissance Orbiter · HiRISE stereo' },
+  { id: 'shield', group: 'trail', name: 'Shelter from radiation', desc: 'Where hills hide part of the sky and cut the dose.', kind: 'Radiation', from: 'Curiosity RAD detector + elevation',
+    legend: [['#7d50dc', 'More sky hidden = less radiation']] },
+  { id: 'home', group: 'trail', name: 'Minutes to walk home', desc: 'One white line for every 5 minutes of walking back to the rover.', kind: 'Computed', from: 'REDCAIRN, from the elevation model',
+    legend: [['#ffffff', 'Each line = 5 more minutes from home']] },
+  { id: 'track', group: 'trail', name: 'The rover’s own tracks', desc: 'Every drive the rover made across this ground.', kind: 'Ground truth', from: 'Curiosity rover' },
+  { id: 'mola', group: 'orbit', name: 'Height of the land', desc: 'Blue is low ground. Red and white are high.', kind: 'Topographic', from: 'Mars Global Surveyor · MOLA + Mars Express · HRSC', coarse: 'One pixel is 200 m. Zoom out to read it.',
+    legend: [['linear-gradient(90deg,#3b4cc0,#3fa35b,#e9d44a,#c9442b,#f4f4f4)', 'Low → high']] },
+  { id: 'thermal', group: 'orbit', name: 'Ground temperature at night', desc: 'Bright ground is solid rock that stays warm after dark. Dark ground is loose dust and sand.', kind: 'Thermal', from: 'Mars Odyssey · THEMIS', coarse: 'One pixel is 100 m. Zoom out to read it.',
+    legend: [['linear-gradient(90deg,#111,#eee)', 'Cool dust → warm rock']] },
+  { id: 'minerals', group: 'orbit', name: 'Water minerals seen from orbit', desc: 'Places where orbiting instruments detected minerals that only form in water.', kind: 'Spectral', from: 'MRO · CRISM + Mars Express · OMEGA',
+    legend: [['#2b9fd6', 'Water-formed minerals detected']] },
+  { id: 'geology', group: 'orbit', name: 'Geologic map', desc: 'What kind of terrain this is and how old.', kind: 'Geologic', from: 'USGS', coarse: 'A global map. Zoom out to read it.' },
+];
+
+const S = { step: 0, reached: 0, env: { spe: false, dust: false }, on: new Set(), opacity: {}, homeVia: 'trail', anim: 0 };
 
 function cfg() {
   const rad = S.mission.hazards.radiation;
   const spe = S.mission.hazards.scenarios.find((x) => x.id === 'spe-2017-analog');
   return { suit: S.mission.suit, env: S.env, radiation: rad, speMultiplier: spe.demoSeverityMultiplier, shieldEff: rad.terrainShielding.efficiency };
 }
-const wpById = (id) => S.mission.waypoints.find((w) => w.id === id);
 const cellOf = (p) => S.terrain.cellIndex(p.lon, p.lat);
+const stops = () => S.mission.waypoints;
+const CH = () => ['start', ...stops().map((_, k) => k), 'home', 'end'];
 
-// ---------- planning ----------
-function computeReturnField() {
-  S.returnField = S.router.field(S.dockIdx, { mode: 'fastest', doseAware: S.env.spe, shieldEff: cfg().shieldEff });
-  S.map.buildIsochrones(S.returnField);
-}
-
-function legLines(mode) {
-  if (!S.legs[mode]) {
-    const wps = S.mission.waypoints;
-    S.legs[mode] = wps.slice(1).map((to, k) => {
-      const from = cellOf(wps[k]);
-      const field = S.router.field(cellOf(to), { mode, stopAt: from });
-      return sim.smooth(S.router.trace(field, from));
-    });
-  }
-  return S.legs[mode];
-}
-
-function outboundLine(mode, targetId) {
-  const order = S.mission.waypoints.map((w) => w.id);
-  const n = order.indexOf(targetId);
-  if (mode === 'proven') {
-    const anchor = S.route.anchors.find((a) => a.id === targetId);
-    return S.route.eva.slice(0, anchor.routeIndex + 1).map((v) => ({ lon: v.lon, lat: v.lat }));
-  }
-  const line = [];
-  legLines(mode).slice(0, n).forEach((leg, k) => line.push(...(k ? leg.slice(1) : leg)));
-  return line;
-}
-
+// ---------- the plan: out along the rover's track, and back ----------
 function buildPlan() {
-  const limits = S.limits;
-  const step = S.mode === 'proven' ? 0 : 5;
-  const line = outboundLine(S.mode, S.targetId);
-  const out = sim.profile(S.terrain, line, limits, step);
-  const back = sim.profile(S.terrain, line.slice().reverse(), limits, step);
+  const line = S.route.eva.map((v) => ({ lon: v.lon, lat: v.lat }));
+  const out = sim.profile(S.terrain, line, S.limits, 0);
+  const back = sim.profile(S.terrain, line.slice().reverse(), S.limits, 0);
   const outD = out[out.length - 1].d;
   const pts = out.concat(back.slice(1).map((p) => ({ ...p, d: p.d + outD })));
-
-  const order = S.mission.waypoints.map((w) => w.id);
-  const active = order.slice(0, order.indexOf(S.targetId) + 1);
+  const idx = stops().map((wp, k) => (k === stops().length - 1 ? out.length - 1 : sim.nearestIndex(out, wp)));
   const stays = new Map();
-  const marks = [{ d: 0, label: 'DK' }];
-  for (const id of active.slice(1)) {
-    const wp = wpById(id);
-    const idx = id === S.targetId ? out.length - 1 : sim.nearestIndex(out, wp);
-    stays.set(idx, { min: wp.plannedStayMin, wpId: id });
-    marks.push({ d: out[idx].d, label: id.replace('WP', '') });
-  }
-  const timeline = sim.buildTimeline(pts, stays, sim.startState(S.mission.suit), cfg());
-  const summary = sim.summarise(timeline, S.returnField, S.terrain, S.mission.suit);
-  let units = null;
-  if (S.mode === 'proven') {
-    units = S.mission.layers.minerals.units
-      .map((u) => ({ color: u.color, from: Math.min(1, u.routeFromM / outD), to: Math.min(1, u.routeToM / outD) }))
-      .filter((u) => u.to > u.from);
-  }
-  S.plan = { out, pts, outLen: out.length, outD, stays, marks, timeline, summary, units, active: new Set(active) };
+  stops().forEach((wp, k) => { if (k) stays.set(idx[k], { min: wp.plannedStayMin, wpId: wp.id }); });
+  const tl = sim.buildTimeline(pts, stays, sim.startState(S.mission.suit), cfg());
+  const arr = [], dep = [];
+  stops().forEach((wp, k) => {
+    const a = tl.nodes.find((n) => n.i === idx[k] && (n.kind === 'walk' || n.kind === 'start'));
+    arr[k] = a;
+    dep[k] = tl.nodes.find((n) => n.kind === 'stay' && n.wpId === wp.id) || a;
+  });
+  S.plan = { out, pts, outD, idx, tl, arr, dep };
 }
 
-function replan() {
-  buildPlan();
-  S.map.drawRoute(S.plan.pts, S.plan.outLen, S.slopeOn);
-  S.map.markWaypoints(S.selectedId, S.plan.active);
-  ui.renderSummary(S.plan.summary, S.mission.suit);
-  const o = S.plan.out;
-  $('profile-stats').textContent = `${ui.fmtM(S.plan.outD)} · +${Math.round(o[o.length - 1].z - o[0].z)} m · max ${S.plan.summary.maxSlopeDeg.toFixed(1)}°`;
-  S.run.timeline = S.plan.timeline;
-  S.run.stays = S.plan.stays;
-  refresh(sim.stateAt(S.plan.timeline, 0), true);
+function legInfo(k) {
+  const { out, idx, arr, dep } = S.plan;
+  let steep = 0;
+  for (let i = idx[k - 1]; i <= idx[k]; i++) steep = Math.max(steep, Math.abs(out[i].slope));
+  const word = steep < 8 ? 'gentle ground' : steep < 13 ? 'a steady climb' : 'one steep stretch';
+  return { min: arr[k].t - dep[k - 1].t, dist: out[idx[k]].d - out[idx[k - 1]].d, steep, word };
 }
 
-// ---------- live state ----------
-function backPath(st) {
-  return S.router.trace(S.returnField, cellOf(st));
-}
-
-function vitals(st) {
+// ---------- suit strip ----------
+function showSuit(st) {
   const suit = S.mission.suit;
-  const c = cfg();
-  const backSec = S.returnField.cost[cellOf(st)] / (S.env.dust ? DUST_PACE : 1);
-  const line = backPath(st);
-  let backDist = 0;
-  for (let i = 1; i < line.length; i++) backDist += groundMetres(line[i - 1], line[i]);
-  const m = suit.metabolic;
-  const moving = st.kind === 'walk';
-  return {
-    t: st.t, o2: st.o2, batt: st.batt, dose: st.dose,
-    o2Rate: 1 + (moving ? m.consumptionGainPerUphillDeg * Math.max(0, st.slope) + m.consumptionGainPerDownhillDeg * Math.max(0, -st.slope) : 0),
-    moving, slope: st.slope, cls: st.cls,
-    paceKmh: sim.speedKmh(st.slope, suit, S.env),
-    holdText: st.kind === 'stay' ? `working at ${st.wpId}` : S.run.done ? 'at dock' : 'holding',
-    doseRate: sim.doseRateMSvPerHour(st.shield, c),
-    shieldPct: st.shield * c.shieldEff * 100,
-    spe: S.env.spe,
-    backMin: backSec / 60, backDist,
-    margin: st.o2 - suit.oxygen.reserveMin - sim.returnNeedMin(backSec),
-    climb: st.z - S.plan.pts[0].z,
-  };
-}
-
-function refresh(st, full) {
+  const air = st.o2 - suit.oxygen.reserveMin;
+  const homeSec = S.returnField.cost[cellOf(st)];
+  const spare = air - sim.returnNeedMin(homeSec);
+  $('s-air').textContent = mins(air);
+  $('s-home').textContent = homeSec < 30 ? 'you are home' : mins(homeSec / 60);
+  $('s-time').textContent = mins(st.t);
+  $('s-dose').textContent = `${st.dose.toFixed(2)} mSv`;
+  $('suit').dataset.level = spare < 20 ? 'stop' : spare < 60 ? 'care' : '';
+  $('suit-line').innerHTML = homeSec < 30
+    ? (st.t < 1 ? 'You are at the rover with full tanks: <b>8 hours</b> of air.' : `You are home, with <b>${mins(air)}</b> of air left.`)
+    : `From here you can walk home and still have <b>${mins(spare)}</b> of air to spare.`;
   S.map.setCrew(st.lon, st.lat);
-  if (!full) return;
-  const v = vitals(st);
-  ui.renderVitals(v, S.mission.suit);
-  let cursor = null;
-  if (S.run.active && !S.run.aborted) cursor = st.d <= S.plan.outD ? st.d : Math.max(0, 2 * S.plan.outD - st.d);
-  ui.drawProfile($('profile'), S.plan.out, S.plan.marks, S.plan.units, cursor);
-  updateStatus(v);
-  S.lastState = st;
+  S.last = st;
 }
 
-function updateStatus(v) {
-  if (v.margin < 20) return ui.setStatus('warning', 'WARNING', 'Walk-back margin under 20 min');
-  if (S.plan.summary.nogoPts && !S.run.aborted) return ui.setStatus('warning', 'WARNING', 'Route crosses no-go terrain');
-  if (S.env.spe) return ui.setStatus('warning', 'WARNING', S.run.aborted ? 'Returning to dock' : 'Solar particle event');
-  if (S.env.dust) return ui.setStatus('caution', 'CAUTION', 'Dust storm, reduced pace');
-  if (v.margin < 60) return ui.setStatus('caution', 'CAUTION', 'Walk-back margin under 1 h');
-  if (v.moving && v.cls >= 1) return ui.setStatus('caution', 'CAUTION', `On ${CLASS_NAMES[v.cls]} slope`);
-  return ui.setStatus('nominal', 'NOMINAL', S.run.active ? 'All margins green' : 'Plan within limits');
+function animate(tl, tA, tB, done) {
+  const token = ++S.anim;
+  const t0 = performance.now(), dur = 1900;
+  const finish = () => { if (token !== S.anim) return; S.anim++; showSuit(sim.stateAt(tl, tB)); if (done) done(); };
+  const frame = (now) => {
+    if (token !== S.anim) return;
+    const f = Math.min(1, (now - t0) / dur);
+    const e = f < 0.5 ? 2 * f * f : 1 - Math.pow(-2 * f + 2, 2) / 2;
+    showSuit(sim.stateAt(tl, tA + (tB - tA) * e));
+    if (f < 1) requestAnimationFrame(frame); else finish();
+  };
+  requestAnimationFrame(frame);
+  setTimeout(finish, dur + 400); // still lands if the tab is in the background
 }
 
-function phaseText(st) {
-  if (S.run.done) return 'EVA complete. Crew at dock.';
-  if (!S.run.active) return 'Crew at dock';
-  if (S.run.aborted) return 'Returning to dock on the recalculated route';
-  if (st.kind === 'stay') return `Working at ${st.wpId} · ${wpById(st.wpId).name}`;
-  return st.d <= S.plan.outD ? `Outbound to ${S.targetId}` : 'Inbound to dock';
+// ---------- layers ----------
+function renderLayers() {
+  const row = (l) => `
+    <div class="layer" data-layer="${l.id}">
+      <label>
+        <input type="checkbox" ${S.on.has(l.id) ? 'checked' : ''}>
+        <span class="layer__name">${esc(l.name)}</span>
+        <span class="layer__desc">${esc(l.desc)}</span>
+        <span class="layer__from"><b>${esc(l.kind)}</b>${esc(l.from)}</span>
+      </label>
+      ${S.on.has(l.id) && l.id !== 'track' && l.id !== 'minerals' ? `<input type="range" min="15" max="100" value="${Math.round((S.opacity[l.id] ?? 0.8) * 100)}" aria-label="How strongly to show ${esc(l.name)}">` : ''}
+      ${S.on.has(l.id) && l.coarse && S.map.view === 'walk' ? `<p class="layer__coarse">${esc(l.coarse)}</p>` : ''}
+    </div>`;
+  $('layers-panel').innerHTML = `
+    <h3>Always on <small>· the photo from orbit (MRO · HiRISE and CTX cameras)</small></h3>
+    <h3>On the trail</h3>${LAYERS.filter((l) => l.group === 'trail').map(row).join('')}
+    <h3>From orbit <small>· best when zoomed out</small></h3>${LAYERS.filter((l) => l.group === 'orbit').map(row).join('')}`;
+  $('layers-count').textContent = S.on.size ? String(S.on.size) : '';
+  $('layers-count').hidden = S.on.size === 0;
+  const lg = [...S.on].map((id) => LAYERS.find((l) => l.id === id)).filter((l) => l && l.legend).pop();
+  $('legend').hidden = !lg;
+  if (lg) $('legend').innerHTML = `<b>${esc(lg.name)}</b>${lg.legend.map(([c, t]) => `<span><i style="background:${c}"></i>${esc(t)}</span>`).join('')}`;
 }
 
-// ---------- playback ----------
-function tick(now) {
-  const r = S.run;
-  if (!r.active || !r.playing) return;
-  const dt = Math.min(250, now - r.last);
-  r.last = now;
-  r.t += (dt / 60000) * r.speed;
-  const st = sim.stateAt(r.timeline, r.t);
-  const full = now - r.uiAt > 90 || st.done;
-  if (st.done) { r.playing = false; r.done = true; }
-  if (full) r.uiAt = now;
-  refresh(st, full);
-  if (full) $('phase').textContent = phaseText(st);
-  if ((S.env.spe || S.env.dust) && !r.aborted && now - r.alertAt > 1500) { r.alertAt = now; showHazard(st); }
-  if (st.done) {
-    $('btn-run').textContent = 'EVA complete';
-    $('btn-run').disabled = true;
-    if (r.aborted) S.map.drawReturn(null);
-    showHazard(st);
-    return;
-  }
-  requestAnimationFrame(tick);
+function setLayer(id, on, opacity) {
+  if (on) S.on.add(id); else S.on.delete(id);
+  if (opacity != null) S.opacity[id] = opacity;
+  S.map.setLayer(id, on, S.opacity[id] ?? null);
+  if (id === 'slope' && S.plan) S.map.drawRoute(S.plan.out, on);
 }
 
-function setPlanLocked(locked) {
-  for (const b of document.querySelectorAll('#target-seg button, #mode-seg button')) b.disabled = locked;
+function useLayers(ids) {
+  for (const l of LAYERS) setLayer(l.id, ids.includes(l.id));
+  renderLayers();
 }
 
-function toggleRun() {
-  const r = S.run;
-  if (r.done) return;
-  if (!r.active) {
-    Object.assign(r, { active: true, playing: true, aborted: false, t: 0, last: performance.now(), timeline: S.plan.timeline, stays: S.plan.stays });
-    setPlanLocked(true);
-    $('btn-reset').disabled = false;
-  } else {
-    r.playing = !r.playing;
-    r.last = performance.now();
-  }
-  $('btn-run').textContent = r.playing ? 'Pause' : 'Resume';
-  if (r.playing) requestAnimationFrame(tick);
+// ---------- chapters ----------
+function stepsNav() {
+  const ch = CH();
+  $('steps').innerHTML = ch.map((c, i) => {
+    const label = c === 'start' ? '●' : c === 'home' ? '⌂' : c === 'end' ? '✓' : String(c + 1);
+    const name = c === 'start' ? 'Introduction' : c === 'home' ? 'The way home' : c === 'end' ? 'Back at the rover' : `Stop ${c + 1}`;
+    return `${i ? `<i ${i <= S.step ? 'data-done' : ''}></i>` : ''}<button type="button" data-step="${i}" aria-label="${name}" ${i === S.step ? 'aria-current="step"' : ''} ${i < S.step ? 'data-done' : ''}>${label}</button>`;
+  }).join('');
 }
 
-function reset() {
-  Object.assign(S.run, { active: false, playing: false, done: false, aborted: false, t: 0 });
-  $('btn-run').textContent = 'Start EVA';
-  $('btn-run').disabled = false;
-  $('btn-reset').disabled = true;
-  setPlanLocked(false);
-  S.map.drawReturn(null);
-  replan();
-  $('phase').textContent = phaseText(S.lastState);
-  showHazard(S.lastState);
+function sourcesLine(ids) {
+  const list = ids.map((id) => S.mission.sources.find((s) => s.id === id)).filter(Boolean);
+  return list.length ? `<p class="src">How we know: ${list.map((s) => `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)}</a>`).join(' · ')}</p>` : '';
 }
 
-// ---------- hazards ----------
-// Rebuild what is left of the walk from the crew's current state under current conditions.
-function remainingTimeline(st) {
-  const tl = S.run.timeline;
-  const rest = tl.pts.slice(st.nextIndex);
-  const first = { ...rest[0], lon: st.lon, lat: st.lat, z: st.z, shield: st.shield, d: st.d }; // keep distance along the plan
-  const pts = [first];
-  for (const p of rest) pts.push({ ...p, d: pts[pts.length - 1].d + groundMetres(pts[pts.length - 1], p) });
-  const stays = new Map();
-  for (const [idx, stay] of S.run.stays) {
-    if (idx > st.nextIndex || (idx === st.nextIndex && st.kind !== 'stay')) stays.set(idx - st.nextIndex + 1, stay);
-  }
-  return { timeline: sim.buildTimeline(pts, stays, { t: st.t, o2: st.o2, batt: st.batt, dose: st.dose }, cfg()), stays };
+function startHTML() {
+  const m = S.mission, b = m.briefing, q = m.question, w = S.conditions.weather;
+  return `
+    <p class="eyebrow">Gale crater, Mars · a ${metres(m.eva.oneWayM)} walk</p>
+    <h1>${esc(b.title)}</h1>
+    <figure class="photo photo--wide">
+      <img src="assets/img/hero.jpg" alt="The trail climbing across ridged ground, marked by stacked-stone cairns">
+      <figcaption>The real ground of this walk, built in Blender from orbital height data and photos. The orange line is the trail.</figcaption>
+    </figure>
+    <p class="lede">${esc(b.body[0])}</p>
+    <p>${esc(b.body[1])}</p>
+    <div class="question">
+      <h2>${esc(q.title)}</h2>
+      <p>${esc(q.text)}</p>
+      <small>${esc(q.factCheck)}</small>
+    </div>
+    <div class="facts">
+      <div><b>${metres(m.eva.oneWayM)}</b><span>each way, on ground the rover already drove</span></div>
+      <div><b>${stops().length} stops</b><span>each one a real place the rover worked</span></div>
+      <div><b>${mins(S.plan.tl.end.t)}</b><span>outside, with 8 hours of air</span></div>
+    </div>
+    <p class="weather"><b>Weather at the site.</b> High ${w.airMaxC}°C, low ${w.airMinC}°C, sky: ${esc(String(w.sky).toLowerCase())}. Latest report from the rover’s own weather station, Mars day ${w.sol} (${esc(w.earthDate)}).</p>
+    <div class="teach"><b>On the map now</b>The whole of Gale crater, 154 km across. Colours show height, measured by two orbiters. Blue dots are places where orbiters spotted minerals that only form in water. Your walk is the orange pin near the middle.
+      <small>Each stop switches on the map layer that matters there. Open “Map layers” to mix your own.</small></div>
+    <details><summary>See the whole walk in 3D</summary>
+      <model-viewer src="assets/models/site.glb" alt="3D model of the walk across the ridges" camera-controls touch-action="pan-y" interaction-prompt="none" camera-orbit="25deg 58deg 75%" auto-rotate rotation-per-second="5deg" shadow-intensity="0" exposure="1.1" loading="lazy"></model-viewer>
+      <small>True-scale ground from the 1 m orbital height model with the orbital photo laid over it (tinted). Cairns are drawn large so you can see them. Built in Blender.</small>
+    </details>
+    ${sourcesLine(q.sources)}`;
 }
 
-function returnTimeline(st) {
-  const line = [{ lon: st.lon, lat: st.lat }, ...sim.smooth(backPath(st)).slice(1)];
-  const pts = sim.profile(S.terrain, line, S.limits, 5);
-  return sim.buildTimeline(pts, new Map(), { t: st.t, o2: st.o2, batt: st.batt, dose: st.dose }, cfg());
+function stopHTML(k) {
+  const wp = stops()[k], p = wp.plain;
+  const leg = k ? legInfo(k) : null;
+  const layer = LAYERS.find((l) => l.id === p.layer);
+  return `
+    <p class="eyebrow">Stop ${k + 1} of ${stops().length}${leg ? ` · ${mins(leg.min)} walk · ${leg.word}` : ' · start'}</p>
+    <h1>${esc(p.title)}</h1>
+    <p class="place">${esc(wp.name)}</p>
+    <figure class="photo">
+      <img src="${esc(wp.pov.imageUrl)}" alt="${esc(p.see)}" referrerpolicy="no-referrer">
+      <figcaption>What you will see. Photographed by the Curiosity rover from this spot on ${esc(wp.pov.utc.slice(0, 10))}. ${esc(wp.pov.credit)}</figcaption>
+    </figure>
+    <p class="lede">${esc(wp.story)}</p>
+    <h2>Why stop here</h2>
+    <p>${esc(p.why)}</p>
+    <h2>Your job here${wp.plannedStayMin ? ` · ${wp.plannedStayMin} min` : ''}</h2>
+    <ul class="jobs">${p.do.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
+    <div class="teach"><b>On the map now${layer ? ` · ${esc(layer.name)}` : ' · the photo from orbit'}</b>${esc(p.teach)}
+      <small>${layer ? `${esc(layer.kind)} data from ${esc(layer.from)}.` : 'Optical data from Mars Reconnaissance Orbiter · HiRISE.'}</small></div>
+    ${wp.earthNamesakes.length ? `<p class="earth">Named after a place on Earth: ${wp.earthNamesakes.map((n) => `<a href="${esc(n.url)}" target="_blank" rel="noopener">see ${esc(n.name)} from orbit</a>`).join(' · ')}</p>` : ''}
+    <details><summary>Stand here in 3D</summary>
+      <model-viewer src="${esc(wp.model.src)}" alt="3D model of the ground at ${esc(wp.name)}" camera-controls touch-action="pan-y" interaction-prompt="none"
+        camera-target="1.5m 1m 0m" camera-orbit="-40deg 72deg 22m" min-camera-orbit="auto auto 6m" max-camera-orbit="auto auto 110m" shadow-intensity="0" exposure="1.1" loading="lazy"></model-viewer>
+      <small>The real shape of the ground here, at true scale, from the 1 m orbital height model. The figure is 1.8 m tall.${k === 0 ? ' The rover is our team’s own model.' : ''} Drag to look around, scroll to pull back.</small>
+    </details>
+    ${sourcesLine(wp.science.sources)}`;
 }
 
-function optionFacts(tl, st) {
-  const reserve = S.mission.suit.oxygen.reserveMin;
-  return `${ui.fmtDur(tl.end.t - st.t)} · ${ui.fmtM(tl.pts[tl.pts.length - 1].d)} · +${(tl.end.dose - st.dose).toFixed(2)} mSv · O₂ ${ui.fmtHM(tl.end.o2 - reserve)} at dock`;
+function homeHTML() {
+  const far = stops()[stops().length - 1];
+  const direct = S.returnField.cost[cellOf(far)] / 60;
+  return `
+    <p class="eyebrow">Before you turn around</p>
+    <h1>The way home</h1>
+    <p class="lede">The first question on any walk is not “what will I find?” It is “can I get back?”</p>
+    <p>Every point on this map knows the answer. The white lines are five minutes of walking apart, measured over the real slopes. From here, the rover is <b>${mins(direct)}</b> away on foot.</p>
+    <p>That is what a cairn is for. It does not tell you where to go. It tells you that you can come back.</p>
+    <h2>Practise the bad day</h2>
+    <p>The Sun sometimes throws out a burst of radiation. With no thick air or magnetic field to stop it, an astronaut on Mars has to act fast.</p>
+    <p style="margin-top:14px"><button class="btn btn--storm" id="btn-storm" type="button" aria-pressed="${S.env.spe}">${S.env.spe ? 'End the drill' : 'Start the drill: a solar storm arrives'}</button></p>
+    <div id="drill"></div>
+    ${sourcesLine(['nasa-rad-safer', 'jpl-sept-2017'])}`;
 }
 
-function showHazard(st) {
-  const { spe, dust } = S.env;
-  if (!spe && !dust) { ui.renderAlert(null); if (!S.run.aborted) S.map.drawReturn(null); return; }
-  const c = cfg();
-  const title = spe && dust ? 'Solar particle event + dust storm' : spe ? 'Solar particle event' : 'Dust storm';
-  const bits = [];
-  if (spe) bits.push(`Dose rate ×${c.speMultiplier}: ${(sim.doseRateMSvPerHour(st.shield, c) * 1000).toFixed(0)} µSv/h here.`);
-  if (dust) bits.push('Pace −30%, battery load +15%.');
-  const level = spe ? 'warning' : 'caution';
-  const r = S.run;
-
-  if (r.done) return ui.renderAlert({ level, title, detail: `${bits.join(' ')} Crew is at the dock.` });
-  if (!r.active) {
-    const s = S.plan.summary;
-    return ui.renderAlert({ level, title, detail: `${bits.join(' ')} Hold at the dock: this plan would now take ${ui.fmtDur(s.durationMin)} and ${s.doseMSv.toFixed(2)} mSv.` });
-  }
-  if (r.aborted) {
-    return ui.renderAlert({ level, title, detail: `${bits.join(' ')} Returning on the recalculated route: ${ui.fmtDur(r.timeline.end.t - st.t)} to the dock.` });
-  }
-  const cont = remainingTimeline(st);
-  const ret = returnTimeline(st);
-  S.map.drawReturn(ret.pts);
+function drillHTML() {
+  if (!S.env.spe) return '';
+  const c = cfg(), d = S.drill;
+  const less = Math.round((1 - d.direct.dose / d.trail.dose) * 100);
   const best = S.terrain.shelters(1, 10)[0];
-  ui.renderAlert({
-    level, title,
-    detail: `${bits.join(' ')} Best terrain shielding on this site cuts dose by ${Math.round(best.blocked * c.shieldEff * 100)}%, not enough to wait it out.`,
-    options: [
-      { name: 'Return now', best: true, facts: optionFacts(ret, st), action: 'Execute return', run: () => executeReturn() },
-      { name: 'Continue plan', facts: optionFacts(cont.timeline, st) },
-    ],
-  });
+  return `
+    <div class="choices">
+      <span class="drill-tag">Drill · simulated storm · radiation ×${c.speMultiplier}</span>
+      <button class="choice" type="button" data-via="direct" ${S.homeVia === 'direct' ? 'data-best' : 'data-best'}>
+        <b>Take the dashed white line</b>
+        <span>${mins(d.direct.min)} to the rover · ${d.direct.dose.toFixed(2)} mSv on the way. Redcairn just drew this: the quickest safe ground home.</span>
+      </button>
+      <button class="choice" type="button" data-via="trail">
+        <b>Go back the way you came</b>
+        <span>${mins(d.trail.min)} to the rover · ${d.trail.dose.toFixed(2)} mSv on the way.</span>
+      </button>
+      <p>The new line cuts the dose by <b>${less}%</b>. Could you hide behind a hill instead? The purple patches show where the ground blocks part of the sky. The best spot here stops only ${Math.round(best.blocked * c.shieldEff * 100)}%. Not enough. Go home.</p>
+    </div>`;
 }
 
-function executeReturn() {
-  const st = sim.stateAt(S.run.timeline, S.run.t);
-  const ret = returnTimeline(st);
-  Object.assign(S.run, { timeline: ret, stays: new Map(), aborted: true });
-  S.map.drawReturn(ret.pts);
-  showHazard(st);
-  $('phase').textContent = phaseText(st);
+function endHTML() {
+  const tl = S.finalTl || S.plan.tl;
+  const kinds = [['Sharp photos from orbit', 'Mars Reconnaissance Orbiter'], ['Height and slope', 'MRO, Mars Global Surveyor, Mars Express'], ['Night temperature', 'Mars Odyssey'],
+    ['Water minerals from orbit', 'MRO, Mars Express'], ['Geologic map', 'USGS'], ['Rock chemistry on the ground', 'Curiosity rover'],
+    ['Radiation', 'Curiosity rover'], ['Weather', 'Curiosity rover'], ['Eye-level photos', 'Curiosity rover']];
+  return `
+    <p class="eyebrow">Back at the rover</p>
+    <h1>You are home.</h1>
+    <div class="facts">
+      <div><b>${mins(tl.end.t)}</b><span>outside</span></div>
+      <div><b>${stops().length} stops</b><span>${stops().reduce((n, w) => n + w.plain.do.length, 0)} jobs done</span></div>
+      <div><b>${mins(tl.end.o2 - S.mission.suit.oxygen.reserveMin)}</b><span>of air still in the tanks</span></div>
+    </div>
+    <p class="lede">In your sample bag is rock from both sides of a line that marks when this part of Mars began to dry. On Earth, it will help answer how long water lasted under this mountain.</p>
+    <h2>What this guide is made of</h2>
+    <ul class="made-of">${kinds.map(([a, b]) => `<li>${esc(a)}<span>${esc(b)}</span></li>`).join('')}</ul>
+    <p style="margin-top:12px"><button class="link-btn" id="about-2" type="button">See every source and how AI was used</button></p>
+    <p class="closing">The rover could not come home. Its last job is to make sure you can.</p>`;
 }
 
-function toggleHazard(key, btn) {
-  const r = S.run;
-  const st = r.active ? sim.stateAt(r.timeline, r.t) : null;
-  S.env[key] = !S.env[key];
-  btn.setAttribute('aria-pressed', String(S.env[key]));
-  computeReturnField();
-  if (!r.active) { replan(); showHazard(S.lastState); return; }
-  if (r.done) { showHazard(S.lastState); return; }
-  // Conditions changed mid-walk: re-time whatever is left from where the crew stands.
-  if (r.aborted) r.timeline = returnTimeline(st);
-  else { const rest = remainingTimeline(st); r.timeline = rest.timeline; r.stays = rest.stays; }
-  r.alertAt = performance.now();
-  showHazard(st);
-  refresh(sim.stateAt(r.timeline, r.t), true);
+function go(step, jump) {
+  const ch = CH();
+  const prev = S.step;
+  step = Math.max(0, Math.min(ch.length - 1, step));
+  if (S.env.spe && ch[step] !== 'home' && ch[step] !== 'end') toggleStorm(true);
+  S.step = step;
+  S.reached = Math.max(S.reached, step);
+  const c = ch[step];
+  const { tl, arr, dep } = S.plan;
+  const last = stops().length - 1;
+
+  stepsNav();
+  $('chapter').innerHTML = c === 'start' ? startHTML() : c === 'home' ? homeHTML() : c === 'end' ? endHTML() : stopHTML(c);
+  $('chapter').scrollTop = 0;
+  if (c === 'home') { $('drill').innerHTML = drillHTML(); }
+  $('btn-prev').disabled = step === 0;
+  $('btn-next').textContent = c === 'start' ? 'Begin the walk' : c === 'end' ? 'Start again' : c === 'home' ? 'Walk home' : c === last ? 'Plan the way home' : `Walk to stop ${c + 2}`;
+
+  useLayers(c === 'start' ? ['mola', 'minerals'] : c === 'home' ? (S.env.spe ? ['home', 'shield'] : ['home']) : c === 'end' ? [] : ({ slope: ['slope'], rocks: ['rocks'], relief: ['relief'] }[stops()[c].plain.layer] || []));
+  const wantView = c === 'start' ? 'crater' : 'walk';
+  if (S.map.view !== wantView) S.map.setView(wantView);
+
+  const forward = !jump && step === prev + 1;
+  if (typeof c === 'number') {
+    S.map.markStops(c, c);
+    if (forward && c > 0) animate(tl, dep[c - 1].t, arr[c].t); else { S.anim++; showSuit(sim.stateAt(tl, arr[c].t)); }
+    S.map.panTo(stops()[c].lon, stops()[c].lat);
+  } else if (c === 'home') {
+    S.map.markStops(last, last);
+    S.anim++; showSuit(sim.stateAt(tl, dep[last].t));
+  } else if (c === 'end') {
+    S.map.markStops(-1, last + 1);
+    const useTl = S.finalTl || tl;
+    if (forward) animate(useTl, dep[last].t, useTl.end.t, () => S.map.drawReturn(null)); else { S.anim++; showSuit(sim.stateAt(useTl, useTl.end.t)); S.map.drawReturn(null); }
+  } else {
+    S.map.markStops(-1, 0);
+    S.anim++; showSuit(sim.stateAt(tl, 0));
+  }
+  if (c !== 'home' && c !== 'end') { S.finalTl = null; S.map.drawReturn(null); }
 }
 
-// ---------- waypoints ----------
-function selectWaypoint(id, pan) {
-  S.selectedId = id;
-  const wp = wpById(id);
-  const dock = S.mission.waypoints[0];
-  S.map.markWaypoints(id, S.plan.active);
-  ui.renderWaypoint(wp, {
-    units: S.mission.layers.minerals.units,
-    sources: S.mission.sources,
-    geologicUnit: S.mission.site.geologicUnit,
-    distM: wp.routeDistM,
-    climbM: S.terrain.elevAt(wp.lon, wp.lat) - S.terrain.elevAt(dock.lon, dock.lat),
-    backMin: S.returnField.cost[cellOf(wp)] / 60,
-    isTarget: id === S.targetId,
-    onSetTarget: setTarget,
-  });
-  if (pan) S.map.focus(wp.lon, wp.lat);
+// ---------- the storm drill ----------
+function toggleStorm(silent) {
+  S.env.spe = !S.env.spe;
+  S.returnField = S.router.field(S.dockIdx, { mode: 'fastest', doseAware: S.env.spe, shieldEff: cfg().shieldEff });
+  S.map.buildHome(S.returnField);
+  const last = stops().length - 1;
+  if (S.env.spe) {
+    const st = sim.stateAt(S.plan.tl, S.plan.dep[last].t);
+    const start = { t: st.t, o2: st.o2, batt: st.batt, dose: st.dose };
+    const line = [{ lon: st.lon, lat: st.lat }, ...sim.smooth(S.router.trace(S.returnField, cellOf(st))).slice(1)];
+    const direct = sim.buildTimeline(sim.profile(S.terrain, line, S.limits, 5), new Map(), start, cfg());
+    const back = S.plan.pts.slice(S.plan.idx[last]).map((p) => ({ ...p, d: p.d - S.plan.outD }));
+    const trail = sim.buildTimeline(back, new Map(), start, cfg());
+    const sum = (tl) => ({ tl, min: tl.end.t - st.t, dose: tl.end.dose - st.dose });
+    S.drill = { direct: sum(direct), trail: sum(trail) };
+    S.homeVia = 'direct';
+    S.finalTl = direct;
+    S.map.drawReturn(direct.pts);
+  } else {
+    S.drill = null; S.finalTl = null; S.homeVia = 'trail';
+    S.map.drawReturn(null);
+  }
+  if (!silent) go(S.step, true);
 }
 
-function setTarget(id) {
-  if (S.run.active) return;
-  S.targetId = id;
-  ui.setSegment($('target-seg'), 'target', id);
-  replan();
-  selectWaypoint(S.selectedId, false);
+// ---------- about ----------
+function aboutHTML() {
+  const m = S.mission;
+  const src = (id) => m.sources.find((s) => s.id === id);
+  return `
+    <section>
+      <h3>The five resources we were given, and what each one does here</h3>
+      <ul>${m.anchorResources.map((a) => `<li><b><a href="${esc(src(a.source).url)}" target="_blank" rel="noopener">${esc(a.name)}</a></b>${esc(a.role)}</li>`).join('')}</ul>
+      <div class="live" id="m2020-live"></div>
+    </section>
+    <section>
+      <h3>Every map layer, and where it comes from</h3>
+      <div class="tablewrap"><table><thead><tr><th>Layer</th><th>Kind of data</th><th>Mission or source</th></tr></thead><tbody>
+        <tr><td>Photo from orbit (always on)</td><td>Optical</td><td>Mars Reconnaissance Orbiter · HiRISE and CTX</td></tr>
+        ${LAYERS.map((l) => `<tr><td>${esc(l.name)}</td><td>${esc(l.kind)}</td><td>${esc(l.from)}</td></tr>`).join('')}
+        <tr><td>Weather report</td><td>Atmospheric</td><td>Curiosity rover · REMS</td></tr>
+        <tr><td>Photos at each stop</td><td>Optical, from the ground</td><td>Curiosity rover · navigation cameras</td></tr>
+      </tbody></table></div>
+    </section>
+    <section>
+      <h3>What is real and what is simulated</h3>
+      <p><b>Real:</b> the ground, its height and slopes, the route (the rover’s own track), the photos, the rock findings, the weather report, the normal radiation rate and the measured effect of terrain on radiation. Our height model matches the rover’s own measurements to within ${esc(S.route.summary.demVsRoverRmsResidualM)} m along the route.</p>
+      <p style="margin-top:8px"><b>Simulated:</b> the suit (air, walking pace), the astronaut’s position, and the solar storm, which is made ${cfg().speMultiplier} times stronger than normal radiation so the drill is easy to follow.</p>
+      <p style="margin-top:8px"><b>One correction we want to be clear about:</b> ${esc(m.question.factCheck)}</p>
+    </section>
+    <section>
+      <h3>How it is built</h3>
+      <p>Small scripts in the project fetch public mission data and bake it into files. Your browser then works out slope, shelter, walking time and the way home for ${S.terrain.size.toLocaleString('en-US')} patches of ground, with no server. The 3D models and the opening picture are made in Blender from the same data.</p>
+    </section>
+    <section>
+      <h3>All sources</h3>
+      <div class="tablewrap"><table><tbody>${m.sources.map((s) => `<tr><td><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)}</a></td><td>${esc(s.org)}</td><td>${esc(s.use)}</td></tr>`).join('')}</tbody></table></div>
+    </section>
+    <section>
+      <h3>How AI was used</h3>
+      <p>${esc(m.aiDisclosure)}</p>
+      <p style="margin-top:8px">This is an independent hackathon project. It is not affiliated with or endorsed by any space agency.</p>
+    </section>`;
 }
 
-function hover(lon, lat) {
-  const el = $('readout');
-  if (lon == null || !S.terrain.contains(lon, lat)) { el.textContent = ''; return; }
-  const t = S.terrain, i = t.cellIndex(lon, lat);
-  const dock = S.mission.waypoints[0];
-  el.textContent =
-    `${lat.toFixed(5)}°  ${lon.toFixed(5)}°E\n` +
-    `elev   ${(t.z[i] - t.elevAt(dock.lon, dock.lat) >= 0 ? '+' : '−')}${Math.abs(t.z[i] - t.elevAt(dock.lon, dock.lat)).toFixed(1)} m vs dock\n` +
-    `slope  ${t.slope[i].toFixed(1)}°  ${CLASS_NAMES[t.cls[i]]}\n` +
-    `home   ${ui.fmtDur(S.returnField.cost[i] / 60)}\n` +
-    `sky    ${(t.shield[i] * 100).toFixed(0)}% hidden`;
+function openAbout() {
+  $('about-body').innerHTML = aboutHTML();
+  $('about').showModal();
+  fetchJson(S.mission.liveFeeds.perseveranceLatest).then((d) => {
+    const im = d.images && d.images[0];
+    if (im && $('m2020-live')) {
+      $('m2020-live').innerHTML = `<img src="${esc(im.image_files.medium)}" alt="Latest navigation camera frame from the Perseverance rover" referrerpolicy="no-referrer">
+        <p class="src">Live: the newest picture from the other rover, Perseverance, at Jezero crater. Mars day ${esc(im.sol)} (${esc(im.date_taken_utc.slice(0, 10))}). ${esc(im.credit)}</p>`;
+    }
+  }).catch(() => {});
 }
 
 // ---------- boot ----------
 async function boot() {
-  const [mission, route] = await Promise.all([fetchJson('data/mission.json'), fetchJson('data/route.json')]);
-  S.mission = mission;
-  S.route = route;
+  const [mission, route, conditions] = await Promise.all([fetchJson('data/mission.json'), fetchJson('data/route.json'), fetchJson('data/conditions.json')]);
+  Object.assign(S, { mission, route, conditions });
   S.limits = { caution: mission.suit.slopeLimitsDeg.caution, noGo: mission.suit.slopeLimitsDeg.noGo };
   S.terrain = await Terrain.load('data/terrain.json', S.limits);
   S.router = new Router(S.terrain, mission.suit);
-  S.dockIdx = cellOf(mission.waypoints[0]);
-
-  $('eva-name').textContent = `${mission.eva.id.toUpperCase()} · ${mission.eva.name}`;
-  $('site-name').textContent = `${mission.site.name}, ${mission.site.locality}`;
-  const spe = mission.hazards.scenarios.find((x) => x.id === 'spe-2017-analog');
-  $('spe-sub').textContent = `Dose rate ×${spe.demoSeverityMultiplier}`;
+  S.dockIdx = cellOf(stops()[0]);
+  S.returnField = S.router.field(S.dockIdx, { mode: 'fastest' });
+  buildPlan();
 
   S.map = new MapView($('map'), mission, S.terrain);
-  S.map.buildStaticRasters();
-  S.map.drawScience(route);
-  S.map.drawTrack(route);
-  S.map.drawShelters(S.terrain.shelters(4, 70), cfg().shieldEff);
-  S.map.addWaypoints(mission.waypoints);
-  S.map.onWaypoint = (id) => selectWaypoint(id, true);
-  S.map.onHover = hover;
+  S.map.buildRasters();
+  S.map.buildHome(S.returnField);
+  S.map.drawStatic(route, conditions, S.terrain.shelters(4, 70), cfg().shieldEff);
+  S.map.addStops(stops());
+  S.map.drawRoute(S.plan.out, false);
+  S.map.onStop = (k) => go(k + 1, true);
+  S.map.onView = (name) => { for (const b of $('views').querySelectorAll('button')) b.setAttribute('aria-pressed', String(b.dataset.view === name)); if (S.plan) renderLayers(); };
 
-  $('target-seg').innerHTML = mission.waypoints.slice(1)
-    .map((w) => `<button type="button" role="radio" data-target="${w.id}" aria-checked="${w.id === S.targetId}" title="${w.name}">${w.id.replace('WP', '')}</button>`).join('');
-  $('target-seg').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) setTarget(b.dataset.target); });
-  $('mode-seg').addEventListener('click', (e) => {
-    const b = e.target.closest('button');
-    if (!b || S.run.active) return;
-    S.mode = b.dataset.mode;
-    ui.setSegment($('mode-seg'), 'mode', S.mode);
-    replan();
+  $('views').innerHTML = Object.entries(mission.views).map(([id, v]) => `<button type="button" data-view="${id}" aria-pressed="${id === S.map.view}">${esc(v.label)}</button>`).join('');
+  $('views').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) S.map.setView(b.dataset.view); });
+  $('steps').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) go(Number(b.dataset.step), true); });
+  $('btn-prev').addEventListener('click', () => go(S.step - 1, true));
+  $('btn-next').addEventListener('click', () => (S.step === CH().length - 1 ? go(0, true) : go(S.step + 1)));
+  $('btn-about').addEventListener('click', openAbout);
+  $('btn-layers').addEventListener('click', () => {
+    const p = $('layers-panel');
+    p.hidden = !p.hidden;
+    $('btn-layers').setAttribute('aria-expanded', String(!p.hidden));
   });
-  $('speed-seg').addEventListener('click', (e) => {
-    const b = e.target.closest('button');
-    if (!b) return;
-    S.run.speed = Number(b.dataset.speed);
-    ui.setSegment($('speed-seg'), 'speed', b.dataset.speed);
+  $('layers-panel').addEventListener('change', (e) => {
+    const row = e.target.closest('.layer');
+    if (!row || e.target.type !== 'checkbox') return;
+    setLayer(row.dataset.layer, e.target.checked);
+    renderLayers();
   });
-  $('btn-run').addEventListener('click', toggleRun);
-  $('btn-reset').addEventListener('click', reset);
-  $('btn-spe').addEventListener('click', (e) => toggleHazard('spe', e.currentTarget));
-  $('btn-dust').addEventListener('click', (e) => toggleHazard('dust', e.currentTarget));
-  $('btn-site3d').addEventListener('click', () => { ui.renderSite3D(); $('site3d').showModal(); });
-  for (const id of ['btn-about', 'btn-about-2']) $(id).addEventListener('click', () => $('about').showModal());
-
-  const layers = [
-    { id: 'slope', name: 'Slope / mobility', src: '1 m orbital elevation model', on: true, blend: true, opacity: 0.7,
-      legend: [['#3ddc84', `under ${S.limits.caution}°`], ['#ffb020', `${S.limits.caution}–${S.limits.noGo}°`], ['#ff4d4d', `over ${S.limits.noGo}°`]] },
-    { id: 'science', name: 'Rock units / science stops', src: 'Rover findings on the ground', on: true, blend: true, opacity: 1,
-      legend: mission.layers.minerals.units.map((u) => [u.color, u.label]).concat([['#4cc9f0', 'priority stop']]) },
-    { id: 'shield', name: 'Radiation shielding', src: 'Sky hidden by terrain, from elevation', on: false, blend: true, opacity: 0.8,
-      legend: [['#b388ff', 'more sky hidden = lower dose']] },
-    { id: 'iso', name: 'Walk-back time', src: 'Least-time field to the dock', on: false, blend: true, opacity: 0.85,
-      legend: [['#ffffff', 'one line per 5 min, bold per 15']] },
-    { id: 'hillshade', name: 'Shaded relief', src: '1 m orbital elevation model', on: false, blend: true, opacity: 0.6 },
-    { id: 'track', name: 'Rover track', src: 'Every drive, sols 4560–4868', on: false, blend: false },
-  ];
-  const applyLayer = (id, on, opacity) => {
-    S.map.setLayer(id, on, opacity);
-    if (id === 'slope') { S.slopeOn = on; if (S.plan) S.map.drawRoute(S.plan.pts, S.plan.outLen, on); }
-  };
-  ui.renderLayers(layers, applyLayer);
-
-  computeReturnField();
-  for (const l of layers) applyLayer(l.id, l.on, l.blend ? l.opacity : null);
-  replan();
-  selectWaypoint('DOCK', false);
-  $('phase').textContent = phaseText(S.lastState);
-
-  ui.renderAbout(mission, { cells: S.terrain.size.toLocaleString('en-US'), rms: route.summary.demVsRoverRmsResidualM, spe: spe.demoSeverityMultiplier });
-  fetchJson(mission.liveFeeds.perseveranceLatest).then((d) => {
-    const im = d.images && d.images[0];
-    if (im) ui.renderLiveFeed({ url: im.image_files.medium, sol: im.sol, date: im.date_taken_utc.slice(0, 10), credit: im.credit });
-  }).catch(() => {});
-
-  ui.renderBriefing(mission, [
-    [ui.fmtM(mission.eva.oneWayM), 'out, on ground the rover drove'],
-    [`+${Math.round(mission.eva.elevGainM)} m`, 'of climb to the turnaround'],
-    [String(mission.waypoints.length), 'cairns, each a real rover stop'],
-  ], () => S.map.resize());
-
-  let resizeTimer = 0;
-  window.addEventListener('resize', () => {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(() => { S.map.resize(); if (S.lastState) refresh(S.lastState, true); }, 120);
+  $('layers-panel').addEventListener('input', (e) => {
+    const row = e.target.closest('.layer');
+    if (row && e.target.type === 'range') setLayer(row.dataset.layer, true, e.target.value / 100);
   });
+  $('chapter').addEventListener('click', (e) => {
+    if (e.target.closest('#btn-storm')) return toggleStorm();
+    if (e.target.closest('#about-2')) return openAbout();
+    const choice = e.target.closest('.choice');
+    if (choice && S.drill) {
+      S.homeVia = choice.dataset.via;
+      S.finalTl = S.drill[S.homeVia].tl;
+      S.map.drawReturn(S.finalTl.pts);
+    }
+  });
+
+  go(0, true);
+  let timer = 0;
+  window.addEventListener('resize', () => { clearTimeout(timer); timer = setTimeout(() => S.map.resize(), 120); });
   $('app').removeAttribute('data-booting');
   S.map.resize();
+  S.map.setView('crater', false);
 }
 
 boot().catch((err) => {
   console.error(err);
-  const b = $('boot');
-  b.dataset.error = '';
   $('boot-text').textContent = `Could not start: ${err.message}`;
 });

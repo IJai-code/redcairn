@@ -3,185 +3,74 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="description" content="REDCAIRN — a hyper-local tactical EVA navigator for the first human surface walks on Mars.">
-  <meta name="theme-color" content="#090b0d">
-  <title>REDCAIRN — Mars EVA Navigator</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23090b0d'/%3E%3Crect x='6' y='21' width='20' height='5' rx='2' fill='%23ff7a45'/%3E%3Crect x='9' y='14' width='14' height='5' rx='2' fill='%23ff7a45'/%3E%3Crect x='12' y='7' width='8' height='5' rx='2' fill='%23ff7a45'/%3E%3C/svg%3E">
+  <meta name="description" content="REDCAIRN — a trail guide for the first walk on Mars, built from real orbital and rover data.">
+  <meta name="theme-color" content="#f4eee3">
+  <title>REDCAIRN — a trail guide for the first walk on Mars</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23f4eee3'/%3E%3Cellipse cx='16' cy='24' rx='10' ry='3.6' fill='%23b4441f'/%3E%3Cellipse cx='16' cy='16.5' rx='7' ry='3.2' fill='%23b4441f'/%3E%3Cellipse cx='16' cy='9.8' rx='4.2' ry='2.8' fill='%23b4441f'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
   <link rel="stylesheet" href="css/styles.css">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script type="module" src="https://unpkg.com/@google/model-viewer@4.0.0/dist/model-viewer.min.js"></script>
 </head>
 <body>
-  <div class="app" id="app" data-status="nominal" data-booting>
+  <div class="app" id="app" data-booting>
 
-    <header class="bar">
-      <div class="brand">
-        <span class="brand__mark" aria-hidden="true"><i></i><i></i><i></i></span>
-        <span class="brand__name">REDCAIRN</span>
-        <span class="brand__sub">EVA NAV</span>
-      </div>
-      <div class="bar__mission">
-        <span class="bar__eva" id="eva-name">—</span>
-        <span class="bar__site" id="site-name"></span>
-      </div>
-      <div class="bar__clock" title="Mission elapsed time for this EVA">
-        <span class="lbl">MET</span>
-        <output id="met">00:00:00</output>
-      </div>
-      <div class="status" id="status" role="status" aria-live="polite">
-        <span class="status__lamp" aria-hidden="true"></span>
-        <span class="status__text" id="status-text">BOOT</span>
-        <span class="status__why" id="status-why"></span>
-      </div>
-      <button class="btn btn--ghost" id="btn-about" type="button">Data &amp; system</button>
+    <header class="top">
+      <a class="logo" href="./" aria-label="REDCAIRN home">
+        <svg viewBox="0 0 32 30" width="30" height="28" aria-hidden="true"><ellipse cx="16" cy="24" rx="12" ry="4.4"/><ellipse cx="16" cy="15" rx="8.4" ry="3.8"/><ellipse cx="16" cy="7" rx="5" ry="3.3"/></svg>
+        <span>Redcairn</span>
+      </a>
+      <p class="top__tag">A trail guide for the first walk on Mars</p>
+      <button class="link-btn" id="btn-about" type="button">Where the data comes from</button>
     </header>
 
-    <section class="alert" id="alert" hidden aria-live="assertive"></section>
-
-    <aside class="rail" aria-label="Plan and layers">
-      <section class="panel">
-        <h2 class="panel__title">EVA plan</h2>
-        <div class="field">
-          <span class="lbl" id="lbl-target">Turnaround</span>
-          <div class="seg" id="target-seg" role="radiogroup" aria-labelledby="lbl-target"></div>
-        </div>
-        <div class="field">
-          <span class="lbl" id="lbl-mode">Route</span>
-          <div class="seg seg--stack" id="mode-seg" role="radiogroup" aria-labelledby="lbl-mode">
-            <button type="button" role="radio" data-mode="proven" aria-checked="true">
-              <b>Proven</b><small>Ground the rover drove</small>
-            </button>
-            <button type="button" role="radio" data-mode="fastest" aria-checked="false">
-              <b>Fastest</b><small>Least time on the elevation model</small>
-            </button>
-            <button type="button" role="radio" data-mode="safest" aria-checked="false">
-              <b>Gentlest</b><small>Avoids slope wherever it can</small>
-            </button>
-          </div>
-        </div>
-        <dl class="summary" id="plan-summary"></dl>
-        <p class="note" id="plan-note" hidden></p>
-      </section>
-
-      <section class="panel">
-        <h2 class="panel__title">Data layers</h2>
-        <div class="layers" id="layers"></div>
-      </section>
-
-      <section class="panel">
-        <h2 class="panel__title">Hazard drill <span class="tag tag--sim">Simulated</span></h2>
-        <div class="hazards">
-          <button class="btn btn--hazard" id="btn-spe" type="button" aria-pressed="false">
-            <b>Solar particle event</b><small id="spe-sub">Dose rate ×20</small>
-          </button>
-          <button class="btn btn--hazard" id="btn-dust" type="button" aria-pressed="false">
-            <b>Dust storm</b><small>Pace −30%, low visibility</small>
-          </button>
-        </div>
-      </section>
-      <section class="panel">
-        <button class="btn" id="btn-about-2" type="button" style="width:100%">Data sources &amp; AI use</button>
-      </section>
-    </aside>
-
-    <main class="stage">
-      <div class="mapwrap">
-        <div id="map" class="map" aria-label="Tactical map of the EVA site"></div>
-        <div class="readout" id="readout" aria-hidden="true"></div>
-        <div class="scale" id="scale" aria-hidden="true"><span class="scale__bar" id="scale-bar"></span><span id="scale-text"></span></div>
-        <div class="north" aria-hidden="true">N</div>
-        <button class="btn site3d-btn" id="btn-site3d" type="button">3D site</button>
-        <div class="boot" id="boot"><span class="boot__dot"></span><span id="boot-text">Loading terrain…</span></div>
+    <section class="story" aria-label="The walk, step by step">
+      <nav class="steps" id="steps" aria-label="Progress"></nav>
+      <div class="chapter" id="chapter" tabindex="-1"></div>
+      <div class="pager">
+        <button class="btn btn--quiet" id="btn-prev" type="button">Back</button>
+        <button class="btn btn--go" id="btn-next" type="button">Next</button>
       </div>
-      <div class="simbar">
-        <button class="btn btn--primary" id="btn-run" type="button">Start EVA</button>
-        <button class="btn" id="btn-reset" type="button" disabled>Reset</button>
-        <div class="seg seg--small" id="speed-seg" role="radiogroup" aria-label="Playback speed">
-          <button type="button" role="radio" data-speed="60" aria-checked="false">×60</button>
-          <button type="button" role="radio" data-speed="240" aria-checked="true">×240</button>
-          <button type="button" role="radio" data-speed="900" aria-checked="false">×900</button>
-        </div>
-        <span class="simbar__phase" id="phase">Crew at dock</span>
-      </div>
-      <div class="profile">
-        <div class="profile__head">
-          <span class="lbl">Elevation profile, dock to turnaround</span>
-          <span class="profile__stats" id="profile-stats"></span>
-        </div>
-        <canvas id="profile" height="96"></canvas>
-      </div>
+    </section>
+
+    <main class="mapside">
+      <div id="map" class="map" aria-label="Map of the walk"></div>
+
+      <div class="views" id="views" role="group" aria-label="How far to zoom out"></div>
+
+      <button class="layers-btn" id="btn-layers" type="button" aria-expanded="false" aria-controls="layers-panel">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3 2 8.5 12 14l10-5.5L12 3Zm-7.2 9L2 13.5 12 19l10-5.5-2.8-1.5L12 16l-7.2-4Z"/></svg>
+        Map layers <span class="layers-btn__count" id="layers-count"></span>
+      </button>
+      <aside class="layers" id="layers-panel" hidden aria-label="Map layers"></aside>
+
+      <div class="legend" id="legend" hidden></div>
+      <div class="scale" id="scale" aria-hidden="true"><span class="scale__bar" id="scale-bar"></span><span id="scale-text"></span></div>
+
+      <section class="suit" id="suit" aria-label="Your suit right now" aria-live="polite">
+        <p class="suit__line" id="suit-line"></p>
+        <dl class="suit__nums">
+          <div><dt>Air left</dt><dd id="s-air">—</dd></div>
+          <div><dt>Walk home</dt><dd id="s-home">—</dd></div>
+          <div><dt>Time outside</dt><dd id="s-time">—</dd></div>
+          <div><dt>Radiation so far</dt><dd id="s-dose">—</dd></div>
+        </dl>
+        <p class="suit__note">Suit numbers are a simulation. The ground, the route and the radiation rate are real.</p>
+      </section>
+
+      <div class="boot" id="boot"><span id="boot-text">Unfolding the map…</span></div>
     </main>
-
-    <aside class="side" aria-label="Suit telemetry and waypoint">
-      <section class="panel panel--vitals">
-        <h2 class="panel__title">Suit telemetry <span class="tag tag--sim">Simulated</span></h2>
-        <div class="vitals">
-          <div class="vital" id="v-o2">
-            <span class="lbl">Oxygen</span>
-            <output class="vital__num" id="o2-num">—</output>
-            <span class="vital__unit">h:mm primary</span>
-            <div class="gauge"><i id="o2-bar"></i><b class="gauge__reserve" id="o2-reserve" title="Reserve"></b></div>
-            <span class="vital__sub" id="o2-sub"></span>
-          </div>
-          <div class="vital" id="v-batt">
-            <span class="lbl">Battery</span>
-            <output class="vital__num" id="batt-num">—</output>
-            <span class="vital__unit">%</span>
-            <div class="gauge"><i id="batt-bar"></i></div>
-            <span class="vital__sub" id="batt-sub"></span>
-          </div>
-          <div class="vital" id="v-pace">
-            <span class="lbl">Pace</span>
-            <output class="vital__num" id="pace-num">—</output>
-            <span class="vital__unit">km/h</span>
-            <span class="vital__sub" id="pace-sub"></span>
-          </div>
-          <div class="vital" id="v-dose">
-            <span class="lbl">Radiation dose</span>
-            <output class="vital__num" id="dose-num">—</output>
-            <span class="vital__unit">mSv this EVA</span>
-            <span class="vital__sub" id="dose-sub"></span>
-          </div>
-        </div>
-        <div class="walkback" id="walkback">
-          <div class="walkback__main">
-            <span class="lbl">Walk-back margin</span>
-            <output class="walkback__num" id="margin-num">—</output>
-          </div>
-          <dl class="walkback__facts">
-            <div><dt>To dock</dt><dd id="back-dist">—</dd></div>
-            <div><dt>Walk time</dt><dd id="back-time">—</dd></div>
-            <div><dt>Climbed</dt><dd id="climb">—</dd></div>
-          </dl>
-        </div>
-      </section>
-
-      <section class="panel panel--wp" id="wp-card" aria-live="polite"></section>
-    </aside>
-  </div>
-
-  <div class="brief" id="brief" hidden>
-    <div class="brief__card" id="brief-card"></div>
   </div>
 
   <dialog class="about" id="about" aria-labelledby="about-title">
     <form method="dialog" class="about__head">
-      <h2 id="about-title">System architecture &amp; data attribution</h2>
-      <button class="btn btn--ghost" type="submit" aria-label="Close">Close</button>
+      <h2 id="about-title">Where the data comes from</h2>
+      <button class="btn btn--quiet" type="submit">Close</button>
     </form>
     <div class="about__body" id="about-body"></div>
   </dialog>
 
-  <dialog class="about site3d" id="site3d" aria-labelledby="site3d-title">
-    <form method="dialog" class="about__head">
-      <h2 id="site3d-title">The whole walk in 3D</h2>
-      <button class="btn btn--ghost" type="submit" aria-label="Close">Close</button>
-    </form>
-    <div class="site3d__body" id="site3d-body"></div>
-  </dialog>
-
-  <noscript><p class="noscript">REDCAIRN needs JavaScript to load the terrain model and run the route engine.</p></noscript>
+  <noscript><p style="padding:20px">REDCAIRN needs JavaScript to load the map and the terrain.</p></noscript>
   <script type="module" src="js/app.js"></script>
 </body>
 </html>

@@ -76,31 +76,43 @@
     },
     {
       "id": "ctx",
-      "label": "CTX regional context mosaic",
-      "type": "wmts-equirectangular",
-      "url": "https://trek.nasa.gov/tiles/Mars/EQ/curiosity_ctx_mosaic/1.0.0/default/default028mm/{z}/{y}/{x}.png",
+      "label": "Wide photo from orbit",
+      "url": "https://trek.nasa.gov/tiles/Mars/EQ/Gale_CTX_BlockAdj_dd/1.0.0/default/default028mm/{z}/{y}/{x}.png",
       "tileSize": 256,
       "minZoom": 5,
-      "maxNativeZoom": 10,
-      "bounds": {
-        "west": 136.2768326,
-        "south": -7.2137273,
-        "east": 139.3864225,
-        "north": -3.5804738
-      },
+      "maxNativeZoom": 12,
       "credit": "NASA/JPL-Caltech/MSSS",
       "source": "trek"
     },
     {
+      "id": "thermal",
+      "label": "Night-time ground temperature",
+      "url": "https://trek.nasa.gov/tiles/Mars/EQ/THEMIS_NightIR_ControlledMosaics_100m_v2_oct2018/1.0.0/default/default028mm/{z}/{y}/{x}.png",
+      "tileSize": 256,
+      "minZoom": 3,
+      "maxNativeZoom": 9,
+      "credit": "NASA/JPL-Caltech/Arizona State University",
+      "source": "trek"
+    },
+    {
       "id": "mola",
-      "label": "MOLA global colour shaded relief",
-      "type": "wmts-equirectangular",
-      "url": "https://trek.nasa.gov/tiles/Mars/EQ/Mars_MGS_MOLA_ClrShade_merge_global_463m/1.0.0/default/default028mm/{z}/{y}/{x}.jpg",
+      "label": "Height of the land",
+      "url": "https://trek.nasa.gov/tiles/Mars/EQ/Mars_MOLA_blend200ppx_HRSC_ClrShade_clon0dd_200mpp_lzw/1.0.0/default/default028mm/{z}/{y}/{x}.jpg",
       "tileSize": 256,
       "minZoom": 0,
-      "maxNativeZoom": 7,
-      "credit": "NASA/JPL-Caltech/GSFC",
+      "maxNativeZoom": 8,
+      "credit": "NASA/GSFC (MOLA) and ESA/DLR/FU Berlin (HRSC)",
       "source": "trek"
+    },
+    {
+      "id": "geology",
+      "label": "Geologic map",
+      "url": "https://trek.nasa.gov/mars/trekarcgis/rest/services/SIM3292_Global_Geology/MapServer/WMTS/tile/1.0.0/SIM3292_Global_Geology/default/default028mm/{z}/{y}/{x}.png",
+      "tileSize": 256,
+      "minZoom": 0,
+      "maxNativeZoom": 11,
+      "credit": "USGS",
+      "source": "usgs-geology"
     }
   ],
   "layers": {
@@ -254,7 +266,18 @@
           "name": "Altadena, California",
           "url": "https://worldview.earthdata.nasa.gov/?v=-118.6,33.9,-117.7,34.5"
         }
-      ]
+      ],
+      "plain": {
+        "title": "Where the walk begins",
+        "see": "Flat, cracked bedrock with drifts of sand. The rover that brought you is parked beside you.",
+        "do": [
+          "Check your suit and radio",
+          "Find the old drill hole and photograph it"
+        ],
+        "why": "This rock sits just outside the ridges. It is your “before” sample: what the ground looks like where the water left less of a mark.",
+        "layer": "photo",
+        "teach": "You are looking at the sharpest picture of this ground ever taken from orbit. Each pixel is 64 cm."
+      }
     },
     {
       "id": "WP1",
@@ -299,7 +322,18 @@
         "alt": "Terrain cross-section of the ridge flank"
       },
       "story": "On sol 4600 the rover tilted 17 degrees here and kept going. This is where you learn how the suit handles a real Martian slope, while the dock is still seven minutes behind you.",
-      "earthNamesakes": []
+      "earthNamesakes": [],
+      "plain": {
+        "title": "The steep part",
+        "see": "Bedrock tilting up toward the first ridges.",
+        "do": [
+          "Test your footing on the slope",
+          "Photograph the side of a ridge"
+        ],
+        "why": "No science stop yet. This is where you learn how a pressurised suit handles a real hill, while home is still seven minutes away.",
+        "layer": "slope",
+        "teach": "The colours show how steep the ground is. Green is easy walking in a suit. Amber needs care. Red is too steep to cross."
+      }
     },
     {
       "id": "WP2",
@@ -358,7 +392,19 @@
           "name": "Nevado Sajama, Bolivia",
           "url": "https://worldview.earthdata.nasa.gov/?v=-69.5,-18.5,-68.3,-17.7"
         }
-      ]
+      ],
+      "plain": {
+        "title": "The heart of the mystery",
+        "see": "A low rock ridge with a sandy hollow beside it, like the rim and floor of a shallow bowl.",
+        "do": [
+          "Take a rock core from the ridge top",
+          "Take another from the hollow floor",
+          "Collect the white and grey vein material"
+        ],
+        "why": "Water once moved through cracks here and left minerals that set like cement. Wind wore the softer rock away and left the cemented cracks standing as ridges. Comparing ridge and hollow tells you what the water carried.",
+        "layer": "rocks",
+        "teach": "The coloured band shows the kind of rock under the trail, from what the rover measured on the ground. Blue circles mark the most important stops."
+      }
     },
     {
       "id": "WP3",
@@ -403,7 +449,18 @@
         "alt": "Terrain cross-section of layered ledges"
       },
       "story": "The rover spent its last week in the boxwork here, photographing ridge after ridge before it left them for good. You get to put a hand on one.",
-      "earthNamesakes": []
+      "earthNamesakes": [],
+      "plain": {
+        "title": "The last ridges",
+        "see": "Stepped rock ledges, layer on layer.",
+        "do": [
+          "Take a wide photo of the layers",
+          "Look for pea-sized bumps in the rock"
+        ],
+        "why": "Across these ridges the rover found pea-sized mineral bumps called nodules. They are another fingerprint of groundwater, and they suggest the water lasted longer than anyone expected.",
+        "layer": "relief",
+        "teach": "Shaded relief shows the shape of the land as if lit from the side. The criss-cross ridges are only about two metres tall."
+      }
     },
     {
       "id": "WP4",
@@ -448,7 +505,18 @@
         "alt": "Terrain cross-section across the contact"
       },
       "story": "One drive in March 2026 carried the rover across this line. The team titled that week’s log “Bye-Bye Boxwork.” It crossed in a single drive. You can stop and stand with a boot on each side.",
-      "earthNamesakes": []
+      "earthNamesakes": [],
+      "plain": {
+        "title": "The line in the rock",
+        "see": "Flat slabs of rock like broken paving, with sand between.",
+        "do": [
+          "Collect rock from both sides of the line",
+          "Photograph exactly where the ridges stop"
+        ],
+        "why": "Here the ridged rock ends and a different, layered rock begins. A boundary like this is a page turning in Mars’ history: on one side water underground, on the other a planet drying out.",
+        "layer": "rocks",
+        "teach": "The band changes colour here. That change is the boundary between two rock units."
+      }
     },
     {
       "id": "WP5",
@@ -505,7 +573,19 @@
           "name": "Atacama Desert, Chile",
           "url": "https://worldview.earthdata.nasa.gov/?v=-71.5,-26.0,-67.5,-22.0"
         }
-      ]
+      ],
+      "plain": {
+        "title": "The turnaround",
+        "see": "Rock cracked into polygons like dried mud, and a layered butte on the skyline.",
+        "do": [
+          "Take a core of the layered rock",
+          "Collect a piece of a cracked slab",
+          "Photograph the butte"
+        ],
+        "why": "This salty, layered rock formed as Mars lost its water. You have now walked from the wet chapter of the story to the dry one. Time to turn for home.",
+        "layer": "slope",
+        "teach": "Look back down the map: the whole walk is green. The rover already proved this ground."
+      }
     }
   ],
   "suit": {
@@ -643,6 +723,13 @@
       "use": "Route concept and unit sequence"
     },
     {
+      "id": "gale-guide",
+      "title": "A Guide to Gale Crater",
+      "org": "NASA/JPL-Caltech",
+      "url": "https://science.nasa.gov/resource/a-guide-to-gale-crater/",
+      "use": "Gale crater and Mount Sharp context"
+    },
+    {
       "id": "jpl-boxwork-2025",
       "title": "Curiosity Mars Rover Starts Unpacking Boxwork Formations",
       "org": "NASA/JPL-Caltech",
@@ -733,6 +820,27 @@
       "org": "NASA/JPL-Caltech",
       "url": "https://mars.nasa.gov/mars2020/multimedia/raw-images/",
       "use": "Sister image service; reserved for a second site at Jezero crater"
+    },
+    {
+      "id": "nodules-2026",
+      "title": "Curiosity Studies Nodules on Mars Boxwork Formations",
+      "org": "NASA/JPL-Caltech via Phys.org",
+      "url": "https://phys.org/news/2026-02-curiosity-nodules-mars-boxwork-formations.html",
+      "use": "Groundwater lasted longer than expected"
+    },
+    {
+      "id": "rems",
+      "title": "Curiosity REMS weather reports",
+      "org": "NASA/JPL-Caltech/CAB (CSIC-INTA)",
+      "url": "https://mars.nasa.gov/rss/api/?feed=weather&category=msl&feedtype=json",
+      "use": "Latest surface weather at Gale crater"
+    },
+    {
+      "id": "hydrous",
+      "title": "Hydrous mineral detections (CRISM, OMEGA)",
+      "org": "NASA/JPL-Caltech/JHUAPL and ESA",
+      "url": "https://trek.nasa.gov/mars/trekarcgis/rest/services/Hydrous_Mineral_Detections_OMEGA_CRISM_clon0/MapServer",
+      "use": "Water-formed minerals seen from orbit"
     }
   ],
   "aiDisclosure": "AI coding assistants were used to accelerate scaffolding, data retrieval scripts, code generation and review. All positions, elevations, imagery and mission findings come from the public sources listed. Suit telemetry and space-weather scenarios are simulated and labelled as such.",
@@ -774,5 +882,43 @@
   ],
   "liveFeeds": {
     "perseveranceLatest": "https://mars.nasa.gov/rss/api/?feed=raw_images&category=mars2020&feedtype=json&num=1&page=0&order=sol+desc&search=NAVCAM_LEFT&extended=sample_type::full"
+  },
+  "views": {
+    "walk": {
+      "label": "The walk",
+      "bounds": {
+        "west": 137.377,
+        "south": -4.8165,
+        "east": 137.386,
+        "north": -4.798
+      }
+    },
+    "mountain": {
+      "label": "The mountain",
+      "bounds": {
+        "west": 137.15,
+        "south": -5.35,
+        "east": 138.25,
+        "north": -4.55
+      }
+    },
+    "crater": {
+      "label": "The crater",
+      "bounds": {
+        "west": 136.0,
+        "south": -6.9,
+        "east": 139.5,
+        "north": -3.5
+      }
+    }
+  },
+  "question": {
+    "title": "Follow the water",
+    "text": "Billions of years ago, water moved through cracks in the rock under this mountain and left minerals behind, like scale in a kettle. The rover found the proof. Your walk asks the next question: how long did that water last, and was it long enough for life?",
+    "factCheck": "The rover found minerals left by ancient groundwater. It did not find liquid water.",
+    "sources": [
+      "jpl-boxwork-2025",
+      "nodules-2026"
+    ]
   }
 }
