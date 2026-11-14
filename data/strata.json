@@ -1,0 +1,98 @@
+{
+  "title": "Mount Sharp is a cairn built by time",
+  "intro": "A cairn is a pile of stones left by someone who walked before you, so that you know the way. Gale crater holds the biggest one on Mars: five kilometres of rock, laid down one layer at a time. Read it from the bottom, oldest page first.",
+  "scaleNote": "Layer thicknesses are exaggerated for reading. Only the order is true to the rock.",
+  "wetNote": "How wet the world was when this layer formed (simplified).",
+  "closing": "Read from the bottom up, the mountain says one thing: there was water, it stayed a very long time, and then it went. Curiosity is still climbing, one page at a time. Your walk is a few steps along that same line.",
+  "sources": [
+    { "title": "A Guide to Gale Crater (NASA)", "url": "https://science.nasa.gov/resource/a-guide-to-gale-crater/" },
+    { "title": "Curiosity’s Proposed Path up Mount Sharp (NASA)", "url": "https://science.nasa.gov/resource/curiositys-proposed-path-up-mount-sharp/" }
+  ],
+  "layers": [
+    {
+      "id": "bradbury",
+      "name": "Bradbury Group",
+      "where": "Crater floor",
+      "kind": "Streams, rivers and small deltas",
+      "color": "#9a7550",
+      "glow": "#24505f",
+      "thickness": 26,
+      "wet": 70,
+      "pattern": "pebbles",
+      "feeling": "Picture a stream you could step across, running over gravel. Every pebble here was rolled along by moving water until it went round. Then the water stopped, and the pebbles stayed exactly where it left them.",
+      "fact": "The oldest rocks Curiosity has visited, near where it landed: conglomerates (cemented river gravel), cross-bedded sandstones and mudstones, laid down by streams, rivers and small deltas.",
+      "seen": "Seen by Curiosity at Yellowknife Bay, close to the landing site."
+    },
+    {
+      "id": "murray",
+      "name": "Murray Formation",
+      "where": "Base of lower Mount Sharp",
+      "kind": "Mudstone from an ancient lake",
+      "color": "#a8553a",
+      "glow": "#1f4a70",
+      "thickness": 52,
+      "wet": 100,
+      "pattern": "laminated",
+      "feeling": "Then the streams filled a lake, and the lake stayed. Mud sank through still water, a hair’s width at a time, for longer than people have existed. Look at these thin lines. Each one is a quiet season in a world with a sky.",
+      "fact": "A massive sequence of laminated mudstones and lake deposits: long-standing ancient lakes, with wet and dry periods trading places.",
+      "seen": "Seen by Curiosity from Pahrump Hills onward, the first steps up the mountain."
+    },
+    {
+      "id": "clay",
+      "name": "Clay-bearing unit",
+      "where": "Glen Torridon and the ground around it",
+      "kind": "Clay minerals (phyllosilicates)",
+      "color": "#8a6f7a",
+      "glow": "#36405e",
+      "thickness": 30,
+      "wet": 85,
+      "pattern": "clay",
+      "feeling": "Clay forms only when water lingers on rock long enough to soften it. These are the gentlest rocks on the mountain. They are what water does when it has time and no reason to leave.",
+      "fact": "In the lower regions, rich in clay minerals that formed in liquid water. Clay is also where scientists look for conditions that could have held the chemistry of life.",
+      "seen": "Seen by Curiosity in the Glen Torridon region."
+    },
+    {
+      "id": "sulfate",
+      "name": "Sulfate-bearing unit",
+      "where": "Above the clay. This is where your walk is.",
+      "kind": "Salty sulfate minerals",
+      "color": "#d3ad6e",
+      "glow": "#5a4630",
+      "thickness": 60,
+      "wet": 40,
+      "pattern": "box",
+      "feeling": "Salt is what water leaves behind. In this layer the lake is shrinking, and every ridge on your route is a place where the last water crept through cracks and hardened the rock around it. You are not walking across a landscape. You are walking across a goodbye.",
+      "fact": "Lying above the clay, the rock changes to salty sulfate minerals: a major drying trend, with bodies of water evaporating away. The boxwork ridges of this walk formed here.",
+      "seen": "Curiosity is exploring this unit now. The walk in this guide follows its tracks.",
+      "here": true
+    },
+    {
+      "id": "upper",
+      "name": "Upper dry strata",
+      "where": "Mount Sharp’s bulk, above roughly 800 m",
+      "kind": "Wind-laid rock, no water minerals",
+      "color": "#c88f5e",
+      "glow": "#5a3a26",
+      "thickness": 96,
+      "wet": 6,
+      "pattern": "wind",
+      "feeling": "Above this line, no water remembers anything. For some 4,000 metres the story is wind: dunes, dust and the slow scouring of the cliffs. No rover has climbed it. No human has seen it. It is the part of the book nobody has read yet.",
+      "fact": "The upper 4,000 metres of Mount Sharp are dry strata with no sign of hydrated minerals, built by wind and arid processes, and carved into scoured cliffs and yardangs.",
+      "seen": "Seen only from orbit so far."
+    },
+    {
+      "id": "siccar",
+      "name": "Siccar Point Group",
+      "where": "Draped across the older layers",
+      "kind": "A younger group that cuts across time",
+      "color": "#6f5748",
+      "glow": "#3a2a22",
+      "thickness": 28,
+      "wet": 4,
+      "pattern": "blocks",
+      "feeling": "This one arrived late, after the mountain had already been carved. It lies across the old layers like a hand placed on a page, and where it rests, pages are missing. Geologists call that gap an unconformity. It is time you cannot read.",
+      "fact": "A younger geological group that unconformably truncates and overlies the older Mount Sharp strata. It is named for Siccar Point in Scotland, where James Hutton saw the same kind of gap in 1788 and realised Earth must be far older than anyone had believed.",
+      "seen": "Seen by Curiosity at the Greenheugh pediment, where ancient sand dunes turned to stone."
+    }
+  ]
+}

@@ -21,6 +21,7 @@
         <span>Redcairn</span>
       </a>
       <p class="top__tag">A trail guide for the first walk on Mars</p>
+      <button class="link-btn link-btn--strong" id="btn-strata" type="button">Read the mountain</button>
       <button class="link-btn" id="btn-about" type="button">Where the data comes from</button>
     </header>
 
@@ -68,6 +69,28 @@
       <button class="btn btn--quiet" type="submit">Close</button>
     </form>
     <div class="about__body" id="about-body"></div>
+  </dialog>
+
+  <dialog class="strata" id="strata" aria-labelledby="strata-title">
+    <div class="strata__scene" id="strata-scene">
+      <svg id="strata-svg" viewBox="0 0 740 700" preserveAspectRatio="xMidYMid meet" role="group" aria-label="Six layers of Mount Sharp, drawn as a stack you can pull apart. Choose one to read about it."></svg>
+      <label class="strata__gap">Pull the layers apart <input type="range" id="strata-gap" min="0" max="100" value="0"></label>
+    </div>
+    <div class="strata__text">
+      <form method="dialog" class="strata__top">
+        <div>
+          <p class="eyebrow">Read the mountain</p>
+          <h1 id="strata-title"></h1>
+        </div>
+        <button class="btn btn--quiet" type="submit">Close</button>
+      </form>
+      <p class="strata__intro" id="strata-intro"></p>
+      <div class="strata__body" id="strata-body"></div>
+      <div class="pager">
+        <button class="btn btn--quiet" id="strata-prev" type="button">Back</button>
+        <button class="btn btn--go" id="strata-next" type="button">Next</button>
+      </div>
+    </div>
   </dialog>
 
   <noscript><p style="padding:20px">REDCAIRN needs JavaScript to load the map and the terrain.</p></noscript>

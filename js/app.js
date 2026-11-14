@@ -3,6 +3,7 @@
 import { Terrain, Router, fetchJson, groundMetres } from './terrain.js';
 import * as sim from './sim.js';
 import { MapView } from './map.js';
+import { initStrata, openStrata } from './strata.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -177,6 +178,9 @@ function startHTML() {
     <p class="weather"><b>Weather at the site.</b> High ${w.airMaxC}°C, low ${w.airMinC}°C, sky: ${esc(String(w.sky).toLowerCase())}. Latest report from the rover’s own weather station, Mars day ${w.sol} (${esc(w.earthDate)}).</p>
     <div class="teach"><b>On the map now</b>The whole of Gale crater, 154 km across. Colours show height, measured by two orbiters. Blue dots are places where orbiters spotted minerals that only form in water. Your walk is the orange pin near the middle.
       <small>Each stop switches on the map layer that matters there. Open “Map layers” to mix your own.</small></div>
+    <div class="cta"><b>Before you walk: read the mountain</b>
+      <span>You are about to climb across six chapters of rock, each a different Mars. Pull them apart and read them from the bottom, oldest first.</span>
+      <button class="btn" type="button" data-strata="0">Open the six layers</button></div>
     <details><summary>See the whole walk in 3D</summary>
       <model-viewer src="assets/models/site.glb" alt="3D model of the walk across the ridges" camera-controls touch-action="pan-y" interaction-prompt="none" camera-orbit="25deg 58deg 75%" auto-rotate rotation-per-second="5deg" shadow-intensity="0" exposure="1.1" loading="lazy"></model-viewer>
       <small>True-scale ground from the 1 m orbital height model with the orbital photo laid over it (tinted). Cairns are drawn large so you can see them. Built in Blender.</small>
@@ -265,7 +269,10 @@ function endHTML() {
     <h2>What this guide is made of</h2>
     <ul class="made-of">${kinds.map(([a, b]) => `<li>${esc(a)}<span>${esc(b)}</span></li>`).join('')}</ul>
     <p style="margin-top:12px"><button class="link-btn" id="about-2" type="button">See every source and how AI was used</button></p>
-    <p class="closing">The rover could not come home. Its last job is to make sure you can.</p>`;
+    <p class="closing">The rover could not come home. Its last job is to make sure you can.</p>
+    <div class="cta"><b>Now read what you just walked across</b>
+      <span>The ridges you sampled are one page of a five-kilometre book. See the whole mountain, layer by layer.</span>
+      <button class="btn" type="button" data-strata="3">Read the mountain</button></div>`;
 }
 
 function go(step, jump) {
@@ -416,6 +423,8 @@ async function boot() {
   $('btn-prev').addEventListener('click', () => go(S.step - 1, true));
   $('btn-next').addEventListener('click', () => (S.step === CH().length - 1 ? go(0, true) : go(S.step + 1)));
   $('btn-about').addEventListener('click', openAbout);
+  initStrata();
+  $('btn-strata').addEventListener('click', () => openStrata(0));
   $('btn-layers').addEventListener('click', () => {
     const p = $('layers-panel');
     p.hidden = !p.hidden;
@@ -434,6 +443,8 @@ async function boot() {
   $('chapter').addEventListener('click', (e) => {
     if (e.target.closest('#btn-storm')) return toggleStorm();
     if (e.target.closest('#about-2')) return openAbout();
+    const st = e.target.closest('[data-strata]');
+    if (st) return openStrata(Number(st.dataset.strata));
     const choice = e.target.closest('.choice');
     if (choice && S.drill) {
       S.homeVia = choice.dataset.via;
