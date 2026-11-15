@@ -139,7 +139,7 @@ function readout(st) {
   $('h-air').textContent = mins(air);
   $('h-home').textContent = homeSec < 40 ? 'here' : mins(homeSec / 60);
   $('h-dose').textContent = st.dose.toFixed(2);
-  $('h-met').textContent = `MET ${clock(st.t)}`;
+  $('h-met').textContent = `${clock(st.t)} outside`;
   document.body.dataset.level = spare < 20 ? 'stop' : spare < 60 ? 'care' : '';
   const cell = cellOf(st), sl = S.terrain.slope[cell], cls = S.terrain.cls[cell];
   $('h-slope').textContent = `${sl.toFixed(0)}° ${['safe', 'care', 'too steep'][cls]}`;
@@ -281,7 +281,7 @@ async function suitUp() {
     ['Water minerals · CRISM, OMEGA', 'loaded'],
     ['Cairns · Curiosity’s stops, 2025–26', `${stops().length - 1} ahead`],
   ];
-  $('boot').innerHTML = `<p class="boot__head">Visor · EVA-1</p><ol>${lines.map(([a, b]) => `<li><span>${esc(a)}</span><b>${esc(b)}</b></li>`).join('')}</ol>
+  $('boot').innerHTML = `<p class="boot__head">Your visor is waking up</p><ol>${lines.map(([a, b]) => `<li><span>${esc(a)}</span><b>${esc(b)}</b></li>`).join('')}</ol>
     <div class="boot__route"><span>Route</span>${ROUTES.map((r) => { const x = routes[r.id]; return `<button type="button" data-route="${r.id}" aria-pressed="${r.id === S.pick}">${esc(r.name)}<small>${mins(x.tl.end.t)} · ${(x.plan.outD * 2 / 1000).toFixed(1)} km · max ${x.plan.maxSlope.toFixed(0)}°</small></button>`; }).join('')}</div>
     <p class="boot__note">Rover-proven is longer, but every metre of it has been driven. Orbit can’t see rocks smaller than a metre.</p>
     <button type="button" class="act" data-a="hatch">Open the hatch</button>`;
