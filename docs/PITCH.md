@@ -1,6 +1,6 @@
 # REDCAIRN: pitch and demo
 
-Live: https://ijai-code.github.io/redcairn/ · Code: https://github.com/IJai-code/redcairn
+Live: https://ijai-code.github.io/redcairn/ · Judge Mode: https://ijai-code.github.io/redcairn/#judge · Code: https://github.com/IJai-code/redcairn
 Challenge: Interplanetary Survival Guide: Martian Map (NASA Space Apps 2026)
 
 ## The one sentence
@@ -13,7 +13,7 @@ Curiosity has been alone on Mount Sharp since 2012: REDCAIRN is the survival map
 |---|---|
 | Impact | The map knows the walk home from every point (point anywhere: elevation, slope, minutes home); when the Sun flares it draws three ways home on the real terrain and costs each in minutes and dose |
 | Creativity | A survival map with a destination and a character: the rover that went first. An opening film of illustrations drawn by Blender from the real elevation data, no AI images |
-| Validity | 1 m elevation model checked against the rover's own heights (1.65 m RMS over 2.7 km); routes, air, dose computed live; simulated values and imagined radio lines labelled |
+| Validity | 1 m elevation model checked against the rover's own heights (Gale 1.65 m RMS over 2.7 km; Jezero 0.41 m RMS); same engine builds a second crater from its own data; routes, air, dose computed live; simulated values and imagined radio lines labelled |
 | Relevance | Mars Trek tiles and elevation, USGS geology, Curiosity's planned path and real track, Worldview, Perseverance raw images; eight kinds of data from seven missions; NASA DONKI space weather |
 | Presentation | One true line per plate; one card, one map, one panel; a story anyone can follow |
 
@@ -28,7 +28,7 @@ The full kit (shot list with links, voice-over, birthday audio, radio lines to r
 3. **The idea.** A rover drove this ground first. Its stops become the cairns you follow; the map tells the walk one beat at a time.
 4. **The layers.** Optical, topographic, thermal, spectral, geologic, chemical, radiation, ground truth, from seven missions, on Mars Trek tiles.
 5. **The cairns.** One true moment per stop, Curiosity's photo from that spot, the Earth namesake in Worldview, and air, walk home and dose. Inset: the 3D ground view.
-6. **The storm.** 18 min on the new line vs 32 min the way you came vs 2 h behind a ridge: 0.16 vs 0.29 vs 1.08 mSv.
+6. **The storm.** The real September 2017 solar storm: 35 min on the new line vs 57 min the way you came vs 2 h behind a ridge: 0.05 vs 0.08 vs 0.18 mSv.
 7. **The data.** List missions and data types (no logos): Viking (optical), MGS MOLA and Mars Express HRSC (topographic), Mars Odyssey THEMIS (thermal), MRO CRISM and Mars Express OMEGA (spectral), USGS (geologic), MRO HiRISE and CTX (optical, topographic), Curiosity (RAD radiation, REMS weather, rock chemistry, photos, track), NASA DONKI (space weather), Perseverance (live photo). Built with Blender and the browser. AI helped write code; data and figures are from the sources.
 
 ## The 3-minute live run
@@ -52,7 +52,7 @@ Shortcuts: the root URL plays the opening; `#intro`, `#plan`, `#stop-0` to `#sto
 | Curiosity, sol 5,073 (13 Nov 2026) | 38.6 km driven, 1,029 m climbed |
 | The walk | hatch to the rover 2.7 km along its tracks; 5 cairns on the way |
 | Routes (round trip) | Rover-proven 5.3 km, 4 h 39 · Fastest 3.6 km, 3 h 59 · Gentlest 3.7 km, 4 h 02 |
-| Storm from the rover | New line 35 min, 0.31 mSv · Way you came 57 min, 0.52 mSv · Shelter 2 h then home, 1.12 mSv |
+| Storm from the rover (real Sept 2017, ×3) | New line 35 min, 0.05 mSv · Way you came 57 min, 0.08 mSv · Shelter 2 h then home, 0.18 mSv |
 | Best terrain shelter | blocks 10% of the dose |
 | Elevation model vs rover | 1.65 m RMS along the route |
 | Normal radiation at Gale | 0.67 mSv per day (Curiosity RAD) |
@@ -61,7 +61,7 @@ Shortcuts: the root URL plays the opening; `#intro`, `#plan`, `#stop-0` to `#sto
 
 **"Is the horizon real?"** Yes, in the 3D window and the ground view. Blender builds Gale crater at true scale from the Mars Trek MOLA + HRSC elevation under Viking colour, stands a camera 1.7 m above the dock and renders a 360° panorama. We checked it against the elevation data: the horizon is 10° high to the east, where Mount Sharp is.
 
-**"Is the radiation real?"** The everyday rate and terrain shielding were measured by Curiosity. The storm is shaped on the September 2017 event and made 20 times stronger so the drill is visible; the screen says so.
+**"Is the radiation real?"** The everyday rate and terrain shielding were measured by Curiosity. The storm is the real September 2017 event at its measured peak (about 3× background, Zeitlin et al. 2018). Only its timing is staged.
 
 **"What's simulated?"** The suit, you, the walk's time compression, the storm's strength, and small rocks scattered for scale (HiRISE can't see anything under about a metre).
 

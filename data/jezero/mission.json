@@ -1,0 +1,941 @@
+{
+ "schema": "redcairn.mission/1",
+ "app": {
+  "name": "REDCAIRN",
+  "tagline": "Tactical surface navigation for crewed Mars EVAs",
+  "dataLockDate": "2026-11-14"
+ },
+ "site": {
+  "id": "jezero-floor",
+  "name": "Octavia E. Butler Landing",
+  "locality": "Floor of Jezero crater, beside Séítah",
+  "body": "Mars",
+  "center": {
+   "lon": 77.44699,
+   "lat": 18.43601
+  },
+  "bounds": {
+   "west": 77.438,
+   "east": 77.455984,
+   "north": 18.448006,
+   "south": 18.424016
+  },
+  "crs": "IAU Mars 2000 geographic (EPSG:104905), planetocentric latitude, east-positive longitude",
+  "metresPerDegree": 59274.7,
+  "rationale": [
+   "Jezero is where Perseverance landed in February 2021, inside a crater that once held a lake, beside a river delta.",
+   "It has its own 1 m orbital elevation model and 25 cm photo (the maps Perseverance landed by), and a rover-driven track over the same ground.",
+   "Beta: built by the same scripts and engine as the Gale walk, to show the method works anywhere these four data sets exist."
+  ],
+  "explorationZoneProposals": [
+   {
+    "abstract": 1020,
+    "lon": 137.5,
+    "lat": -4.5
+   },
+   {
+    "abstract": 1022,
+    "lon": 137.087,
+    "lat": -4.74
+   },
+   {
+    "abstract": 1040,
+    "lon": 137.12,
+    "lat": -4.64
+   }
+  ],
+  "explorationZoneSource": "trek-ezmars",
+  "geologicUnit": {
+   "code": "Htu",
+   "name": "Hesperian transition undivided unit",
+   "source": "usgs-geology",
+   "service": "https://trek.nasa.gov/mars/trekarcgis/rest/services/SIM3292_Global_Geology/MapServer"
+  },
+  "beta": true,
+  "sheet": [
+   "Jezero crater, Mars",
+   "Crater floor, beside Séítah"
+  ]
+ },
+ "basemaps": [
+  {
+   "id": "thermal",
+   "label": "Night-time ground temperature",
+   "url": "https://trek.nasa.gov/tiles/Mars/EQ/THEMIS_NightIR_ControlledMosaics_100m_v2_oct2018/1.0.0/default/default028mm/{z}/{y}/{x}.png",
+   "tileSize": 256,
+   "minZoom": 3,
+   "maxNativeZoom": 9,
+   "credit": "NASA/JPL-Caltech/Arizona State University",
+   "source": "trek"
+  },
+  {
+   "id": "mola",
+   "label": "Height of the land",
+   "url": "https://trek.nasa.gov/tiles/Mars/EQ/Mars_MOLA_blend200ppx_HRSC_ClrShade_clon0dd_200mpp_lzw/1.0.0/default/default028mm/{z}/{y}/{x}.jpg",
+   "tileSize": 256,
+   "minZoom": 0,
+   "maxNativeZoom": 8,
+   "credit": "NASA/GSFC (MOLA) and ESA/DLR/FU Berlin (HRSC)",
+   "source": "trek"
+  },
+  {
+   "id": "geology",
+   "label": "Geologic map",
+   "url": "https://trek.nasa.gov/mars/trekarcgis/rest/services/SIM3292_Global_Geology/MapServer/WMTS/tile/1.0.0/SIM3292_Global_Geology/default/default028mm/{z}/{y}/{x}.png",
+   "tileSize": 256,
+   "minZoom": 0,
+   "maxNativeZoom": 11,
+   "credit": "USGS",
+   "source": "usgs-geology"
+  },
+  {
+   "id": "ctx",
+   "label": "Colour photo from orbit (Viking)",
+   "url": "https://trek.nasa.gov/tiles/Mars/EQ/Mars_Viking_MDIM21_ClrMosaic_global_232m/1.0.0/default/default028mm/{z}/{y}/{x}.jpg",
+   "tileSize": 256,
+   "minZoom": 3,
+   "maxNativeZoom": 7,
+   "credit": "NASA/USGS",
+   "source": "trek"
+  }
+ ],
+ "layers": {
+  "slope": {
+   "label": "Slope / mobility",
+   "status": "live",
+   "thresholdsDeg": {
+    "caution": 15,
+    "noGo": 20
+   },
+   "classes": [
+    {
+     "id": "safe",
+     "label": "Safe",
+     "rule": "< 15°",
+     "color": "#3ddc84"
+    },
+    {
+     "id": "caution",
+     "label": "Caution",
+     "rule": "15°–20°",
+     "color": "#ffb020"
+    },
+    {
+     "id": "nogo",
+     "label": "No-go",
+     "rule": "> 20°",
+     "color": "#ff4d4d"
+    }
+   ],
+   "elevationService": {
+    "url": "https://trek.nasa.gov/mars/trekarcgis/rest/services/Gale_DEM_SMG_1m/ImageServer",
+    "operations": [
+     "identify",
+     "getSamples"
+    ],
+    "pixelSizeM": 1.0,
+    "pixelType": "32-bit float metres",
+    "note": "GET only; sends no CORS header, so sample at build time and ship the result as static data."
+   },
+   "validation": {
+    "method": "Orbital DEM compared with rover localisation at 324 points along the EVA route",
+    "datumOffsetM": 17.16,
+    "rmsResidualM": 0.99
+   },
+   "source": "trek-gale-dem"
+  },
+  "minerals": {
+   "label": "Mineral / science targets",
+   "status": "live: waypoint and unit annotations from surface findings",
+   "note": "Orbital spectrometer footprints (CRISM, about 18 m per pixel) are too coarse for a 1.5 km walk, so targets here are tied to what the rover measured on the ground.",
+   "units": [
+    {
+     "id": "boxwork",
+     "label": "Boxwork terrain",
+     "color": "#4cc9f0",
+     "routeFromM": 0,
+     "routeToM": 1284.4,
+     "summary": "Low ridges enclosing sandy hollows, in a layer rich in magnesium sulfates. Bedrock between the ridges carries white calcium sulfate veins.",
+     "sources": [
+      "jpl-boxwork-2025"
+     ]
+    },
+    {
+     "id": "layered-sulfate",
+     "label": "Layered sulfate unit",
+     "color": "#f4a261",
+     "routeFromM": 1284.4,
+     "routeToM": 2709.4,
+     "summary": "Layered sulfate-bearing bedrock above the boxwork terrain. The same unit was last sampled about 160 m lower on the mountain.",
+     "sources": [
+      "blog-4845",
+      "blog-4873"
+     ]
+    }
+   ],
+   "orbitalContext": {
+    "hydrousMineralDetections": "https://trek.nasa.gov/mars/trekarcgis/rest/services/Hydrous_Mineral_Detections_OMEGA_CRISM_clon0/MapServer/0",
+    "crismTargetedFootprints": "https://trek.nasa.gov/mars/trekarcgis/rest/services/mars_mro_crism_mtrdr_c0a_humex_frt_sites/MapServer/0",
+    "globalGeologicMap": "https://trek.nasa.gov/mars/trekarcgis/rest/services/SIM3292_Global_Geology/MapServer"
+   }
+  },
+  "hazard": {
+   "label": "Radiation / weather",
+   "status": "live",
+   "simulated": true
+  }
+ },
+ "eva": {
+  "id": "eva-jz",
+  "name": "Landing site to the first rock cores",
+  "dockWaypointId": "DOCK",
+  "routeFile": "data/jezero/route.json",
+  "profile": "out-and-back",
+  "oneWayM": 1857.5,
+  "roundTripM": 3715.0,
+  "elevGainM": -4.6,
+  "maxSlopeDeg": 10.1,
+  "meanSlopeDeg": 1.6,
+  "basis": "Follows ground driven by Perseverance between mission sols 13 and 180, with spurs and back-tracks removed."
+ },
+ "waypoints": [
+  {
+   "id": "DOCK",
+   "name": "Octavia E. Butler Landing",
+   "type": "dock",
+   "lon": 77.45088572,
+   "lat": 18.44462715,
+   "elevM": -2569.91,
+   "routeDistM": 0.0,
+   "rover": {
+    "sol": 13,
+    "rmc": "3_0",
+    "tiltDeg": 1.18
+   },
+   "plannedStayMin": 0,
+   "science": {
+    "priority": 2,
+    "unit": "crater-floor",
+    "headline": "The hatch",
+    "why": "Perseverance landed here on 18 February 2021. The team named the spot for the science-fiction writer Octavia E. Butler.",
+    "targets": [],
+    "tasks": [
+     "Suit and radio check",
+     "Photograph the landing site"
+    ],
+    "sources": [
+     "m20-waypoints",
+     "m2020"
+    ]
+   },
+   "pov": {
+    "imageUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00016/ids/edr/browse/ncam/NLF_0016_0668374116_362ECM_N0030578NCAM00500_01_295J01_800.jpg",
+    "camera": "Left Navigation Camera",
+    "sol": 16,
+    "utc": "2021-03-07T07:30:19Z",
+    "caption": "The landing site, a few metres from where it touched down.",
+    "credit": "NASA/JPL-Caltech"
+   },
+   "model": {
+    "src": "",
+    "status": "none",
+    "alt": ""
+   },
+   "story": "Perseverance landed here on 18 February 2021. The team named the spot for the science-fiction writer Octavia E. Butler.",
+   "earthNamesakes": [],
+   "plain": {
+    "title": "The hatch",
+    "see": "Flat crater floor, scattered rock, the rim of Jezero on the horizon.",
+    "do": [
+     "Suit and radio check",
+     "Photograph the landing site"
+    ],
+    "why": "Perseverance touched down here on 18 February 2021.",
+    "layer": "slope",
+    "teach": "Green is easy walking in a suit. Amber needs care. Red is too steep."
+   }
+  },
+  {
+   "id": "WP1",
+   "name": "Van Zyl Overlook",
+   "type": "overlook",
+   "lon": 77.45201926,
+   "lat": 18.44479578,
+   "elevM": -2568.98,
+   "routeDistM": 73.2,
+   "rover": {
+    "sol": 49,
+    "rmc": "3_1950",
+    "tiltDeg": 0.13
+   },
+   "plannedStayMin": 10,
+   "science": {
+    "priority": 2,
+    "unit": "crater-floor",
+    "headline": "The overlook",
+    "why": "On 19 April 2021 Perseverance parked here and watched Ingenuity, a 1.8 kg helicopter, rise three metres and hover. The first powered flight on another world.",
+    "targets": [],
+    "tasks": [
+     "Look east to the airfield",
+     "Photograph the take-off strip"
+    ],
+    "sources": [
+     "ingenuity",
+     "m20-waypoints"
+    ]
+   },
+   "pov": {
+    "imageUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00058/ids/edr/browse/ncam/NLF_0058_0672092439_971ECM_N0032046NCAM00412_01_195J02_800.jpg",
+    "camera": "Left Navigation Camera",
+    "sol": 58,
+    "utc": "2021-04-19T08:22:56Z",
+    "caption": "Sol 58, the morning of the first flight. Its own tracks run off to the right.",
+    "credit": "NASA/JPL-Caltech"
+   },
+   "model": {
+    "src": "",
+    "status": "none",
+    "alt": ""
+   },
+   "story": "On 19 April 2021 Perseverance parked here and watched Ingenuity, a 1.8 kg helicopter, rise three metres and hover. The first powered flight on another world.",
+   "earthNamesakes": [],
+   "plain": {
+    "title": "The overlook",
+    "see": "The flat strip of ground where the first powered flight on another world took off.",
+    "do": [
+     "Look east to the airfield",
+     "Photograph the take-off strip"
+    ],
+    "why": "Perseverance watched Ingenuity fly from here.",
+    "layer": "slope",
+    "teach": "Flat ground: the slope map stays green."
+   }
+  },
+  {
+   "id": "WP2",
+   "name": "Máaz",
+   "type": "geology",
+   "lon": 77.44953798,
+   "lat": 18.43961086,
+   "elevM": -2569.137,
+   "routeDistM": 486.6,
+   "rover": {
+    "sol": 113,
+    "rmc": "4_1062",
+    "tiltDeg": 1.14
+   },
+   "plannedStayMin": 15,
+   "science": {
+    "priority": 2,
+    "unit": "crater-floor",
+    "headline": "The crater floor",
+    "why": "The team expected lake mud here. The floor turned out to be volcanic rock, later changed by water. The team named it Máaz, the Navajo word for Mars.",
+    "targets": [],
+    "tasks": [
+     "Sample the floor rock",
+     "Photograph the ripples"
+    ],
+    "sources": [
+     "m2020-samples",
+     "m20-waypoints"
+    ]
+   },
+   "pov": {
+    "imageUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00117/ids/edr/browse/ncam/NLF_0117_0677328086_255ECM_N0041250NCAM00500_01_295J01_800.jpg",
+    "camera": "Left Navigation Camera",
+    "sol": 117,
+    "utc": "2021-06-18T22:44:19Z",
+    "caption": "The crater floor on sol 117, looking north-east.",
+    "credit": "NASA/JPL-Caltech"
+   },
+   "model": {
+    "src": "",
+    "status": "none",
+    "alt": ""
+   },
+   "story": "The team expected lake mud here. The floor turned out to be volcanic rock, later changed by water. The team named it Máaz, the Navajo word for Mars.",
+   "earthNamesakes": [],
+   "plain": {
+    "title": "The crater floor",
+    "see": "Dark, flat rock and ripples of sand.",
+    "do": [
+     "Sample the floor rock",
+     "Photograph the ripples"
+    ],
+    "why": "The floor turned out to be volcanic rock, not lake mud.",
+    "layer": "slope",
+    "teach": "The way home is already drawn from every point."
+   }
+  },
+  {
+   "id": "WP3",
+   "name": "Roubion",
+   "type": "sample",
+   "lon": 77.45164982,
+   "lat": 18.42769464,
+   "elevM": -2584.922,
+   "routeDistM": 1331.2,
+   "rover": {
+    "sol": 157,
+    "rmc": "6_0",
+    "tiltDeg": 1.98
+   },
+   "plannedStayMin": 20,
+   "science": {
+    "priority": 2,
+    "unit": "crater-floor",
+    "headline": "Roubion",
+    "why": "On sol 164 Perseverance drilled its first core here. The rock was too crumbly and fell away; the tube sealed with only Martian air inside. The team kept it anyway.",
+    "targets": [],
+    "tasks": [
+     "Find the drill hole",
+     "Photograph it for change detection"
+    ],
+    "sources": [
+     "m2020-samples",
+     "m20-waypoints"
+    ]
+   },
+   "pov": {
+    "imageUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00159/ids/edr/browse/ncam/NLG_0159_0681066172_925ECM_N0060000NCAM00500_00_2I4J01_800.jpg",
+    "camera": "Left Navigation Camera",
+    "sol": 159,
+    "utc": "2021-08-01T05:06:15Z",
+    "caption": "Near Roubion, sol 159.",
+    "credit": "NASA/JPL-Caltech"
+   },
+   "model": {
+    "src": "",
+    "status": "none",
+    "alt": ""
+   },
+   "story": "On sol 164 Perseverance drilled its first core here. The rock was too crumbly and fell away; the tube sealed with only Martian air inside. The team kept it anyway.",
+   "earthNamesakes": [],
+   "plain": {
+    "title": "Roubion",
+    "see": "A pale paving stone of rock, drilled once.",
+    "do": [
+     "Find the drill hole",
+     "Photograph it for change detection"
+    ],
+    "why": "Its first sample attempt: the rock crumbled and the tube kept only air.",
+    "layer": "shield",
+    "teach": "Purple: hills hide part of the sky, so less radiation."
+   }
+  },
+  {
+   "id": "PERSEVERANCE",
+   "name": "Rochette",
+   "type": "rover",
+   "lon": 77.44436574,
+   "lat": 18.4307394,
+   "elevM": -2574.524,
+   "routeDistM": 1857.5,
+   "rover": {
+    "sol": 180,
+    "rmc": "7_0",
+    "tiltDeg": 1.98
+   },
+   "plannedStayMin": 20,
+   "science": {
+    "priority": 2,
+    "unit": "crater-floor",
+    "headline": "Rochette",
+    "why": "On 1 and 8 September 2021 Perseverance drilled this ridge and sealed two cores, Montdenier and Montagnac: the first rock collected on another planet to be brought home.",
+    "targets": [],
+    "tasks": [
+     "Find the two drill holes",
+     "Photograph the ridge",
+     "Turn for home"
+    ],
+    "sources": [
+     "m2020-samples",
+     "m20-waypoints"
+    ]
+   },
+   "pov": {
+    "imageUrl": "https://mars.nasa.gov/mars2020-raw-images/pub/ods/surface/sol/00197/ids/edr/browse/ncam/NLG_0197_0684425602_800ECM_N0070000NCAM00500_00_2I4J02_800.jpg",
+    "camera": "Left Navigation Camera",
+    "sol": 197,
+    "utc": "2021-09-09T02:17:11Z",
+    "caption": "Citadelle and Rochette, sol 197.",
+    "credit": "NASA/JPL-Caltech"
+   },
+   "model": {
+    "src": "",
+    "status": "none",
+    "alt": ""
+   },
+   "story": "On 1 and 8 September 2021 Perseverance drilled this ridge and sealed two cores, Montdenier and Montagnac: the first rock collected on another planet to be brought home.",
+   "earthNamesakes": [],
+   "plain": {
+    "title": "Rochette",
+    "see": "A ridge of hard grey rock, two drill holes in its top.",
+    "do": [
+     "Find the two drill holes",
+     "Photograph the ridge",
+     "Turn for home"
+    ],
+    "why": "The first rock cores kept for return to Earth.",
+    "layer": "slope",
+    "teach": "The way home is already on the map."
+   }
+  }
+ ],
+ "suit": {
+  "simulated": true,
+  "note": "Planning assumptions for the demo, not flight values. Each one is editable and labelled as simulated in the app.",
+  "oxygen": {
+   "primaryMin": 480,
+   "reserveMin": 30
+  },
+  "battery": {
+   "capacityMin": 510
+  },
+  "speed": {
+   "model": "tobler-scaled",
+   "formula": "kmh = suitFactor * baseKmh * exp(-k * abs(tan(slope) + offset))",
+   "baseKmh": 6.0,
+   "k": 3.5,
+   "offset": 0.05,
+   "suitFactor": 0.6,
+   "flatKmh": 3.0
+  },
+  "metabolic": {
+   "consumptionGainPerUphillDeg": 0.04,
+   "consumptionGainPerDownhillDeg": 0.01
+  },
+  "slopeLimitsDeg": {
+   "caution": 15,
+   "noGo": 20
+  },
+  "walkBackRule": "Consumables remaining must always cover the walk back to the dock at current pace, plus the oxygen reserve."
+ },
+ "hazards": {
+  "radiation": {
+   "backgroundMSvPerDay": 0.67,
+   "backgroundBasis": "Average galactic cosmic ray dose equivalent measured on the surface at Gale crater by the rover's radiation detector.",
+   "backgroundSource": "hassler-2014",
+   "careerLimitMSv": 600,
+   "careerLimitNote": "NASA career effective-dose limit for all astronauts, NASA-STD-3001 Volume 1 Revision B (2022).",
+   "terrainShielding": {
+    "observedDoseReductionPct": 4,
+    "basis": "Measured while the rover was parked at the foot of a cliff at Murray Buttes, 9–21 September 2016.",
+    "source": "nasa-rad-safer",
+    "model": "Dose reduction = efficiency x fraction of sky hidden by terrain, scanned in 16 directions out to 80 m on the elevation grid.",
+    "efficiency": 0.5,
+    "efficiencyNote": "Assumption. Blocking sky does not remove ground-scattered particles, so only half the blocked fraction is credited.",
+    "candidates": [
+     "Paniri butte (near WP5; to be located on the HiRISE mosaic)",
+     "Pressurised rover at the dock"
+    ]
+   }
+  },
+  "scenarios": [
+   {
+    "id": "spe-2017-analog",
+    "label": "The real solar storm of September 2017",
+    "simulated": false,
+    "basis": "Replayed at its measured peak: during the solar particle event of 10-11 September 2017, Curiosity's RAD measured the surface dose rate at Gale rising two to three times above background over several hours (Zeitlin et al. 2018; Hassler et al. 2018). REDCAIRN uses the 3x peak for the whole drill, which is the cautious end.",
+    "observedPeakMultiplier": {
+     "low": 2,
+     "high": 3
+    },
+    "response": "Recalculate the fastest safe return to the dock and flag terrain shielding on the way.",
+    "source": "zeitlin-2018",
+    "peakMultiplierUsed": 3
+   },
+   {
+    "id": "dust-storm",
+    "label": "Dust storm",
+    "simulated": true,
+    "basis": "Rising atmospheric dust cuts visibility and solar power. Opacity values are demo assumptions.",
+    "opacityTau": {
+     "nominal": 0.6,
+     "storm": 4.0
+    },
+    "response": "Reduce pace, tighten the walk-back margin and recommend return before visibility drops below waypoint spacing."
+   }
+  ]
+ },
+ "sources": [
+  {
+   "id": "trek",
+   "title": "Mars Trek tile services",
+   "org": "NASA/JPL-Caltech",
+   "url": "https://trek.nasa.gov/mars/",
+   "use": "Orbital basemaps"
+  },
+  {
+   "id": "trek-gale-dem",
+   "title": "MRO HiRISE Gale Crater DEM, 1 m",
+   "org": "NASA/JPL-Caltech/University of Arizona/USGS",
+   "url": "https://trek.nasa.gov/mars/trekarcgis/rest/services/Gale_DEM_SMG_1m/ImageServer",
+   "use": "Slope along the EVA route"
+  },
+  {
+   "id": "trek-ezmars",
+   "title": "Exploration Zones layer (2015 human landing site workshop)",
+   "org": "NASA",
+   "url": "https://trek.nasa.gov/mars/trekarcgis/rest/services/EZMars/MapServer",
+   "use": "Landing site rationale"
+  },
+  {
+   "id": "usgs-geology",
+   "title": "Geologic Map of Mars, SIM 3292",
+   "org": "USGS",
+   "url": "https://astrogeology-usgs.hub.arcgis.com/pages/interactive-maps-mars",
+   "use": "Regional geologic context"
+  },
+  {
+   "id": "msl-traverse",
+   "title": "Curiosity traverse path",
+   "org": "NASA/JPL-Caltech",
+   "url": "https://mars.nasa.gov/mmgis-maps/MSL/Layers/json/MSL_traverse.json",
+   "use": "EVA corridor geometry"
+  },
+  {
+   "id": "msl-waypoints",
+   "title": "Curiosity waypoints",
+   "org": "NASA/JPL-Caltech",
+   "url": "https://mars.nasa.gov/mmgis-maps/MSL/Layers/json/MSL_waypoints.json",
+   "use": "Waypoint positions, elevations and rover tilt"
+  },
+  {
+   "id": "msl-raw",
+   "title": "Curiosity raw images",
+   "org": "NASA/JPL-Caltech",
+   "url": "https://mars.nasa.gov/msl/multimedia/raw-images/",
+   "use": "Eye-level photography at each waypoint"
+  },
+  {
+   "id": "mount-sharp-route",
+   "title": "Curiosity's Proposed Path up Mount Sharp",
+   "org": "NASA/JPL-Caltech",
+   "url": "https://science.nasa.gov/resource/curiositys-proposed-path-up-mount-sharp/",
+   "use": "Route concept and unit sequence"
+  },
+  {
+   "id": "gale-guide",
+   "title": "A Guide to Gale Crater",
+   "org": "NASA/JPL-Caltech",
+   "url": "https://science.nasa.gov/resource/a-guide-to-gale-crater/",
+   "use": "Gale crater and Mount Sharp context"
+  },
+  {
+   "id": "jpl-boxwork-2025",
+   "title": "Curiosity Mars Rover Starts Unpacking Boxwork Formations",
+   "org": "NASA/JPL-Caltech",
+   "url": "https://www.nasa.gov/centers-and-facilities/nasas-curiosity-mars-rover-starts-unpacking-boxwork-formations/",
+   "use": "Boxwork origin and vein mineralogy"
+  },
+  {
+   "id": "blog-4568",
+   "title": "Curiosity Blog, Sols 4568-4569: A Close Look at the Altadena Drill Hole and Tailings",
+   "org": "NASA",
+   "url": "https://science.nasa.gov/blog/curiosity-blog-sols-4568-4569-a-close-look-at-the-altadena-drill-hole-and-tailings/",
+   "use": "DOCK"
+  },
+  {
+   "id": "blog-4709",
+   "title": "Curiosity Blog, Sols 4709-4715: Drilling High and Low in the Boxwork Unit",
+   "org": "NASA",
+   "url": "https://science.nasa.gov/blog/curiosity-blog-sols-4709-4715-drilling-high-and-low-in-the-boxwork-unit",
+   "use": "WP2"
+  },
+  {
+   "id": "blog-4716",
+   "title": "Curiosity Blog, Sols 4716-4722: Drilling Success at Nevado Sajama",
+   "org": "NASA",
+   "url": "https://science.nasa.gov/solar-system/curiosity-blog-sols-4716-4722-drilling-success-at-nevado-sajama",
+   "use": "WP2"
+  },
+  {
+   "id": "blog-4838",
+   "title": "Curiosity Blog, Sols 4838-4844: Wrapping Up the Boxwork Terrain",
+   "org": "NASA",
+   "url": "https://science.nasa.gov/blog/curiosity-blog-sols-4838-4844-wrapping-up-the-boxwork-terrain/",
+   "use": "WP3"
+  },
+  {
+   "id": "blog-4845",
+   "title": "Curiosity Blog, Sols 4845-4851: Bye-Bye Boxwork, Bye-Bye",
+   "org": "NASA",
+   "url": "https://science.nasa.gov/blog/curiosity-blog-sols-4845-4851-bye-bye-boxwork-bye-bye/",
+   "use": "WP4",
+   "note": "Mirror of the mission blog post; replace with the science.nasa.gov link before submission."
+  },
+  {
+   "id": "blog-4873",
+   "title": "Curiosity Blog, Sols 4873-4878: Welcome to the Atacama Drill Target",
+   "org": "NASA",
+   "url": "https://science.nasa.gov/blog/curiosity-blog-sols-4873-4878-welcome-to-the-atacama-drill-target/",
+   "use": "WP5"
+  },
+  {
+   "id": "blog-4893",
+   "title": "Curiosity Blog, Sols 4893-4899: Drilling at Campo Marte and a Visit From the Psyche Spacecraft",
+   "org": "NASA",
+   "url": "https://science.nasa.gov/blog/curiosity-blog-sols-4893-4899-drilling-at-campo-marte-and-a-visit-from-the-psyche-spacecraft/",
+   "use": "WP5"
+  },
+  {
+   "id": "hassler-2014",
+   "title": "Mars' Surface Radiation Environment Measured with the Mars Science Laboratory's Curiosity Rover",
+   "org": "Hassler et al., Science 343, 2014",
+   "url": "https://doi.org/10.1126/science.1244797",
+   "use": "Background dose rate"
+  },
+  {
+   "id": "nasa-rad-safer",
+   "title": "How NASA's Curiosity Rover Is Making Mars Safer for Astronauts",
+   "org": "NASA",
+   "url": "https://www.nasa.gov/missions/mars-science-laboratory/how-nasas-curiosity-rover-is-making-mars-safer-for-astronauts/",
+   "use": "Terrain shielding measurement"
+  },
+  {
+   "id": "jpl-sept-2017",
+   "title": "Large Solar Storm Sparks Global Aurora and Doubles Radiation Levels on the Martian Surface",
+   "org": "NASA/JPL-Caltech",
+   "url": "https://www.jpl.nasa.gov/news/large-solar-storm-sparks-global-aurora-and-doubles-radiation-levels-on-the-martian-surface/",
+   "use": "Solar particle event scenario"
+  },
+  {
+   "id": "worldview",
+   "title": "Worldview",
+   "org": "NASA Earthdata",
+   "url": "https://worldview.earthdata.nasa.gov/",
+   "use": "Reference for the layer-toggle interaction model; no Earth data is used"
+  },
+  {
+   "id": "m2020-raw",
+   "title": "Mars 2020 Perseverance raw images",
+   "org": "NASA/JPL-Caltech",
+   "url": "https://mars.nasa.gov/mars2020/multimedia/raw-images/",
+   "use": "Sister image service; reserved for a second site at Jezero crater"
+  },
+  {
+   "id": "nodules-2026",
+   "title": "Curiosity Studies Nodules on Mars Boxwork Formations",
+   "org": "NASA/JPL-Caltech via Phys.org",
+   "url": "https://phys.org/news/2026-02-curiosity-nodules-mars-boxwork-formations.html",
+   "use": "Groundwater lasted longer than expected"
+  },
+  {
+   "id": "rems",
+   "title": "Curiosity REMS weather reports",
+   "org": "NASA/JPL-Caltech/CAB (CSIC-INTA)",
+   "url": "https://mars.nasa.gov/rss/api/?feed=weather&category=msl&feedtype=json",
+   "use": "Latest surface weather at Gale crater"
+  },
+  {
+   "id": "hydrous",
+   "title": "Hydrous mineral detections (CRISM, OMEGA)",
+   "org": "NASA/JPL-Caltech/JHUAPL and ESA",
+   "url": "https://trek.nasa.gov/mars/trekarcgis/rest/services/Hydrous_Mineral_Detections_OMEGA_CRISM_clon0/MapServer",
+   "use": "Water-formed minerals seen from orbit"
+  },
+  {
+   "id": "themis",
+   "title": "THEMIS night-time infrared mosaic (Mars Odyssey)",
+   "url": "https://trek.nasa.gov/tiles/Mars/EQ/THEMIS_NightIR_ControlledMosaics_100m_v2_oct2018/1.0.0/default/default028mm/{z}/{y}/{x}.png",
+   "org": "NASA/JPL-Caltech/Arizona State University via Mars Trek",
+   "use": "Thermal layer on the planning map: where the ground holds heat at night (rock) or loses it (dust)."
+  },
+  {
+   "id": "donki",
+   "title": "DONKI: Space Weather Database Of Notifications, Knowledge, Information",
+   "url": "https://kauai.ccmc.gsfc.nasa.gov/DONKI/",
+   "org": "NASA Community Coordinated Modeling Center",
+   "use": "Real solar energetic particle events, shown with today's conditions on the map."
+  },
+  {
+   "id": "pia17936",
+   "title": "Bright 'Evening Star' Seen from Mars is Earth (PIA17936)",
+   "org": "NASA/JPL-Caltech/MSSS/TAMU",
+   "url": "https://science.nasa.gov/resource/bright-evening-star-seen-from-mars-is-earth/",
+   "use": "Earth and the Moon from Gale crater, Mastcam, sol 529: shown at the turnaround."
+  },
+  {
+   "id": "happy-birthday",
+   "title": "Happy Birthday, Curiosity",
+   "org": "NASA Goddard Space Flight Center (SVS)",
+   "url": "https://svs.gsfc.nasa.gov/11331/",
+   "use": "The SAM instrument played 'Happy Birthday' on 5 August 2013; the opening plays that recording."
+  },
+  {
+   "id": "marscuriosity-landing",
+   "title": "@MarsCuriosity first post from the surface, 6 August 2012",
+   "org": "NASA/JPL (rover social account)",
+   "url": "https://x.com/MarsCuriosity",
+   "use": "Curiosity's first radio line, quoted."
+  },
+  {
+   "id": "zeitlin-2018",
+   "title": "Analysis of the Radiation Hazard Observed by RAD on the Surface of Mars During the September 2017 Solar Particle Event (Zeitlin et al., Geophysical Research Letters, 2018)",
+   "org": "AGU / NASA",
+   "url": "https://doi.org/10.1029/2018GL077760",
+   "use": "The storm drill's dose rate: the measured peak, about 3x background."
+  },
+  {
+   "id": "ehresmann-2018",
+   "title": "Energetic Particle Radiation Environment Observed by RAD on the Surface of Mars During the September 2017 Event (Ehresmann et al., GRL, 2018)",
+   "org": "AGU / NASA",
+   "url": "https://doi.org/10.1029/2018GL077801",
+   "use": "The proton and neutral-particle response at Gale during the same event."
+  },
+  {
+   "id": "m20-traverse",
+   "title": "Perseverance traverse",
+   "org": "NASA/JPL-Caltech",
+   "url": "https://mars.nasa.gov/mmgis-maps/M20/Layers/json/M20_traverse.json",
+   "use": "The walk follows its track"
+  },
+  {
+   "id": "m20-waypoints",
+   "title": "Perseverance waypoints and localisation",
+   "org": "NASA/JPL-Caltech",
+   "url": "https://mars.nasa.gov/mmgis-maps/M20/Layers/json/M20_waypoints.json",
+   "use": "Stop positions, sols, heights; check on the elevation model"
+  },
+  {
+   "id": "usgs-jezero-dtm",
+   "title": "Mars 2020 HiRISE DTM of Jezero, 1 m (Terrain Relative Navigation map)",
+   "org": "USGS Astrogeology / NASA/JPL-Caltech/University of Arizona",
+   "url": "https://doi.org/10.5066/P9QJDP48",
+   "use": "Slope, sky shelter and routing at Jezero"
+  },
+  {
+   "id": "usgs-jezero-ortho",
+   "title": "Mars 2020 HiRISE orthomosaic of Jezero, 25 cm",
+   "org": "USGS Astrogeology / NASA/JPL-Caltech/University of Arizona",
+   "url": "https://doi.org/10.5066/P9QJDP48",
+   "use": "The site photo under the map and the walk"
+  },
+  {
+   "id": "ingenuity",
+   "title": "Ingenuity Mars Helicopter",
+   "org": "NASA",
+   "url": "https://science.nasa.gov/mission/mars-2020-perseverance/ingenuity-mars-helicopter/",
+   "use": "The first flight, sol 58"
+  },
+  {
+   "id": "m2020-samples",
+   "title": "Mars rock samples (Perseverance)",
+   "org": "NASA",
+   "url": "https://science.nasa.gov/mission/mars-2020-perseverance/mars-rock-samples/",
+   "use": "Roubion, Montdenier, Montagnac"
+  },
+  {
+   "id": "m2020",
+   "title": "Mars 2020 Perseverance mission",
+   "org": "NASA",
+   "url": "https://science.nasa.gov/mission/mars-2020-perseverance/",
+   "use": "Landing site and mission facts"
+  },
+  {
+   "id": "m20-ctx",
+   "title": "Mars 2020 Science Investigation CTX orthomosaic of Jezero, 5 m",
+   "org": "NASA/JPL-Caltech/MSSS/USGS (Mangold et al. 2021)",
+   "url": "https://doi.org/10.1126/science.abl4051",
+   "use": "The crater-wide photo under the map"
+  }
+ ],
+ "aiDisclosure": "AI coding assistants were used to accelerate scaffolding, data retrieval scripts, code generation and review. All positions, elevations, imagery and mission findings come from the public sources listed. Suit telemetry and space-weather scenarios are simulated and labelled as such.",
+ "briefing": {
+  "kicker": "EVA-JZ · Jezero crater · beta",
+  "title": "A rover walked this ground alone so that you would not have to.",
+  "body": [
+   "For fourteen years one machine climbed this mountain at a few metres a day. Every place it stopped, it left a record: where it stood, how far it tilted, what the rock was made of, what the sky was doing.",
+   "On Earth, hikers stack stones into cairns to mark the safe way for whoever comes next. REDCAIRN turns the rover's stops into cairns. This is the first trail on Mars a person can follow out, and follow home."
+  ],
+  "cta": "Open the trail"
+ },
+ "anchorResources": [
+  {
+   "source": "trek",
+   "name": "Mars Trek",
+   "role": "The planning map is built on Mars Trek's own tiles (HiRISE 25 cm, CTX, THEMIS night infrared, MOLA + HRSC colour height, the USGS geology service), and every height in the app (the 1 m elevation model of the walk, the crater, the 360° horizon) comes from Mars Trek services."
+  },
+  {
+   "source": "usgs-geology",
+   "name": "USGS planetary geologic mapping",
+   "role": "The Rock units layer on the planning map (USGS SIM 3292 via Mars Trek): Mount Sharp (Htu) inside the crater's impact unit (AHi). Htu is the unit under the whole walk."
+  },
+  {
+   "source": "mount-sharp-route",
+   "name": "Curiosity's proposed path up Mount Sharp",
+   "role": "The planning map's 'Curiosity's whole climb' layer and the intro, where the line draws itself over Mount Sharp rendered in 3D: the route the team planned up Mount Sharp, as Curiosity actually drove it, landing to sol 5,073. Our walk follows its 2025–26 stretch."
+  },
+  {
+   "source": "worldview",
+   "name": "Worldview",
+   "role": "Each cairn named after a place on Earth (Altadena, Valle de la Luna, Nevado Sajama, the Atacama) links to that place in Worldview, on the map and in the 3D ground view."
+  },
+  {
+   "source": "m2020-raw",
+   "name": "Perseverance raw images",
+   "role": "Perseverance's newest raw image, fetched live, and its Navcam photo at every stop of the second walk, Jezero (beta), which the same engine builds from Jezero's own maps."
+  }
+ ],
+ "liveFeeds": {
+  "perseveranceLatest": "https://mars.nasa.gov/rss/api/?feed=raw_images&category=mars2020&feedtype=json&num=1&page=0&order=sol+desc&search=NAVCAM_LEFT&extended=sample_type::full"
+ },
+ "views": {
+  "walk": {
+   "label": "The walk",
+   "bounds": {
+    "west": 77.438,
+    "east": 77.455984,
+    "north": 18.448006,
+    "south": 18.424016
+   }
+  },
+  "mountain": {
+   "label": "The delta",
+   "bounds": {
+    "west": 77.25,
+    "south": 18.36,
+    "east": 77.62,
+    "north": 18.58
+   }
+  },
+  "crater": {
+   "label": "The crater",
+   "bounds": {
+    "west": 77.0,
+    "south": 18.0,
+    "east": 77.95,
+    "north": 18.9
+   }
+  }
+ },
+ "question": {
+  "title": "Was there life in the lake?",
+  "text": "Jezero held a lake 3.5 billion years ago. Perseverance is sealing rock in tubes so it can be studied on Earth. Your walk goes to the first rock it kept.",
+  "factCheck": "No sign of life has been confirmed. The cores are waiting to be studied.",
+  "sources": [
+   "m2020-samples"
+  ]
+ },
+ "rover": {
+  "name": "Perseverance",
+  "landingUTC": "2021-02-18T20:55:00Z",
+  "primeSols": null
+ },
+ "siteImages": {
+  "map": "assets/img/jezero/site-hirise.jpg",
+  "ground": "assets/img/jezero/site-ortho.jpg",
+  "horizon": null,
+  "wide": {
+   "url": "assets/img/jezero/crater-ctx.jpg",
+   "bounds": {
+    "west": 77.00085397837795,
+    "east": 78.58147460363604,
+    "north": 19.28896260880024,
+    "south": 17.581391027725086
+   },
+   "credit": "MRO CTX orthomosaic of Jezero, Mars 2020 science team (Mangold et al. 2021), NASA/JPL-Caltech/MSSS/USGS"
+  }
+ }
+}

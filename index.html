@@ -27,10 +27,11 @@
 
   <!-- The planning map: Mars Trek's own tiles, our computed layers, the routes and the cairns. -->
   <div class="map" id="map"><div class="coords" id="coords" hidden></div>
-    <div class="sheet" aria-hidden="true"><svg viewBox="0 0 18 34"><path d="M9 1 L16 22 L9 17 Z" fill="#ece5d8"/><path d="M9 1 L2 22 L9 17 Z" fill="none" stroke="#ece5d8" stroke-width="1"/><text x="9" y="33" text-anchor="middle" fill="#ece5d8" font-size="10" font-family="Archivo, sans-serif" font-weight="700">N</text></svg><b>GALE CRATER, MARS</b><span>Mount Sharp, lower slopes</span><span>Mars Trek tiles · north up</span></div><div class="scale" aria-hidden="true"><span class="scale__bar" id="scale-bar"></span><span id="scale-text"></span></div></div>
+    <div class="sheet" aria-hidden="true"><svg viewBox="0 0 18 34"><path d="M9 1 L16 22 L9 17 Z" fill="#ece5d8"/><path d="M9 1 L2 22 L9 17 Z" fill="none" stroke="#ece5d8" stroke-width="1"/><text x="9" y="33" text-anchor="middle" fill="#ece5d8" font-size="10" font-family="Archivo, sans-serif" font-weight="700">N</text></svg><b id="sheet-a">GALE CRATER, MARS</b><span id="sheet-b">Mount Sharp, lower slopes</span><span>Mars Trek tiles · north up</span></div><div class="scale" aria-hidden="true"><span class="scale__bar" id="scale-bar"></span><span id="scale-text"></span></div></div>
   <aside class="mapui" id="mapui" aria-label="Map layers and data"></aside>
   <!-- The story, told on the map one beat at a time. -->
   <article class="guide" id="guide" aria-live="polite" hidden></article>
+  <div class="provbox" id="provbox" role="dialog" aria-label="Where this number comes from" hidden></div>
   <!-- What the illustration is drawing, in a mapmaker's key. -->
   <aside class="inklegend" id="inklegend" aria-label="Key to the drawing"></aside>
   <div class="mapbar"><button type="button" class="mapbar__story" data-a="story">Back to the story</button><button type="button" class="mapbar__layers" data-a="layers">Layers</button></div>
@@ -45,7 +46,8 @@
       <p class="film__mark">Redcairn</p>
       <h1>Finding Curiosity</h1>
       <p class="film__sub">A survival map for the first walk on Mars</p>
-      <div class="film__start"><button type="button" class="act" data-a="filmsound">Begin, with sound</button><button type="button" class="act act--alt" data-a="filmquiet">Without sound</button></div>
+      <div class="film__start"><button type="button" class="act" data-a="filmsound">Begin, with sound<small>a 25-second opening</small></button><button type="button" class="act act--alt" data-a="filmmap">Straight to the map<small>skip the opening</small></button></div>
+      <button type="button" class="link film__quiet" data-a="filmquiet">Without sound</button>
     </div>
   </section>
 
@@ -80,22 +82,24 @@
 
   <nav class="sections" id="sections" aria-label="Jump to a part of the walk">
     <button type="button" data-go="intro" class="sections__home">Redcairn</button>
+    <a class="sections__site" id="site-link" href="?site=jezero" title="Switch to the other site (same engine, different crater)"><span class="w">Gale · </span>Jezero <sup>beta</sup></a>
     <button type="button" data-go="plan"><i>1</i>Plan</button>
     <button type="button" data-go="walk"><i>2</i>Walk</button>
     <button type="button" data-go="storm"><i>3</i>Storm</button>
     <button type="button" data-go="home"><i>4</i>Home</button>
     <button type="button" class="sections__sheet" id="btn-sheet" data-a="sheet" aria-pressed="false"><span class="w">Field </span>map</button>
     <button type="button" class="sections__sound" id="btn-sound" aria-pressed="false"><span class="w">Sound </span>off</button>
-    <button type="button" class="sections__about" id="btn-about"><span class="w">Architecture &amp; </span>data</button>
+    <button type="button" class="sections__about" id="btn-about"><span class="w">Numbers &amp; </span>data</button>
   </nav>
   <dialog class="about" id="about" aria-labelledby="about-title">
     <form method="dialog" class="about__head">
-      <h2 id="about-title">System architecture &amp; data attribution</h2>
+      <h2 id="about-title">The numbers, system architecture &amp; data attribution</h2>
       <button class="link" type="submit">Close</button>
     </form>
     <div class="about__body" id="about-body"></div>
   </dialog>
 
+  <div class="judge" id="judge" hidden aria-live="polite"></div>
   <div class="loading" id="loading"><span id="boot-text">Loading Mars…</span></div>
   <noscript><p style="padding:96px 24px;color:#f0e7d9">REDCAIRN needs JavaScript to draw Mars.</p></noscript>
   <script type="module" src="js/app.js"></script>

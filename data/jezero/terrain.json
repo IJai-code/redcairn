@@ -1,0 +1,22 @@
+{
+ "schema": "redcairn.terrain/1",
+ "generatedBy": "tools/build_jezero.py",
+ "source": "https://asc-pds-services.s3.us-west-2.amazonaws.com/mosaic/mars2020_trn/HiRISE/JEZ_hirise_soc_006_DTM_MOLAtopography_DeltaGeoid_1m_Eqc_latTs0_lon0_blend40.tif",
+ "credit": "NASA/JPL-Caltech/University of Arizona/USGS",
+ "file": "data/jezero/terrain.bin",
+ "encoding": "int16 little-endian, row-major, row 0 is the northern edge",
+ "cols": 533,
+ "rows": 711,
+ "bounds": {
+  "west": 77.43799954770267,
+  "east": 77.45598361248142,
+  "north": 18.44800641234899,
+  "south": 18.42401641224075
+ },
+ "cellMX": 1.8974,
+ "cellMY": 2.0,
+ "baseElevM": -2593,
+ "unitsPerMetre": 10,
+ "minElevM": -2592.68,
+ "maxElevM": -2544.73
+}

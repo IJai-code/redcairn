@@ -1,24 +1,41 @@
 # REDCAIRN: Finding Curiosity
 
-**A survival map for the first walk on Mars, and the walk has a destination: the rover itself.**
+**Could you walk 2.7 km across Mars to a rover that has been alone since 2012, and get home before the Sun turns on you?**
+REDCAIRN is the layered survival map that gets you there: slope for a spacesuit, air, radiation and the way home from every 2 m of real ground.
+Every number is computed in your browser from NASA data, and tapping any number shows its source.
+**Live:** <https://ijai-code.github.io/redcairn/> · **Judge Mode (90 s, hands-free):** <https://ijai-code.github.io/redcairn/#judge> · **Second site, Jezero (beta):** <https://ijai-code.github.io/redcairn/?site=jezero>
+2026 NASA Space Apps, *Interplanetary Survival Guide: Martian Map*. An independent student project, not affiliated with or endorsed by NASA.
 
-Curiosity has been alone on Mount Sharp since 2012. Its real track ends at its latest stop, sol 5,073. REDCAIRN sends the first person on Mars to walk the last 2.7 km of its tracks, find it, and come home alive. The survival map (slope for a suit, air, radiation, the way home from every point, a solar storm) is how you get there.
+## Same engine, two craters
 
-Live: <https://ijai-code.github.io/redcairn/>
+The method is not hand-tuned to one place. The same scripts and the same browser engine build each walk from four public inputs: a 1 m orbital elevation model, a 25 cm orbital photo, a rover's own track and its photos. Each elevation model is checked against the heights the rover itself measured on that ground.
 
-> Built for the 2026 NASA International Space Apps Challenge, *Interplanetary Survival Guide: Martian Map*. An independent student project, not affiliated with or endorsed by NASA or any space agency.
+| Site | Rover track walked | Walk | Steepest | Elevation model vs rover heights | Cells routed |
+|---|---|---|---|---|---|
+| Gale crater, Mount Sharp | Curiosity, sols 4560–5073 | 2.71 km | 16.6° | **1.65 m RMS** (573 points) | 386,912 |
+| Jezero crater floor (beta) | Perseverance, sols 13–180 | 1.86 km | 10.1° | **0.41 m RMS** (248 points) | 378,963 |
+
+Jezero is built by `tools/fetch_jezero_dtm.py`, `tools/fetch_jezero_ortho.py` and `tools/build_jezero.py`. They read only the needed window out of the 1.8 GB and 3.4 GB Mars 2020 landing maps with HTTP range requests.
+
+## The numbers (Gale)
+
+| | |
+|---|---|
+| Walk-home time computed for | 386,912 patches of ground, in about 0.2 s in your browser |
+| Three routes to the rover, round trip | rover-proven 5.3 km, 4 h 39 · fastest 3.6 km, 3 h 59 · gentlest 3.7 km, 4 h 02 |
+| Real solar storm of September 2017 (RAD peak ≈ 3× normal), from the rover | the map's new line **0.05 mSv**, 35 min · the way you came 0.08 mSv, 57 min · shelter behind the best ridge 0.18 mSv |
+| Whole walk | 0.13 mSv, 0.02% of the NASA career limit, 3 h 00 of air to spare |
 
 ## How it plays
 
-1. **The opening.** Five illustrated plates, one true line each: it landed alone in 2012; it played itself "Happy Birthday" once; rock tore its wheels and it kept climbing; it photographed Earth as a point of light; fourteen years later, you land. *Go and find it.* Every plate is **drawn by Blender from the real elevation data** (`tools/blender_plates.py`): ink contour lines every 2 m of real height, flat tones, the team's rover and a suited figure standing at real waypoints. No AI images.
-2. **The map.** Mars Trek tiles, Curiosity's whole 14-year line, and the three questions: where is it safe to step, what is worth stopping for, can I get home?
-3. **The plan.** Slope for a spacesuit and three routes to the rover: rover-proven 5.3 km round trip (4 h 39), fastest 3.6 km, gentlest 3.7 km.
-4. **Five cairns along its tracks, in a living illustration.** During the story the screen is the real 1 m ground drawn live in the plates' style: flat tones from the sun and the HiRISE photo, ink contour lines every 2 m of real height, the horizon drawn in ink by Blender from MOLA + HRSC (`tools/blender_horizon_ink.py`), and the data drawn the way a mapmaker draws it: hachures on ground that needs care, cross-hatching where it is too steep, stipple where hills shelter you from radiation, Curiosity's wheel tracks as a fine line. You, a suited figure, walk each leg behind the team's rover model at true scale. The moment is told in film captions over the drawing, with the four live numbers (air, walk home, dose, time out) in a small readout and Curiosity's photo and the detail one click away. The real Mars Trek map stays on screen as a live inset that follows you; click it (or **Field map**) for every layer and the cursor readout. At each cairn: one true moment from the mission, Curiosity's own photo from that spot, your air, the walk home and dose.
-5. **Curiosity.** You reach it at its real position. Its newest raw image is fetched live from NASA. You can kneel at its torn wheel.
-6. **The storm.** A simulated solar storm as you leave the rover. Three ways home drawn on the real terrain: the new line (35 min, 0.31 mSv), the way you came (57 min, 0.52 mSv), shelter behind a ridge (1.12 mSv; the best ridge blocks 10%).
-7. **Home.** The three questions answered with your numbers, and its mission clock still ticking, years past its planned one Mars year.
+1. **The opening.** Five plates, each one true line: it landed alone in 2012; it played itself "Happy Birthday" once; rock tore its wheels and it kept climbing; it photographed Earth; fourteen years later, you land. Blender drew every plate from the real elevation data (`tools/blender_plates.py`). No AI images. You can skip straight to the map.
+2. **The plan.** Mars Trek tiles, Curiosity's 14-year line, and three routes to the rover drawn on slope for a suit.
+3. **Five cairns along its tracks**, on the real 1 m ground drawn live in ink: contours every 2 m of real height, hachures where the ground needs care, stipple where hills shelter you from radiation. At each cairn you get one true moment from the mission, Curiosity's photo from that spot, and four live numbers: air, walk home, dose and time out.
+4. **Curiosity.** You reach it at its real position. Its newest raw image is fetched live. You can kneel at its torn wheel.
+5. **The storm.** The real September 2017 solar storm arrives. You choose between three ways home on the real terrain.
+6. **Home.** The three questions are answered with your numbers, and its mission clock is still ticking. Save a **result card** of your walk.
 
-Point anywhere on the map for coordinates and, on the site, elevation, slope for a suit and minutes to walk home. The panel shows only the layers that are on, with legends; **All 11 layers** opens the full set (optical, topographic, thermal, spectral, geologic, chemical, radiation, ground truth, computed). On the suit radio, Curiosity's real first post from Mars is marked *real*; the habitat and your partner EVA-2 are marked *imagined*.
+Point anywhere on the map for coordinates, elevation, slope and minutes to walk home. Eleven layers are available: optical, topographic, thermal, spectral, geologic, chemical, radiation, ground truth and computed. On the suit radio, Curiosity's real first post is marked *real*; the habitat and your partner EVA-2 are marked *imagined*.
 
 ## Sound
 
@@ -36,13 +53,13 @@ Most entries open as a dark dashboard. REDCAIRN opens as a story with a look of 
 | [USGS planetary geologic mapping](https://astrogeology-usgs.hub.arcgis.com/pages/interactive-maps-mars) | The **Rock units** layer on the map: Mount Sharp (Htu) inside the crater's impact unit (AHi) |
 | [Curiosity's proposed path up Mount Sharp](https://science.nasa.gov/resource/curiositys-proposed-path-up-mount-sharp/) | The intro beat and the "Curiosity's whole climb" layer: the 38.6 km route that plan became; our walk is its 2025–26 stretch |
 | [Worldview](https://worldview.earthdata.nasa.gov/) | Each cairn named after a place on Earth links to that place in Worldview |
-| [Perseverance raw images](https://mars.nasa.gov/mars2020/multimedia/raw-images/) | "The other rover, today": Perseverance's newest raw image from Jezero crater, fetched live; the engine needs only an elevation model and a rover's photos |
+| [Perseverance raw images](https://mars.nasa.gov/mars2020/multimedia/raw-images/) | Perseverance's newest raw image, fetched live, and its Navcam photo at every stop of the **Jezero walk (beta)**, built by the same engine |
 
 ## What is real and what is simulated
 
 **Real:** the ground, its height and slope, the route (the rover's own track), the photographs, the rock findings, the weather report, the normal radiation rate and the measured effect of terrain on it, the water-mineral detections, the geologic units, and every date and figure about the machines. The 1 m elevation model agrees with the rover's own elevations to 1.65 m RMS along the 2.7 km route.
 
-**Simulated, and labelled in the app:** the suit (air, battery, pace), you, the time compression of the walk, the solar storm (made 20 times stronger than the September 2017 event so the drill is easy to follow, and 2 h long for the shelter option), and the rocks smaller than a metre scattered for scale, since HiRISE cannot resolve them. The walk is at true scale; the Blender crater render in the intro stretches heights ×3.
+**Simulated, and labelled in the app:** the suit (air, battery, pace), you, the time compression of the walk, the storm's timing (the real September 2017 event, at its measured peak of about 3× background, is replayed as you leave the rover), and the rocks smaller than a metre scattered for scale, since HiRISE cannot resolve them. The walk is at true scale; the Blender crater render in the intro stretches heights ×3.
 
 ## Run locally
 

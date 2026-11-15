@@ -3,20 +3,25 @@
 Everything you need to record the demo. The rule: **30 seconds or less**, or it is not eligible for global judging.
 Stills of every shot are in `docs/video/` (1920×1080, rendered from the live build).
 
-## The arc
+## The finished cut
 
-The opening film is most of the video. Let it play, then show the map doing its job.
+`docs/video/redcairn-30s.mp4` is the finished cut: 30.0 s, 1920×1080, 30 fps, AAC audio at about −14 LUFS. Upload it as is.
 
-| Time | Picture | On screen / voice-over |
-|---|---|---|
-| 0:00–0:04 | Plate 1, Mount Sharp (the opening, root URL) | **Audio:** the 2013 birthday tune, quiet. Caption on screen: "In August 2012, a rover landed alone in Gale crater…" |
-| 0:04–0:08 | Plate 2, the rover at dusk | "On its first birthday, it played itself Happy Birthday. Once." |
-| 0:08–0:11 | Plate 3, the wheels | "Sharp rock tore its wheels. It kept climbing." |
-| 0:11–0:14 | Plate 4, Earth as a point of light | "One evening, it photographed Earth." |
-| 0:14–0:18 | Plate 5, you at the hatch, then the map with the slope layer | **VO:** "Fourteen years later, you land. This map gets you to it: slope, air, radiation, the way home." |
-| 0:18–0:24 | Walk to the rover in the 3D window (`#stop-5` → Follow its tracks); plate 6, "You found it." | **Radio (EVA-2):** "There it is. Fourteen years, and it's still working." |
-| 0:24–0:28 | The storm: three ways home on the map | **VO:** "When the Sun flares, the map already knows the way home." |
-| 0:28–0:30 | Home card | Caption: "It walked this ground alone, so you wouldn't have to." End card: **REDCAIRN · ijai-code.github.io/redcairn** |
+| Time | Picture | Caption | Sound |
+|---|---|---|---|
+| 0:00–0:07 | Blender plates: Mount Sharp, the torn wheels, you at the hatch | "A rover landed alone, and began to climb." / "Sharp rock tore its wheels. It kept climbing." / "You land. Your first walk: find it, and come home." | NASA Goddard's 2013 recording of SAM playing "Happy Birthday" |
+| 0:07–0:11 | The field map: HiRISE photo, slope for a suit, Curiosity's track, cursor readout | "Slope for a spacesuit, from NASA's 1 m elevation model. Point anywhere: height, slope, minutes to walk home." | Score in; radio: "Habitat to EVA-1 and EVA-2: route uploaded. Pick your line." |
+| 0:11–0:13 | Tapping a number opens its source | "Tap it: what it is, how it's computed, which NASA data it comes from." | |
+| 0:13–0:19 | Walking the tracks; reaching Curiosity at its real position | "You walk Curiosity's real tracks, at true scale." / "You found it." | Radio: "There it is. Fourteen years, and it's still working." |
+| 0:19–0:25 | The real September 2017 storm: flash, three ways home, the new line | "The Sun flares. Three ways home…" / "The new line home: 41% less radiation than the way you came." | Drone; radio: "I'm with you. Your call." |
+| 0:25–0:27 | Jezero: Perseverance's whole track on the crater photo | "Jezero, built from Perseverance's own maps. Checked against the rover: 0.41 m." | Score resolves |
+| 0:27–0:30 | End card: plate 6, the line, the URL, the data credits | "It walked this ground alone, so you wouldn't have to." | Radio: "Both suits at the hatch. Welcome home." |
+
+How it was made:
+- **Picture.** Every app shot was recorded from the real site in Chrome (frame by frame, CDP screencast). The plates are the Blender renders.
+- **Score.** Synthesised in code from sine partials, with no samples.
+- **Voices.** The team's recordings, through a radio filter: band-pass, compression, soft clipping and a hiss bed.
+- **AI.** No AI images, music or voices.
 
 ## How to record (Mac)
 

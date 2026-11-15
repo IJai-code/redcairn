@@ -1,0 +1,165 @@
+{
+ "schema": "redcairn.story/2",
+ "note": "Every chapter is one headline and one sentence. Values in {braces} are filled from the data files at run time.",
+ "missions": [
+  "Viking",
+  "Mars Global Surveyor",
+  "Mars Reconnaissance Orbiter",
+  "Perseverance",
+  "Ingenuity",
+  "Curiosity"
+ ],
+ "chapters": {
+  "mars": {
+   "kicker": "Interplanetary Survival Guide: Martian Map",
+   "title": "Your first walk on Mars.",
+   "line": "Six missions mapped this ground before you arrived. REDCAIRN turns what they saw into a guide you can walk."
+  },
+  "crater": {
+   "kicker": "Where · Gale crater",
+   "title": "A mountain inside a crater.",
+   "line": "Gale is 154 km across. Mount Sharp rises {mountainKm} km from its floor. You will walk on its lower slopes."
+  },
+  "water": {
+   "kicker": "Why · seen from orbit",
+   "title": "Orbiters saw water here first.",
+   "line": "Blue dots: minerals that only form in water, found from orbit by CRISM and OMEGA. That is why we came."
+  },
+  "rover": {
+   "kicker": "Who went first",
+   "title": "A rover tested the ground for you.",
+   "line": "Curiosity drove {roverKm} km and climbed {roverClimb} m in fourteen years. The white end of its line is your walk."
+  },
+  "walk": {
+   "kicker": "The plan",
+   "title": "1.5 km out. Five stops. Home with air to spare.",
+   "line": "Green ground is safe in a suit, amber needs care, red is too steep. The route is the rover's own track."
+  },
+  "storm": {
+   "kicker": "Simulated drill · solar storm",
+   "title": "The Sun just flared.",
+   "line": "REDCAIRN redraws the way home: {directMin} instead of {trailMin}, with {less}% less radiation. No hill here blocks more than {shelter}%. Go now."
+  },
+  "home": {
+   "kicker": "Back at the rover",
+   "title": "Home, with {airLeft} of air.",
+   "line": "Curiosity is still out there, {roverAheadM} m past your turnaround, climbing. It walked this ground alone so that you would not have to."
+  }
+ },
+ "objective": "Today: walk {walkKm} km of Perseverance’s first tracks, from where it landed to the first rock it kept, and be home with air to spare.",
+ "stops": {
+  "DOCK": {
+   "title": "The hatch",
+   "q": "Where do I start?",
+   "moment": "You are standing where it landed.",
+   "sub": "Perseverance touched down here on 18 February 2021, after seven minutes of falling. The team named the place Octavia E. Butler Landing. Its first tracks lead south. Follow them.",
+   "layers": [
+    "slope"
+   ]
+  },
+  "WP1": {
+   "title": "The overlook",
+   "q": "What happened here?",
+   "moment": "From here, it watched something fly.",
+   "sub": "19 April 2021. Perseverance parked on this spot and turned its cameras east. Ingenuity, a 1.8 kg helicopter carrying a scrap of the Wright brothers’ 1903 Flyer, rose three metres and hovered for 39 seconds. It went on to fly 72 times.",
+   "layers": [
+    "slope"
+   ]
+  },
+  "WP2": {
+   "title": "Máaz",
+   "q": "Is this lake mud?",
+   "moment": "They expected lake mud. They found lava.",
+   "sub": "The floor of Jezero turned out to be volcanic rock, later touched by water. The team named it Máaz, the Navajo word for Mars. Your suit’s slope limit is 20°; here the ground barely tilts.",
+   "layers": [
+    "slope"
+   ]
+  },
+  "WP3": {
+   "title": "Roubion",
+   "q": "What went wrong?",
+   "moment": "Its first try came up empty.",
+   "sub": "6 August 2021. The drill went in, the rock crumbled, and the tube sealed with nothing but Martian air. The team kept it anyway: the first sample of another planet’s air waiting to come home. Purple ground on the map hides part of the sky.",
+   "layers": [
+    "shield"
+   ]
+  },
+  "PERSEVERANCE": {
+   "title": "Rochette",
+   "q": "What did it keep?",
+   "moment": "Here it kept its first piece of Mars.",
+   "sub": "September 2021. Two cores from this ridge, Montdenier and Montagnac, sealed in tubes: the first rock from another planet set aside to be brought home. Perseverance has moved on; today it is far up the crater rim, still driving.",
+   "layers": [
+    "slope"
+   ]
+  }
+ },
+ "radio": {
+  "_note": "Lines heard on the suit radio, one at a time. 'real' lines are quoted from the source named; every other line is imagined and says so on screen. 'audio' is played through the radio filter if the file exists.",
+  "plan": [
+   {
+    "who": "Habitat",
+    "text": "Habitat to EVA-1 and EVA-2: route uploaded. Pick your line.",
+    "audio": "assets/audio/02-habitat-route.m4a"
+   }
+  ],
+  "stop-0": [
+   {
+    "who": "Habitat",
+    "text": "Habitat to EVA-1, EVA-2: you are clear. Follow its tracks.",
+    "audio": "assets/audio/03-habitat-clear.m4a"
+   }
+  ],
+  "stop-3": [
+   {
+    "who": "EVA-2",
+    "text": "Turnaround. Leave something for whoever comes next.",
+    "audio": "assets/audio/06-eva2-turnaround.m4a"
+   }
+  ],
+  "storm": [
+   {
+    "who": "EVA-2",
+    "text": "I’m with you. Your call.",
+    "audio": "assets/audio/08-eva2-yourcall.m4a"
+   }
+  ],
+  "storm-chosen": [
+   {
+    "who": "EVA-2",
+    "text": "Right behind you.",
+    "audio": "assets/audio/09-eva2-behind.m4a"
+   }
+  ],
+  "home": [
+   {
+    "who": "Habitat",
+    "text": "Both suits at the hatch. Welcome home, {name}.",
+    "audio": "assets/audio/10-habitat-home.m4a"
+   }
+  ]
+ },
+ "cards": {
+  "intro": {
+   "kicker": "Beta · second site · same engine",
+   "title": "Jezero crater: where Perseverance landed.",
+   "body": "This is the second walk, built by the same scripts from Jezero’s own maps: the 1 m elevation model and 25 cm photo Perseverance used to land, and the track it drove. The orange line is Perseverance, {roverKm} km in {latestSol} sols. Your walk follows its first {walkKm} km, from where it landed to the first rock it kept."
+  },
+  "storm": {
+   "body": "You and EVA-2 are at Rochette, {walkKm} km from the hatch. The real solar storm of September 2017 is replayed here, as Curiosity measured it at Gale (Perseverance carries no particle-radiation detector). The map has drawn three ways back on Jezero’s real terrain."
+  },
+  "home": {
+   "title": "It came here to leave something for us.",
+   "body": "You walked {walkKm} km of the first tracks Perseverance made, to the first rock it kept for Earth, and came home. That tube is still waiting to be collected.{mine}"
+  },
+  "roverStop": {
+   "kicker": "Rochette · sol {sol} · the first rock cores",
+   "win": "Where Perseverance stood on sol {sol}, drilling its first cores. Our rover model marks the spot; the real rover has moved on. Drag to look around."
+  },
+  "homeWin": "From the hatch, looking back along its tracks.",
+  "sol": {
+   "label": "Perseverance, today",
+   "note": "Landed 18 February 2021."
+  }
+ }
+}

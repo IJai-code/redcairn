@@ -48,7 +48,9 @@ export class MapView {
       if (b.id === 'mola') L.tileLayer(b.url, { pane: 'under', tileSize: 256, minZoom: 0, maxNativeZoom: b.maxNativeZoom, maxZoom: 19, noWrap: true }).addTo(this.map);
     }
     // The walk site at about 33 cm per pixel (HiRISE, cut to the site in tools/build_ortho.py): sharp at walking zoom.
-    L.imageOverlay('assets/img/site-hirise.jpg', this.bounds, { pane: 'site', interactive: false }).addTo(this.map);
+    L.imageOverlay((mission.siteImages || {}).map || 'assets/img/site-hirise.jpg', this.bounds, { pane: 'site', interactive: false }).addTo(this.map);
+    const wide = (mission.siteImages || {}).wide;
+    if (wide) { const wb = wide.bounds; L.imageOverlay(wide.url, [[wb.south, wb.west], [wb.north, wb.east]], { pane: 'hirise', interactive: false, attribution: wide.credit }).addTo(this.map); }
     for (const name of ['rocks', 'track', 'minerals', 'shelters', 'curiosity']) this.layers[name] = L.layerGroup();
     this.routeGroup = L.layerGroup().addTo(this.map);
     this.retGroup = L.layerGroup().addTo(this.map);
@@ -188,8 +190,9 @@ export class MapView {
     L.polyline(line, { pane: 'curiosity', color: '#1c1612', weight: 6, opacity: 0.6, interactive: false }).addTo(g);
     L.polyline(line, { pane: 'curiosity', color: '#ff8a4c', weight: 3, interactive: false }).addTo(g);
     const tag = (ll, text, anchor) => L.marker(ll, { icon: L.divIcon({ className: '', html: `<span class="map-tag">${text}</span>`, iconSize: null, iconAnchor: anchor }), interactive: false, keyboard: false }).addTo(g);
-    tag([gale.rover.landing[1], gale.rover.landing[0]], 'Curiosity landed · Aug 2012', [-10, 26]);
-    tag([gale.rover.latest[1], gale.rover.latest[0]], `Curiosity today · sol ${gale.rover.latestSol.toLocaleString('en-US')}`, [-10, -8]);
+    const nm = gale.rover.name || 'Curiosity';
+    tag([gale.rover.landing[1], gale.rover.landing[0]], `${nm} landed · ${gale.rover.landedLabel || 'Aug 2012'}`, [-10, 26]);
+    tag([gale.rover.latest[1], gale.rover.latest[0]], `${nm} today · sol ${gale.rover.latestSol.toLocaleString('en-US')}`, [-10, -8]);
   }
 
   setLayer(name, on, opacity) {

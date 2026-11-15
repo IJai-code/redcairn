@@ -415,7 +415,7 @@ export class Stage {
     this.ground = new THREE.Mesh(geo, groundMat);
     this.ground.receiveShadow = true;
     s.add(this.ground);
-    loadTexture('assets/img/site-ortho.jpg').then((tex) => {
+    loadTexture((this.data.mission.siteImages || {}).ground || 'assets/img/site-ortho.jpg').then((tex) => {
       if (!tex) return;
       groundMat.map = tex; groundMat.needsUpdate = true;
       if (this.inkMat) { this.inkMat.uniforms.photo.value = tex; this.inkMat.uniforms.has.value = 1; }
@@ -525,7 +525,8 @@ export class Stage {
     this.sky.renderOrder = -1;
     this.sky.frustumCulled = false;
     this.wScene.add(this.sky);
-    loadTexture('assets/img/horizon-ink.jpg').then((tex) => {
+    const hz = (this.data.mission.siteImages || {}).horizon;
+    (hz === null ? Promise.resolve(null) : loadTexture(hz || 'assets/img/horizon-ink.jpg')).then((tex) => {
       if (!tex) return;
       mat.uniforms.map.value = tex; mat.uniforms.has.value = 1;
       // The distance fades into the colour of the real horizon, so ground and sky meet without a seam.
