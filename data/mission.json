@@ -891,7 +891,7 @@
     {
       "source": "m2020-raw",
       "name": "Perseverance raw images",
-      "role": "Perseverance's newest picture is fetched live and shown on the planning map's conditions and at the end of the walk: the other rover, still working."
+      "role": "The planning map's 'Next walk: Jezero crater' section shows Perseverance's newest raw image, fetched live: REDCAIRN's engine needs only an elevation model and a rover's photos, and Jezero is the next site it would map."
     }
   ],
   "liveFeeds": {

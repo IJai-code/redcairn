@@ -51,7 +51,9 @@
       "title": "The rover that brought you",
       "line": "Check your suit and radio. Every step from here is on ground a rover already crossed.",
       "q": "Where do I start, and can I trust this ground?",
-      "a": "Right here, beside the rover that brought you. Every step ahead is on ground Curiosity has already crossed."
+      "a": "Right here, beside the rover that brought you. Every step ahead is on ground Curiosity has already crossed.",
+      "moment": "This rover drove here alone, a year before you.",
+      "sub": "The rock under your boots is called Altadena. The team named it for their own neighbourhood beside the lab, which burned in the Eaton Fire months before. Your walk starts at a place named for home."
     },
     "WP1": {
       "title": "The steep part",
@@ -60,7 +62,9 @@
         "slope"
       ],
       "q": "Can my suit handle a real hill?",
-      "a": "Yes, with care. Curiosity tilted 17° here and your suit’s limit is 20°. Home is seven minutes away, so this is the safest place to find out."
+      "a": "Yes, with care. Curiosity tilted 17° here and your suit’s limit is 20°. Home is seven minutes away, so this is the safest place to find out.",
+      "moment": "On this slope, the rover tilted 17° and kept going.",
+      "sub": "Your suit’s limit is 20°. Home is seven minutes behind you, so this is the place to learn how a pressurised suit handles a real hill."
     },
     "WP2": {
       "title": "Monte Grande: the boxwork",
@@ -69,7 +73,9 @@
         "rocks"
       ],
       "q": "Where did the water go?",
-      "a": "Into the cracks. It left minerals that set like cement, and wind wore the softer rock away, leaving ridges. Core the ridge and the hollow to see what the water carried."
+      "a": "Into the cracks. It left minerals that set like cement, and wind wore the softer rock away, leaving ridges. Core the ridge and the hollow to see what the water carried.",
+      "moment": "“Go big or go home,” the team wrote, here.",
+      "sub": "They drilled the hollow and the ridge top ten metres apart and named them for a desert valley and Bolivia’s highest peak. Water once flowed through these cracks and set like cement. Core both and see what it carried."
     },
     "WP3": {
       "title": "The last ridges",
@@ -78,7 +84,9 @@
         "track"
       ],
       "q": "How long did the water last?",
-      "a": "Longer than anyone expected. These pea-sized nodules are another groundwater fingerprint, and they suggest the water lingered."
+      "a": "Longer than anyone expected. These pea-sized nodules are another groundwater fingerprint, and they suggest the water lingered.",
+      "moment": "The rover’s last week among the ridges. It photographed them one by one, then left.",
+      "sub": "You get to put a hand on one. Look for pea-sized nodules: proof the groundwater lasted longer than anyone expected."
     },
     "WP4": {
       "title": "The line in the rock",
@@ -87,7 +95,9 @@
         "rocks"
       ],
       "q": "When did this part of Mars start to dry?",
-      "a": "At this line. Water-altered ridges end and layered, salty rock begins. Sample both sides of it."
+      "a": "At this line. Water-altered ridges end and layered, salty rock begins. Sample both sides of it.",
+      "moment": "“Bye-Bye Boxwork,” the team called that week.",
+      "sub": "The rover crossed this line in a single drive. You can stand with a boot on each side: water underground behind you, a planet drying out ahead. Take rock from both."
     },
     "WP5": {
       "title": "The turnaround",
@@ -96,7 +106,15 @@
         "home"
       ],
       "q": "Can I get home from here?",
-      "a": "Yes. Look back: the whole walk is green, and every white line is five more minutes from the rover. Collect, then turn."
+      "a": "Yes. Look back: the whole walk is green, and every white line is five more minutes from the rover. Collect, then turn.",
+      "moment": "The turnaround. Look back: the whole walk is in view.",
+      "sub": "The rover drilled this salty rock twice. It formed as Mars lost its water. You have walked from the wet chapter of the story into the dry one. Time to go home."
     }
-  }
+  },
+  "radio": {
+    "hatch": "Habitat to EVA-1: you are clear. Follow the rover.",
+    "storm": "Habitat to EVA-1: solar particle event inbound. Come home now.",
+    "home": "Habitat to EVA-1: welcome home."
+  },
+  "objective": "Today: bring back rock from both sides of the line where this part of Mars began to dry, and be home with air to spare."
 }

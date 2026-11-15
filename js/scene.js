@@ -553,7 +553,10 @@ export class Stage {
           e.set(flat ? (rand() - 0.5) * 0.35 : rand() * 3, rand() * 6.28, flat ? (rand() - 0.5) * 0.35 : rand() * 3);
           q.setFromEuler(e);
           const sy = flat ? sz * (0.5 + rand() * 0.4) : sz * (0.45 + rand() * 0.4);
-          m.compose(new THREE.Vector3(x, this.heightAt(x, z) + sy * (flat ? 0.05 : 0.18), z), q, new THREE.Vector3(sz * (0.8 + rand() * 0.5), sy, sz * (0.8 + rand() * 0.4)));
+          // Seat it on the lowest ground under its footprint and bury it a little, as real stones sit in regolith.
+          const r0 = sz * 0.9;
+          const ground = Math.min(this.heightAt(x, z), this.heightAt(x + r0, z), this.heightAt(x - r0, z), this.heightAt(x, z + r0), this.heightAt(x, z - r0));
+          m.compose(new THREE.Vector3(x, ground - sy * (flat ? 0.45 : 0.35), z), q, new THREE.Vector3(sz * (0.8 + rand() * 0.5), sy, sz * (0.8 + rand() * 0.4)));
           mesh.setMatrixAt(used, m);
           const c = palette[Math.floor(Math.pow(rand(), 1.3) * palette.length)], j = 0.88 + rand() * 0.24;
           mesh.setColorAt(used, col.setRGB(c[0] * j, c[1] * j, c[2] * j));
@@ -740,7 +743,9 @@ export class Stage {
       const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 80, 20, 1, true), beamMat);
       beam.position.y = 40; beam.visible = false; beam.frustumCulled = false;
       g.add(beam);
-      g.position.copy(this.worldOf(wp.lon, wp.lat, 0));
+      // A cairn stands beside the trail, not on it: 3.5 m to the left of the way the rover drove.
+      const at = this.cairnPoint(k);
+      g.position.copy(at);
       g.rotation.y = rand() * 6.28;
       g.scale.setScalar(k ? 1 : 0.001);   // the dock has the rover, not a cairn
       this.wScene.add(g);
@@ -753,8 +758,25 @@ export class Stage {
       if (k === 0) el.dataset.start = '';
       el.addEventListener('click', () => this.onStop(k));
       this.pinRoot.appendChild(el);
-      this.pins.push({ el, kind: 'walk', local: this.worldOf(wp.lon, wp.lat, 2.6), id: k });
+      this.pins.push({ el, kind: 'walk', local: at.clone().setY(at.y + 2.6), id: k });
     });
+  }
+
+  // Where cairn k stands: beside the trail at that waypoint, on the ground.
+  cairnPoint(k) {
+    this.cairnAt = this.cairnAt || {};
+    if (this.cairnAt[k]) return this.cairnAt[k].clone();
+    const wp = this.data.mission.waypoints[k], eva = this.data.route.eva;
+    let best = 0, bd = Infinity;
+    eva.forEach((v, i) => { const d = (v.lon - wp.lon) ** 2 + (v.lat - wp.lat) ** 2; if (d < bd) { bd = d; best = i; } });
+    const a = this.worldOf(eva[Math.max(0, best - 3)].lon, eva[Math.max(0, best - 3)].lat);
+    const b = this.worldOf(eva[Math.min(eva.length - 1, best + 3)].lon, eva[Math.min(eva.length - 1, best + 3)].lat);
+    const c = this.worldOf(wp.lon, wp.lat);
+    let dx = b.x - a.x, dz = b.z - a.z;
+    const L = Math.hypot(dx, dz) || 1; dx /= L; dz /= L;
+    const x = c.x + dz * 3.5, z = c.z - dx * 3.5;
+    this.cairnAt[k] = new THREE.Vector3(x, this.heightAt(x, z), z);
+    return this.cairnAt[k].clone();
   }
 
   // Raise or hide cairns: before the rover has stopped somewhere, there is nothing there.

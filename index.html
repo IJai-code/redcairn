@@ -44,6 +44,7 @@
       <button type="button" class="act" data-a="begin">Begin the mission<small>3 minutes · you are the astronaut</small></button>
       <button type="button" class="act act--alt" data-a="explore">Skip to the map<small>every layer, free to explore</small></button>
     </div>
+    <p class="cover__sound">Best with sound: turn it on at the top right.</p>
     <p class="cover__meta">NASA Space Apps 2026 · Interplanetary Survival Guide: Martian Map · data from Viking, Mars Global Surveyor, Mars Odyssey, Mars Express, MRO, Curiosity and Perseverance</p>
   </section>
 
@@ -75,6 +76,8 @@
     <p class="hud__note">Suit numbers and pace are simulated. Ground, route, horizon and radiation rate are real.</p>
   </section>
 
+  <p class="radio" id="radio" aria-live="polite"></p>
+
   <div class="dock">
     <div class="say" id="say" aria-live="polite"></div>
     <div class="actions" id="act"></div>
@@ -89,6 +92,7 @@
     <button type="button" data-go="storm"><i>4</i>Storm</button>
     <button type="button" data-go="home"><i>5</i>Home</button>
     <button type="button" data-go="explore" class="sections__map">Map</button>
+    <button type="button" class="sections__sound" id="btn-sound" aria-pressed="false">Sound off</button>
     <button type="button" class="sections__about" id="btn-about">Data &amp; sources</button>
   </nav>
   <dialog class="about" id="about" aria-labelledby="about-title">
