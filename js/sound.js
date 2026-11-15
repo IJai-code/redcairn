@@ -1,4 +1,5 @@
-// REDCAIRN — sound, made in the browser (Web Audio), no recordings. Off until you turn it on.
+// REDCAIRN — sound, made in the browser (Web Audio). On from the first click unless you turn it off.
+//   score    an original ambient score, generated here: slow chords, a soft reverb, sparse high notes
 //   lander   a low rumble during the descent, a thud at touchdown
 //   suit     your own breathing inside the helmet, faster when the alarm sounds
 //   outside  the thin wind, the rover's motors when it rolls
@@ -34,7 +35,7 @@ export class Sound {
       src.connect(flt).connect(g).connect(this.master); src.start();
       return { flt, g, gain };
     };
-    this.wind = voice('lowpass', 380, 0.4, 0.22);
+    this.wind = voice('lowpass', 420, 0.4, 0.4);
     this.rumble = voice('lowpass', 90, 0.7, 0.9);
     this.breath = voice('bandpass', 620, 0.8, 0.0);
     // The rover's motors: two detuned saws through a low filter.
@@ -43,7 +44,74 @@ export class Sound {
     for (const hz of [92, 93.7]) { const o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = hz; o.connect(mf); o.start(); }
     mf.connect(mg).connect(this.master);
     this.motor = mg;
+    // The score: its own bus through a generated reverb, so it sits behind everything else.
+    const ir = ctx.createBuffer(2, ctx.sampleRate * 3.2, ctx.sampleRate);
+    for (let ch = 0; ch < 2; ch++) { const x = ir.getChannelData(ch); for (let i = 0; i < x.length; i++) x[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / x.length, 3.2); }
+    this.verb = ctx.createConvolver(); this.verb.buffer = ir;
+    this.scoreBus = ctx.createGain(); this.scoreBus.gain.value = 0;
+    this.scoreLP = ctx.createBiquadFilter(); this.scoreLP.type = 'lowpass'; this.scoreLP.frequency.value = 2400;
+    const dry = ctx.createGain(); dry.gain.value = 0.55;
+    const wet = ctx.createGain(); wet.gain.value = 0.75;
+    this.scoreBus.connect(this.scoreLP);
+    this.scoreLP.connect(dry).connect(this.master);
+    this.scoreLP.connect(this.verb); this.verb.connect(wet).connect(this.master);
     this.#breathe();
+  }
+
+  // ---------------------------------------------------------------- the score
+  // Slow chords that change every eight seconds, and now and then a high note, like light on a ridge.
+  // Wistful in A minor; darker for the storm; it settles on a major chord at home.
+  static CHORDS = {
+    walk: [[45, 52, 59, 60, 64], [41, 48, 52, 57, 60], [48, 55, 62, 64, 67], [43, 50, 52, 59, 62]],
+    storm: [[38, 45, 50, 53, 57], [34, 41, 46, 50, 53], [36, 43, 48, 51, 55], [38, 45, 49, 52, 57]],
+    home: [[48, 55, 59, 62, 64], [41, 48, 55, 57, 64], [43, 50, 55, 59, 62], [48, 55, 62, 64, 71]],
+  };
+  #pad(midi, t, dur, vol) {
+    const ctx = this.ctx, f = 440 * Math.pow(2, (midi - 69) / 12);
+    const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + 2.6);
+    g.gain.setValueAtTime(vol, t + dur - 2.2);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur + 1.8);
+    for (const [type, det, v] of [['triangle', 0, 1], ['sine', 1.003, 0.6], ['sine', 0.5, 0.35]]) {
+      const o = ctx.createOscillator(); o.type = type; o.frequency.value = f * (det || 1);
+      const og = ctx.createGain(); og.gain.value = v;
+      o.connect(og).connect(g); o.start(t); o.stop(t + dur + 2);
+    }
+    g.connect(this.scoreBus);
+  }
+  #bell(midi, t, vol) {
+    const ctx = this.ctx, f = 440 * Math.pow(2, (midi - 69) / 12), o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'sine'; o.frequency.value = f;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 3.5);
+    o.connect(g).connect(this.scoreBus); o.start(t); o.stop(t + 3.6);
+  }
+  #tick() {
+    if (!this.ctx || !this.on) return;
+    const set = Sound.CHORDS[this.mood] || Sound.CHORDS.walk, chord = set[this.chordI++ % set.length];
+    const t = this.ctx.currentTime + 0.05, dur = 8;
+    chord.forEach((m, i) => this.#pad(m, t, dur, i < 2 ? 0.05 : 0.032));
+    // two or three sparse high notes from the chord, two octaves up
+    for (let k = 0; k < 3; k++) if (Math.random() < 0.75) this.#bell(chord[2 + Math.floor(Math.random() * 3)] + 24, t + 1 + k * 2.3 + Math.random(), 0.022);
+    clearTimeout(this.scoreT);
+    this.scoreT = setTimeout(() => this.#tick(), dur * 1000);
+  }
+  score(mood = 'walk', level = 1) {
+    if (!this.ctx) return;
+    const changed = mood !== this.mood;
+    this.mood = mood;
+    this.scoreLevel = level;
+    this.scoreBus.gain.setTargetAtTime(this.on ? 0.95 * level : 0, this.ctx.currentTime, 1.2);
+    this.scoreLP.frequency.setTargetAtTime(mood === 'storm' ? 900 : 2400, this.ctx.currentTime, 1.5);
+    if (this.chordI === undefined) this.chordI = 0;
+    if (changed || !this.scoreT) { if (changed) this.chordI = 0; this.#tick(); }
+  }
+  // Voices sit on top: the score dips while someone is speaking.
+  #duck(t, dur) {
+    if (!this.scoreBus) return;
+    const g = this.scoreBus.gain, base = 0.95 * (this.scoreLevel ?? 1);
+    g.cancelScheduledValues(t);
+    g.setTargetAtTime(base * 0.35, t, 0.15);
+    g.setTargetAtTime(base, t + dur, 0.8);
   }
 
   // Inhale, exhale, pause: the loudest thing inside a helmet.
@@ -68,8 +136,9 @@ export class Sound {
     if (on) this.#init();
     if (!this.ctx) return;
     if (on && this.ctx.state === 'suspended') this.ctx.resume();
-    this.master.gain.setTargetAtTime(on ? 0.7 : 0, this.ctx.currentTime, 0.3);
+    this.master.gain.setTargetAtTime(on ? 1.0 : 0, this.ctx.currentTime, 0.3);
     this.scene(this.mode);
+    if (on) this.score(this.mood || 'walk', this.scoreLevel ?? 1); else if (this.scoreBus) { clearTimeout(this.scoreT); this.scoreT = null; this.scoreBus.gain.setTargetAtTime(0, this.ctx.currentTime, 0.3); }
   }
 
   scene(mode) {
@@ -77,7 +146,7 @@ export class Sound {
     if (!this.ctx) return;
     const t = this.ctx.currentTime;
     const set = (v, x) => v.g.gain.setTargetAtTime(x, t, 0.8);
-    set(this.wind, mode === 'outside' || mode === 'storm' || mode === 'home' ? this.wind.gain : mode === 'film' ? this.wind.gain * 0.75 : 0);
+    set(this.wind, mode === 'outside' || mode === 'storm' || mode === 'home' ? this.wind.gain : mode === 'film' ? this.wind.gain * 1.1 : mode === 'world' ? this.wind.gain * 0.8 : 0);
     set(this.rumble, mode === 'lander' ? this.rumble.gain : mode === 'film' ? this.rumble.gain * 0.35 : 0);
     if (mode !== 'outside' && mode !== 'storm') this.motor.gain.setTargetAtTime(0, t, 0.4);
   }
@@ -115,7 +184,7 @@ export class Sound {
 
   // A recorded line (assets/audio/*.m4a, if it exists), played as if over a suit radio:
   // narrowed to a radio band, lightly overdriven, with a click of static at each end.
-  async voice(url) {
+  async voice(url, robot = false) {
     if (!this.ctx || !this.on) return;
     this.vcache = this.vcache || {};
     try {
@@ -133,10 +202,33 @@ export class Sound {
       const sh = ctx.createWaveShaper(), curve = new Float32Array(1024);
       for (let i = 0; i < 1024; i++) { const x = (i / 1023) * 2 - 1; curve[i] = Math.tanh(2.2 * x); }
       sh.curve = curve;
-      const g = ctx.createGain(); g.gain.value = 0.85;
-      src.connect(hp).connect(lp).connect(sh).connect(g).connect(this.master);
+      const g = ctx.createGain(); g.gain.value = 1.15;
+      let head = src;
+      if (robot) {
+        // Curiosity speaking: ring-modulated against a low tone and a little crushed, so it sounds like a machine.
+        const ring = ctx.createGain(); ring.gain.value = 0;
+        const car = ctx.createOscillator(); car.type = 'sine'; car.frequency.value = 62;
+        car.connect(ring.gain);
+        const dry = ctx.createGain(); dry.gain.value = 0.45;
+        const mix = ctx.createGain();
+        src.connect(ring).connect(mix); src.connect(dry).connect(mix);
+        const crush = ctx.createWaveShaper(), cc = new Float32Array(256);
+        for (let i = 0; i < 256; i++) { const x = (i / 255) * 2 - 1; cc[i] = Math.round(x * 10) / 10; }
+        crush.curve = cc;
+        mix.connect(crush);
+        head = crush;
+        const t0 = ctx.currentTime + 0.32;
+        car.start(t0); car.stop(t0 + buf.duration + 0.2);
+      }
+      head.connect(hp).connect(lp).connect(sh).connect(g).connect(this.master);
       const t = ctx.currentTime + 0.32;
       src.start(t);
+      // a hiss of static under the whole line, like an open channel
+      const ns = ctx.createBufferSource(), nf = ctx.createBiquadFilter(), ng = ctx.createGain();
+      ns.buffer = this.noiseBuf; ns.loop = true; nf.type = 'bandpass'; nf.frequency.value = 2600; nf.Q.value = 0.5;
+      ng.gain.setValueAtTime(0.0001, t - 0.1); ng.gain.exponentialRampToValueAtTime(0.05, t); ng.gain.setValueAtTime(0.05, t + buf.duration); ng.gain.exponentialRampToValueAtTime(0.0001, t + buf.duration + 0.25);
+      ns.connect(nf).connect(ng).connect(this.master); ns.start(t - 0.1, Math.random()); ns.stop(t + buf.duration + 0.3);
+      this.#duck(t - 0.1, buf.duration + 0.3);
       this.#static(t + buf.duration, 0.16, 0.4);
     } catch (e) { this.vcache[url] = null; }
   }

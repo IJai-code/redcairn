@@ -172,7 +172,7 @@ function radio(key) {
     const L = lines[i++], text = L.text.replace('{name}', S.name || 'EVA-1');
     el.innerHTML = `<b>${esc(L.who)}${L.when ? ` · ${esc(L.when)}` : ''}</b><span>${esc(text)}</span><em>${L.real ? `real · ${esc(L.real)}` : 'imagined'}</em>`;
     el.classList.remove('is-in'); void el.offsetWidth; el.classList.add('is-in');
-    if (S.sound) { S.sound.radio(); if (L.audio) S.sound.voice(L.audio); }
+    if (S.sound) { S.sound.radio(); if (L.audio) S.sound.voice(L.audio, L.who === 'Curiosity'); }
     S.radioT = setTimeout(next, 3000 + text.split(' ').length * 330);
   };
   S.radioT = setTimeout(next, 700);
@@ -281,6 +281,9 @@ function ensureMap() {
   S.map.addStops(stops());
   S.map.onStop = (k) => mapStop(k);
   S.map.onPoint(pointAt);
+  $('map').addEventListener('click', (e) => {
+    if (document.body.hasAttribute('data-world') && !document.body.hasAttribute('data-sheet') && !document.body.hasAttribute('data-free')) { e.stopPropagation(); e.preventDefault(); toggleSheet(true); }
+  }, true);
   S.mapOn = new Set(['slope']);
 }
 
@@ -338,11 +341,14 @@ function guide(i, opts = {}) {
   S.lastBeat = id;
   if (prev !== id) document.body.toggleAttribute('data-sheet', false);
   if (prev !== id) radio(id);
+  if (S.sound) { S.sound.scene(id === 'intro' ? 'film' : 'world'); S.sound.score(id === 'storm' && !S.choice ? 'storm' : id === 'home' ? 'home' : 'walk', id === 'intro' ? 1 : 0.85); }
   if (id === `stop-${roverK()}` && prev === `stop-${roverK() - 1}` && !S.metOnce) {
     S.metOnce = true;
     setTimeout(() => { if (S.lastBeat === id) playFilm([['p6', 'You found it. Fourteen years alone, and you are the first person to stand beside it.']], () => {}, 5200); }, 9500);
   }
   stage('map', id !== 'intro');
+  document.body.toggleAttribute('data-world', id !== 'intro');
+  document.body.toggleAttribute('data-details', false);
   ensureMap();
   const r = useRoute();
   if (id !== 'storm' && id !== 'home') S.choice = null;
@@ -394,6 +400,16 @@ async function cairnAdd() {
   try { const r = await fetch('/api/stones', { method: 'POST' }); if (!r.ok) return null; const j = await r.json(); if (typeof j.count === 'number') S.cairn = j; return j; } catch (e) { return null; }
 }
 const ordinal = (n) => { const s = ['th', 'st', 'nd', 'rd'], v = n % 100; return `${num(n)}${s[(v - 20) % 10] || s[v] || s[0]}`; };
+function setSound(on) {
+  S.sound.setEnabled(on);
+  $('btn-sound').setAttribute('aria-pressed', String(on));
+  $('btn-sound').innerHTML = `<span class="w">Sound </span>${on ? 'on' : 'off'}`;
+  if (on) {
+    const id = beatIds()[S.beat || 0];
+    S.sound.scene(document.body.dataset.step === 'walk' ? 'outside' : $('film').hidden ? 'world' : 'film');
+    S.sound.score(id === 'storm' && !S.choice ? 'storm' : id === 'home' ? 'home' : 'walk', 0.85);
+  }
+}
 function stoneCount() { try { return Number(localStorage.getItem('redcairn.stones') || 0); } catch (e) { return S.stoneLaid ? 1 : 0; } }
 const camName = (c) => (/navigation/i.test(c) ? 'Navcam' : /mast/i.test(c) ? 'Mastcam' : /hazard/i.test(c) ? 'Hazcam' : /mahli/i.test(c) ? 'MAHLI' : c || 'Camera');
 function btn(id, label, alt) { return `<button type="button" class="act${alt ? ' act--alt' : ''}" data-a="${id}">${label}</button>`; }
@@ -481,6 +497,7 @@ function card() {
     go = btn('again', 'Walk it again') + btn('free', 'Explore every layer', true);
     S.win = win3d('From the hatch, looking up the mountain. It is up there.');
   }
+  if (id !== 'intro' && (id.startsWith('stop-') || id === 'home' || id === 'plan')) go += btn('details', 'Photo and detail', true);
   parkStage();
   $('guide').innerHTML = `<div class="guide__top"><span>${esc(kicker)}</span><em>${S.beat + 1} / ${n}</em></div>
     ${id === 'intro' ? S.win : ''}<h2>${title}</h2><p class="guide__body">${body}</p>${id !== 'intro' ? S.win : ''}${extra}<div class="guide__go">${go}</div>`;
@@ -513,6 +530,7 @@ function chooseOnMap(id) {
   card();
   window3d('storm', 'storm');
   radio('storm-chosen');
+  if (S.sound) S.sound.score('walk', 0.85);
 }
 
 // Leave the story on screen but out of the way, so every layer can be explored by hand.
@@ -521,7 +539,7 @@ function toggleSheet(force) {
   const on = force ?? !document.body.hasAttribute('data-sheet');
   document.body.toggleAttribute('data-sheet', on);
   $('btn-sheet').setAttribute('aria-pressed', String(on));
-  if (on && S.map) { S.map.resize(); mapPanel(); }
+  if (S.map) { setTimeout(() => S.map.resize(), 30); if (on) mapPanel(); }
 }
 
 function freeMap() {
@@ -635,8 +653,8 @@ const midOf = (a, b) => ({ x: (a.x + b.x) / 2, z: (a.z + b.z) / 2 });
 
 // In the drawing, keep the subject clear of the story card.
 function frameShift(on) {
-  const phone = innerWidth <= 760;
-  S.stage.setFrameShift(on ? (phone ? -0.16 : -0.14) : 0, on && phone ? 0.24 : 0);
+  const phone = innerWidth <= 760, details = document.body.hasAttribute('data-details');
+  S.stage.setFrameShift(on ? (details ? (phone ? -0.16 : -0.14) : (phone ? -0.12 : 0)) : 0, on ? (phone ? 0.22 : 0.12) : 0);
 }
 addEventListener('resize', () => { if (S.stage) frameShift(document.body.hasAttribute('data-world') && document.body.dataset.stage === 'map'); });
 
@@ -852,7 +870,7 @@ const FILM = [
 ];
 function playFilm(shots, done, ms = 4300) {
   const run = (S.filmRun = (S.filmRun || 0) + 1), el = $('film'), box = $('film-plates');
-  S.filmDone = () => { if (run !== S.filmRun) return; S.filmRun++; el.classList.remove('is-on'); setTimeout(() => { el.hidden = true; box.innerHTML = ''; }, 700); clearTimeout(S.filmT); if (S.sound) S.sound.scene('off'); if (S.bday) { S.bday.stop(1.5); S.bday = null; } done(); };
+  S.filmDone = () => { if (run !== S.filmRun) return; S.filmRun++; el.classList.remove('is-on'); setTimeout(() => { el.hidden = true; box.innerHTML = ''; }, 700); clearTimeout(S.filmT); if (S.sound) { S.sound.scene('world'); S.sound.score('walk', 0.85); } if (S.bday) { S.bday.stop(1.5); S.bday = null; } done(); };
   box.innerHTML = '';
   el.hidden = false;
   void el.offsetWidth;
@@ -865,10 +883,11 @@ function playFilm(shots, done, ms = 4300) {
     if (S.sound && S.sound.on) {
       if (cue === 'birthday') {
         // NASA's own recording of SAM playing the tune (Goddard, 2013); the synthesized version only if it cannot load.
-        S.sound.clip('assets/audio/sam-birthday.m4a', 0.85).then((h) => { if (h) S.bday = h; else S.sound.birthday(); });
+        S.sound.score('walk', 0.18);
+        S.sound.clip('assets/audio/sam-birthday.m4a', 0.95).then((h) => { if (h) S.bday = h; else S.sound.birthday(); });
         $('film-credit').textContent = 'Sound: Curiosity’s SAM instrument playing “Happy Birthday”, recorded by NASA Goddard, 2013.';
       }
-      if (cue === 'radio') S.sound.radio();
+      if (cue === 'radio') { S.sound.radio(); S.sound.score('walk', 1); }
     }
     if (cue !== 'birthday' && $('film-credit').dataset.base) $('film-credit').textContent = $('film-credit').dataset.base;
     if (shown !== id) {
@@ -891,7 +910,7 @@ function playFilm(shots, done, ms = 4300) {
   S.filmNext = step;
   // warm the cache so plates never pop in
   shots.forEach(([id]) => { const im = new Image(); im.src = `assets/img/plates/${id}.jpg`; });
-  if (S.sound && S.sound.on) S.sound.scene('film');
+  if (S.sound && S.sound.on) { S.sound.scene('film'); S.sound.score('walk', 1); }
   step();
 }
 
@@ -905,6 +924,8 @@ function filmGate(done) {
   $('film-line').textContent = '';
   S.filmGate = (withSound) => {
     el.classList.remove('is-gate');
+    try { localStorage.setItem('redcairn.sound', withSound ? 'on' : 'off'); } catch (e) { /* private mode */ }
+    if (!withSound && S.sound.on) setSound(false);
     if (withSound) {
       S.sound.setEnabled(true);
       S.sound.preload('assets/audio/sam-birthday.m4a');
@@ -1122,6 +1143,7 @@ async function boot() {
       if (id === 'filmsound' || id === 'filmquiet') return S.filmGate && S.filmGate(id === 'filmsound');
       if (id === 'opening') return playFilm(FILM, () => guide(0));
       if (id === 'sheet') return toggleSheet();
+      if (id === 'details') { const on = !document.body.hasAttribute('data-details'); document.body.toggleAttribute('data-details', on); a.textContent = on ? 'Back to the view' : 'Photo and detail'; frameShift(true); return; }
       if (id === 'next') return guide(S.beat + 1);
       if (id === 'touch') { S.touched = true; card(); touchWheel(false); if (S.sound) S.sound.thud(); return; }
       if (id === 'stone') {
@@ -1178,11 +1200,21 @@ async function boot() {
   S.sound = new Sound();
   $('btn-sound').addEventListener('click', () => {
     const on = !S.sound.on;
-    S.sound.setEnabled(on);
-    $('btn-sound').setAttribute('aria-pressed', String(on));
-    $('btn-sound').innerHTML = `<span class="w">Sound </span>${on ? 'on' : 'off'}`;
+    setSound(on);
+    try { localStorage.setItem('redcairn.sound', on ? 'on' : 'off'); } catch (e) { /* private mode */ }
   });
-  const SCENE = { map: 'off', walk: 'outside' };
+  // Browsers only allow sound after a click: the first click or key anywhere turns it on, unless you chose silence.
+  const firstGesture = (e) => {
+    if (e.target.closest && (e.target.closest('#btn-sound') || e.target.closest('[data-a="filmquiet"]'))) return;
+    let pref = null;
+    try { pref = localStorage.getItem('redcairn.sound'); } catch (err) { /* private mode */ }
+    if (pref !== 'off' && !S.sound.on) setSound(true);
+    removeEventListener('pointerdown', firstGesture, true);
+    removeEventListener('keydown', firstGesture, true);
+  };
+  addEventListener('pointerdown', firstGesture, true);
+  addEventListener('keydown', firstGesture, true);
+  const SCENE = { map: 'world', walk: 'outside' };
   new MutationObserver(() => S.sound.scene(SCENE[document.body.dataset.step] || 'off')).observe(document.body, { attributes: true, attributeFilter: ['data-step'] });
   document.addEventListener('keydown', (e) => {
     if ($('about').open || e.target.closest('input')) return; // typing a name, or the slider

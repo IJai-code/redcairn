@@ -1009,30 +1009,41 @@ export class Stage {
 
   // ------------------------------------------------------------ you: a 1.8 m suited figure, drawn like the plates
   #buildFigure() {
-    const root = new THREE.Group(), white = toon(0xf2efe8), dark = toon(0x3a3936), gold = toon(0xc98a2c), stripe = toon(0xe2742f);
-    const part = (geo, mat, x, y, z, parent = root) => {
+    // A 1.8 m suited figure, faces +X. Rounded shapes, flat tones, ink outline: the same hand as the plates.
+    const root = new THREE.Group(), suit = toon(0xf1ece2), seam = toon(0xb9b2a6), dark = toon(0x34322f), gold = toon(0xd39a3a), stripe = toon(0xe2742f);
+    const part = (geo, mat, x, y, z, parent = root, outline = 0.022) => {
       const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = true;
-      const o = inkOutline(geo, 0.026); o.position.copy(m.position);
-      parent.add(m, o);
+      parent.add(m);
+      if (outline) { const o = inkOutline(geo, outline); o.position.copy(m.position); o.rotation.copy(m.rotation); o.scale.copy(m.scale); parent.add(o); m.userData.ol = o; }
       return m;
     };
-    // the figure faces +X; legs hang from hip pivots so they can swing
+    const pose = (m, rx, ry, rz) => { m.rotation.set(rx, ry, rz); if (m.userData.ol) m.userData.ol.rotation.set(rx, ry, rz); };
     this.legs = [];
     for (const side of [-1, 1]) {
-      const hip = new THREE.Group(); hip.position.set(0, 0.86, side * 0.11); root.add(hip);
-      part(new THREE.CylinderGeometry(0.085, 0.08, 0.78, 12), white, 0, -0.42, 0, hip);
-      part(new THREE.BoxGeometry(0.28, 0.1, 0.15), dark, 0.04, -0.82, 0, hip);
+      const hip = new THREE.Group(); hip.position.set(0, 0.92, side * 0.12); root.add(hip);
+      part(new THREE.CapsuleGeometry(0.085, 0.36, 6, 12), suit, 0, -0.24, 0, hip);              // thigh
+      part(new THREE.TorusGeometry(0.085, 0.018, 6, 16), seam, 0, -0.46, 0, hip, 0).rotation.x = Math.PI / 2;  // knee ring
+      part(new THREE.CapsuleGeometry(0.078, 0.3, 6, 12), suit, 0, -0.66, 0, hip);               // shin
+      part(new THREE.BoxGeometry(0.27, 0.11, 0.15), dark, 0.04, -0.89, 0, hip);                 // boot
       this.legs.push(hip);
-      const arm = part(new THREE.CylinderGeometry(0.065, 0.06, 0.62, 10), white, 0, 1.12, side * 0.3);
-      arm.rotation.x = side * 0.12;
-      part(new THREE.SphereGeometry(0.07, 10, 8), dark, 0, 0.78, side * 0.33);
+      const sh = new THREE.Group(); sh.position.set(0, 1.42, side * 0.27); root.add(sh);
+      const upper = part(new THREE.CapsuleGeometry(0.07, 0.26, 6, 12), suit, 0, -0.17, 0, sh);
+      pose(upper, side * 0.14, 0, 0);
+      part(new THREE.BoxGeometry(0.05, 0.03, 0.15), stripe, 0, -0.05, side * 0.02, sh, 0);      // mission stripe
+      const fore = part(new THREE.CapsuleGeometry(0.062, 0.24, 6, 12), suit, 0.04, -0.47, side * 0.03, sh);
+      pose(fore, side * 0.1, 0, 0.15);
+      part(new THREE.SphereGeometry(0.075, 12, 10), dark, 0.07, -0.66, side * 0.04, sh);        // glove
     }
-    part(new THREE.CylinderGeometry(0.2, 0.17, 0.62, 14), white, 0, 1.13, 0);
-    part(new THREE.BoxGeometry(0.2, 0.58, 0.38), white, -0.21, 1.15, 0);
-    part(new THREE.BoxGeometry(0.02, 0.06, 0.24), stripe, -0.315, 1.32, 0);
-    part(new THREE.SphereGeometry(0.19, 18, 14), white, 0, 1.6, 0);
-    const visor = part(new THREE.SphereGeometry(0.15, 16, 12), gold, 0.08, 1.6, 0);
-    visor.scale.set(0.9, 0.85, 0.95);
+    part(new THREE.CapsuleGeometry(0.21, 0.36, 8, 16), suit, 0, 1.2, 0);                      // torso
+    part(new THREE.TorusGeometry(0.2, 0.025, 6, 20), seam, 0, 0.98, 0, root, 0).rotation.x = Math.PI / 2;   // waist ring
+    part(new THREE.BoxGeometry(0.12, 0.1, 0.22), seam, 0.2, 1.2, 0);                           // chest controls
+    const pack = part(new THREE.BoxGeometry(0.24, 0.62, 0.44), suit, -0.25, 1.25, 0);          // life-support pack
+    pack.geometry.translate(0, 0, 0);
+    part(new THREE.BoxGeometry(0.02, 0.07, 0.3), stripe, -0.375, 1.42, 0, root, 0);
+    part(new THREE.CylinderGeometry(0.15, 0.17, 0.06, 16), seam, 0, 1.53, 0, root, 0);         // neck ring
+    part(new THREE.SphereGeometry(0.2, 22, 16), suit, 0, 1.72, 0);                             // helmet shell
+    const visor = part(new THREE.SphereGeometry(0.165, 20, 14, -Math.PI / 2.4, Math.PI / 1.2, Math.PI / 4, Math.PI / 2.1), gold, 0.05, 1.72, 0, root, 0);
+    visor.rotation.y = -Math.PI / 2;
     root.visible = false;
     this.figure = root;
     this.wScene.add(root);
