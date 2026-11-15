@@ -1,6 +1,6 @@
 # REDCAIRN: pitch and demo
 
-Live: https://ijai-code.github.io/redcairn/ · Judge Mode: https://ijai-code.github.io/redcairn/#judge · Code: https://github.com/IJai-code/redcairn
+Live: https://ijai-code.github.io/redcairn/ · Code: https://github.com/IJai-code/redcairn
 Challenge: Interplanetary Survival Guide: Martian Map (NASA Space Apps 2026)
 
 ## The one sentence

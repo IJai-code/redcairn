@@ -696,15 +696,18 @@ body[data-world]:not([data-sheet]):not([data-free]) .map .shelter { display: non
 .numbers--two a { color: var(--accent); }
 .numbers__note { font-size: 12.5px; color: var(--soft); margin: 0 0 18px; }
 
-/* Judge mode: the criterion each part answers, over a hands-free tour */
-.judge { position: fixed; z-index: 95; left: 50%; top: 54px; transform: translateX(-50%); width: min(720px, calc(100vw - 32px)); background: #f3e6cf; color: #2b160f; border: 1.5px solid #2b160f; box-shadow: 4px 4px 0 rgba(43,22,15,.85); padding: 12px 16px 16px; display: grid; grid-template-columns: auto 1fr auto auto; gap: 4px 14px; align-items: baseline; overflow: hidden; }
-.judge__c { font: 700 12px/1 var(--mono, ui-monospace, monospace); letter-spacing: .14em; text-transform: uppercase; color: #fff; background: #b5511c; padding: 5px 8px; align-self: start; }
-.judge p { margin: 0; font-size: 15px; line-height: 1.45; }
-.judge__n { font: 600 11px/1 ui-monospace, monospace; color: #7a5a48; }
-.judge .link { color: #2b160f; font-size: 12px; }
-.judge__bar { position: absolute; left: 0; bottom: 0; height: 3px; width: 100%; background: #b5511c; transform-origin: left; animation: judgebar linear forwards; }
-@keyframes judgebar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-@media (max-width: 760px) { .judge { grid-template-columns: 1fr auto; top: 48px; } .judge p { grid-column: 1 / -1; font-size: 13.5px; } .judge__n { display: none; } }
-body[data-judge] .radio { top: 150px !important; }
-@media (max-width: 760px) { body[data-judge] .radio { top: 170px !important; } }
-.judge[hidden] { display: none !important; }
+
+/* Time-lapse marker: shown whenever a leg runs faster than walking pace */
+.tlapse { position: fixed; z-index: 16; left: 14px; top: 122px; padding: 6px 10px 6px 26px; font: 500 12px/1 var(--mono, ui-monospace, monospace); letter-spacing: .08em; text-transform: uppercase; color: #2b160f; background: rgba(246,234,214,.92); border: 1px solid rgba(43,22,15,.45); opacity: 0; transform: translateY(-4px); transition: opacity .35s, transform .35s; pointer-events: none; }
+.tlapse::before { content: ""; position: absolute; left: 10px; top: 50%; width: 8px; height: 8px; margin-top: -4px; border-radius: 50%; background: #b5511c; animation: tlblink 1s steps(2) infinite; }
+.tlapse.is-on { opacity: 1; transform: none; }
+@keyframes tlblink { 50% { opacity: .25; } }
+@media (max-width: 760px) { .tlapse { top: auto; bottom: calc(52vh + 8px); } }
+
+/* The intro's four steps: what to do, in the order you will do it */
+.guide__how { list-style: none; counter-reset: how; margin: 14px 0 6px; padding: 0; display: grid; gap: 8px; }
+.guide__how li { counter-increment: how; display: grid; grid-template-columns: 22px 64px 1fr; gap: 0 8px; align-items: baseline; font-size: 13.5px; line-height: 1.4; color: var(--soft); }
+.guide__how li::before { content: counter(how); font: 600 11px/1 var(--mono, ui-monospace, monospace); color: var(--accent); border: 1px solid currentColor; width: 18px; height: 18px; display: grid; place-items: center; align-self: start; margin-top: 1px; }
+.guide__how li > b { color: var(--ink); font-weight: 600; }
+.guide__how li span b { color: var(--ink); font-weight: 600; }
+@media (max-width: 760px) { .guide__how li { grid-template-columns: 22px 1fr; } .guide__how li span { grid-column: 2; } }

@@ -2,8 +2,8 @@
 
 **Could you walk 2.7 km across Mars to a rover that has been alone since 2012, and get home before the Sun turns on you?**
 REDCAIRN is the layered survival map that gets you there: slope for a spacesuit, air, radiation and the way home from every 2 m of real ground.
-Every number is computed in your browser from NASA data, and tapping any number shows its source.
-**Live:** <https://ijai-code.github.io/redcairn/> · **Judge Mode (90 s, hands-free):** <https://ijai-code.github.io/redcairn/#judge> · **Second site, Jezero (beta):** <https://ijai-code.github.io/redcairn/?site=jezero>
+Every number is computed in your browser from NASA data, and tapping any number shows its source. Planners can download the whole EVA plan as GeoJSON.
+**Live:** <https://ijai-code.github.io/redcairn/> · **Second site, Jezero (beta):** <https://ijai-code.github.io/redcairn/?site=jezero>
 2026 NASA Space Apps, *Interplanetary Survival Guide: Martian Map*. An independent student project, not affiliated with or endorsed by NASA.
 
 ## Same engine, two craters
@@ -30,7 +30,7 @@ Jezero is built by `tools/fetch_jezero_dtm.py`, `tools/fetch_jezero_ortho.py` an
 
 1. **The opening.** Five plates, each one true line: it landed alone in 2012; it played itself "Happy Birthday" once; rock tore its wheels and it kept climbing; it photographed Earth; fourteen years later, you land. Blender drew every plate from the real elevation data (`tools/blender_plates.py`). No AI images. You can skip straight to the map.
 2. **The plan.** Mars Trek tiles, Curiosity's 14-year line, and three routes to the rover drawn on slope for a suit.
-3. **Five cairns along its tracks**, on the real 1 m ground drawn live in ink: contours every 2 m of real height, hachures where the ground needs care, stipple where hills shelter you from radiation. At each cairn you get one true moment from the mission, Curiosity's photo from that spot, and four live numbers: air, walk home, dose and time out.
+3. **Five cairns along its tracks**, on the real 1 m ground drawn live in ink, inside the real crater in 3D (MOLA + HRSC, about 65 km across), with Mount Sharp rising behind you. Each leg is walked at a real suited pace, with long legs as a labelled time-lapse. The ground shows: contours every 2 m of real height, hachures where the ground needs care, stipple where hills shelter you from radiation. At each cairn you get one true moment from the mission, Curiosity's photo from that spot, and four live numbers: air, walk home, dose and time out.
 4. **Curiosity.** You reach it at its real position. Its newest raw image is fetched live. You can kneel at its torn wheel.
 5. **The storm.** The real September 2017 solar storm arrives. You choose between three ways home on the real terrain.
 6. **Home.** The three questions are answered with your numbers, and its mission clock is still ticking. Save a **result card** of your walk.

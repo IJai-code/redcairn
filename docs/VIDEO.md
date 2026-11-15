@@ -12,10 +12,10 @@ Stills of every shot are in `docs/video/` (1920×1080, rendered from the live bu
 | 0:00–0:07 | Blender plates: Mount Sharp, the torn wheels, you at the hatch | "A rover landed alone, and began to climb." / "Sharp rock tore its wheels. It kept climbing." / "You land. Your first walk: find it, and come home." | NASA Goddard's 2013 recording of SAM playing "Happy Birthday" |
 | 0:07–0:11 | The field map: HiRISE photo, slope for a suit, Curiosity's track, cursor readout | "Slope for a spacesuit, from NASA's 1 m elevation model. Point anywhere: height, slope, minutes to walk home." | Score in; radio: "Habitat to EVA-1 and EVA-2: route uploaded. Pick your line." |
 | 0:11–0:13 | Tapping a number opens its source | "Tap it: what it is, how it's computed, which NASA data it comes from." | |
-| 0:13–0:19 | Walking the tracks; reaching Curiosity at its real position | "You walk Curiosity's real tracks, at true scale." / "You found it." | Radio: "There it is. Fourteen years, and it's still working." |
+| 0:13–0:19 | Walking at a real suited pace, the labelled time-lapse over the detailed ground, then the meeting plate | "Walk Curiosity's real tracks, inside the real crater in 3D." | Radio: "There it is. Fourteen years, and it's still working." |
 | 0:19–0:25 | The real September 2017 storm: flash, three ways home, the new line | "The Sun flares. Three ways home…" / "The new line home: 41% less radiation than the way you came." | Drone; radio: "I'm with you. Your call." |
 | 0:25–0:27 | Jezero: Perseverance's whole track on the crater photo | "Jezero, built from Perseverance's own maps. Checked against the rover: 0.41 m." | Score resolves |
-| 0:27–0:30 | End card: plate 6, the line, the URL, the data credits | "It walked this ground alone, so you wouldn't have to." | Radio: "Both suits at the hatch. Welcome home." |
+| 0:27–0:30 | End card: you at the hatch with Mount Sharp rising in 3D behind you, the line, the URL, the data credits | "It walked this ground alone, so you wouldn't have to." | Radio: "Both suits at the hatch. Welcome home." |
 
 How it was made:
 - **Picture.** Every app shot was recorded from the real site in Chrome (frame by frame, CDP screencast). The plates are the Blender renders.

@@ -1,0 +1,18 @@
+{
+ "schema": "redcairn.midfield/1",
+ "generatedBy": "tools/build_midfield.py",
+ "source": "https://trek.nasa.gov/mars/trekarcgis/rest/services/Mars_MOLA_blend200ppx_HRSC_DEM_clon0dd_200mpp_lzw/ImageServer",
+ "credit": "NASA/JPL/GSFC (MOLA), ESA/DLR/FU Berlin (HRSC), via NASA Mars Trek",
+ "file": "data/midfield.bin",
+ "encoding": "int16 little-endian metres, row 0 is the northern edge",
+ "cols": 420,
+ "rows": 420,
+ "bounds": {
+  "west": 136.82425,
+  "east": 137.94425,
+  "south": -5.3732500000000005,
+  "north": -4.2532499999999995
+ },
+ "minElevM": -4670.7,
+ "maxElevM": 830.5
+}

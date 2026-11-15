@@ -25,7 +25,6 @@ VIDEO_LINK (30 seconds)
 ## Project
 
 https://ijai-code.github.io/redcairn/
-Judge Mode, a 90-second hands-free tour labelled by criterion: https://ijai-code.github.io/redcairn/#judge
 Code: https://github.com/IJai-code/redcairn
 
 ## Project details
@@ -37,6 +36,7 @@ A map for a Marswalk has to work at the scale of a person on foot, not an orbite
 - **Where is it safe to step?** Slope for a spacesuit comes from the 1 m HiRISE elevation model: green for safe, amber for 15–20° and needing care, red for over 20° and too steep. There are three routes to the rover: rover-proven (every metre already driven), fastest and gentlest. Point anywhere on the map for elevation, slope and minutes to walk home.
 - **What is worth stopping for?** Five cairns at Curiosity's real stops. Each has one true moment from the mission, Curiosity's own Navcam photo from that spot, the rock it found there, and the place on Earth it is named after, shown in NASA Worldview.
 - **Can I get home?** A suit timeline (air, dose, time out) runs at every step, and the walk-home field covers all 386,912 patches of ground. When the Sun flares, the map draws three ways home on the real terrain and costs each one.
+- **Take the plan with you.** One click downloads the EVA plan as GeoJSON: the route, every stop with arrival time, air, dose and walk home, and the storm options, ready for QGIS or ArcGIS.
 
 ### Worked case: the real solar storm of September 2017
 
@@ -68,7 +68,7 @@ The second walk is built by the same scripts. It goes from where Perseverance la
   - A terrain engine computes slope classes and sky shelter (how much of the sky hills hide, which reduces radiation).
   - A Dijkstra router plans the three routes and computes the walk-home field.
   - A suit simulation tracks air, dose and time.
-  - The map is Leaflet on live Mars Trek tiles; the ground view is three.js, an ink-drawn true-scale view of the real 1 m ground.
+  - The map is Leaflet on live Mars Trek tiles; the ground view is three.js, an ink-drawn true-scale view of the real 1 m ground and HiRISE photo, set inside the real crater in 3D (MOLA + HRSC elevation, about 65 km across).
   - Sound is generated with Web Audio, with the team's recorded radio voices.
 - **Live.**
   - Curiosity's and Perseverance's newest raw images.

@@ -200,17 +200,59 @@ transformed += normalize(normal) * ${width.toFixed(4)};`);
 
 const INK_GROUND_VS = `varying vec3 vWP; varying vec3 vN; varying vec2 vUv;
 void main(){ vUv = uv; vN = normalize(mat3(modelMatrix) * normal); vec4 w = modelMatrix * vec4(position, 1.0); vWP = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`;
-const INK_GROUND_FS = `uniform sampler2D photo, cls, shield; uniform float has, showSlope, showShield, fogD, y0;
+const INK_GROUND_FS = `uniform sampler2D photo, cls, shield; uniform float has, showSlope, showShield, fogD, y0, pmean;
 uniform vec3 sun, t0, t1, t2, ink, fogC, care, nogo, shelter;
 varying vec3 vWP; varying vec3 vN; varying vec2 vUv;
 float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y); }
+float fbm(vec2 p){ float a = 0.5, s = 0.0; mat2 m = mat2(1.6, 1.2, -1.2, 1.6); for (int i = 0; i < 4; i++){ s += a * vn(p); p = m * p; a *= 0.5; } return s / 0.9375; }
+vec2 cell(vec2 p){ vec2 i = floor(p), f = fract(p); float d1 = 8.0, id = 0.0;
+  for (int y = -1; y <= 1; y++) for (int x = -1; x <= 1; x++){ vec2 g = vec2(float(x), float(y)); vec2 o = vec2(hash(i + g), hash(i + g + 17.3));
+    vec2 r = g + o - f; float d = dot(r, r); if (d < d1){ d1 = d; id = hash(i + g + 5.1); } }
+  return vec2(sqrt(d1), id); }
 float lineAt(float v, float px){ float d = abs(fract(v + 0.5) - 0.5); return 1.0 - smoothstep(px * 0.5, px * 1.3, d); }
+// tonal engraving: lines whose width follows how dark the ground is, fading to a flat tone once they get too fine to draw
+float engrave(float u, float dark, float fw){ float d = abs(fract(u) - 0.5) * 2.0; float w = clamp(dark, 0.0, 1.0);
+  float l = 1.0 - smoothstep(w - fw, w + fw, d); return mix(l, w, smoothstep(0.25, 0.6, fw)); }
 void main(){
   vec3 n = normalize(vN);
   float ndl = max(0.0, dot(n, normalize(sun)));
-  float lum = has > 0.5 ? pow(dot(texture2D(photo, vUv).rgb, vec3(0.299, 0.587, 0.114)), 0.4545) : 0.5;
-  float s = 0.3 + ndl * 0.62 + (lum - 0.5) * 0.38;
-  vec3 c = s < 0.36 ? t0 : (s < 0.7 ? t1 : t2);
+  // The real HiRISE photograph drives the drawing: its brightness, and its local contrast (rocks, ridges, sand, scarps).
+  float lum = 0.5, loc = 0.0;
+  if (has > 0.5) {
+    lum = pow(dot(texture2D(photo, vUv).rgb, vec3(0.299, 0.587, 0.114)), 0.4545);
+    float blur = pow(dot(texture2D(photo, vUv, 3.5).rgb, vec3(0.299, 0.587, 0.114)), 0.4545);
+    loc = lum - blur;
+  }
+  float mean = has > 0.5 ? pmean : 0.5;
+  // An ink print of the photograph: the HiRISE brightness and local contrast, lit by the sun on the real slopes,
+  // mapped onto the plates' three inks with soft steps, so every ridge, scarp, sand patch and boulder field shows.
+  float tone = clamp(0.4 + (ndl - 0.55) * 0.55 + (lum - mean) * 1.6 + loc * 3.4, 0.0, 1.0);
+  tone = mix(tone, floor(tone * 5.0 + 0.5) / 5.0, 0.35);
+  vec3 c = tone < 0.5 ? mix(t0, t1, smoothstep(0.08, 0.5, tone)) : mix(t1, t2, smoothstep(0.5, 0.92, tone));
+  c = mix(c, vec3(0.98, 0.86, 0.68), smoothstep(0.9, 1.0, tone) * 0.5);
+  float dist = length(vWP - cameraPosition);
+  vec2 P = vWP.xz;
+  // fine ink where the photo is darkest: scarps, shadows, boulder fields
+  c = mix(c, ink, smoothstep(0.2, 0.06, tone) * 0.35);
+  // near the walker: gravel stipple and wind-ripple strokes, where the orbital photo runs out of pixels (under ~1 m)
+  float near = 1.0 - smoothstep(18.0, 60.0, dist);
+  if (near > 0.0) {
+    float zone = smoothstep(0.35, 0.7, fbm(P * 0.09 + 3.0));
+    vec2 g = cell(P * 2.6);
+    float r = 0.1 + 0.18 * g.y;
+    float peb = (1.0 - smoothstep(r * 0.55, r, g.x)) * step(0.5, g.y) * zone;
+    vec2 g2 = cell(P * 7.0 + 11.0);
+    peb = max(peb, (1.0 - smoothstep(0.1, 0.2, g2.x)) * step(0.62, g2.y) * (0.4 + 0.6 * zone));
+    float fp = fwidth(P.x * 7.0);
+    peb *= 1.0 - smoothstep(0.35, 0.8, fp);
+    c = mix(c, t0 * 0.85, peb * 0.75 * near);
+    float sand = smoothstep(0.55, 0.75, fbm(P * 0.05 + 21.0)) * smoothstep(0.02, -0.04, loc);
+    float warp = fbm(P * 0.3) * 3.0;
+    float rip = lineAt((dot(P, vec2(0.83, 0.56)) + warp) * 1.1, fwidth((dot(P, vec2(0.83, 0.56)) + warp) * 1.1) * 1.2);
+    c = mix(c, ink, rip * sand * 0.35 * near * (1.0 - smoothstep(0.2, 0.5, fp)));
+  }
   // contour lines every 2 m of real height, bold every 10 m; they fade where they would crowd into grey
   float h = vWP.y + y0;
   float f2 = fwidth(h / 2.0), f10 = fwidth(h / 10.0);
@@ -219,24 +261,23 @@ void main(){
   // hachures: ground that needs care is hatched; ground too steep for a suit is cross-hatched
   if (showSlope > 0.5) {
     float cl = floor(texture2D(cls, vUv).r * 255.0 + 0.5);
-    vec2 P = vWP.xz / 0.8;
-    float fa = fwidth(P.x + P.y), fb = fwidth(P.x - P.y);
+    vec2 Q = P / 0.8;
+    float fa = fwidth(Q.x + Q.y), fb = fwidth(Q.x - Q.y);
     float fade = 1.0 - smoothstep(0.3, 0.6, fa);
-    float a = lineAt(P.x + P.y, fa), b = lineAt(P.x - P.y, fb);
-    if (cl > 0.5 && cl < 1.5) c = mix(mix(c, care, 0.18), care * 0.75, a * fade);
-    if (cl > 1.5) c = mix(mix(c, nogo, 0.3), nogo * 0.7, max(a, b) * fade);
+    float a = lineAt(Q.x + Q.y, fa), b = lineAt(Q.x - Q.y, fb);
+    if (cl > 0.5 && cl < 1.5) c = mix(mix(c, care, 0.22), care * 0.75, a * fade);
+    if (cl > 1.5) c = mix(mix(c, nogo, 0.34), nogo * 0.7, max(a, b) * fade);
   }
   // shelter from radiation: stipple, denser where the hills hide more of the sky
   if (showShield > 0.5) {
     float v = texture2D(shield, vUv).r;
-    vec2 q = vWP.xz / 0.6;
-    vec2 g = floor(q), f = fract(q) - 0.5 + (vec2(hash(g), hash(g + 7.3)) - 0.5) * 0.4;
+    vec2 q = P / 0.6;
+    vec2 gq = floor(q), f = fract(q) - 0.5 + (vec2(hash(gq), hash(gq + 7.3)) - 0.5) * 0.4;
     float fd = fwidth(q.x);
-    float d = (1.0 - smoothstep(0.07, 0.07 + fd, length(f))) * step(hash(g + 3.1), v * 1.4);
+    float d = (1.0 - smoothstep(0.07, 0.07 + fd, length(f))) * step(hash(gq + 3.1), v * 1.4);
     c = mix(c, shelter, d * 0.85 * (1.0 - smoothstep(0.35, 0.7, fd)));
   }
   c = mix(c, ink, k);
-  float dist = length(vWP - cameraPosition);
   c = mix(c, fogC, 1.0 - exp(-fogD * fogD * dist * dist));
   gl_FragColor = vec4(c, 1.0);
   #include <colorspace_fragment>
@@ -279,7 +320,7 @@ export class Stage {
 
     this.gCam = new THREE.PerspectiveCamera(36, 1, 0.1, 100);
     this.gCam.position.z = 6;   // start outside the planet (and its haze), then ease in
-    this.wCam = new THREE.PerspectiveCamera(62, 1, 0.1, 9000);
+    this.wCam = new THREE.PerspectiveCamera(62, 1, 0.2, 90000);
     this.#buildGlobe();
     this.#buildWalk();
     this.resize();
@@ -418,7 +459,11 @@ export class Stage {
     loadTexture((this.data.mission.siteImages || {}).ground || 'assets/img/site-ortho.jpg').then((tex) => {
       if (!tex) return;
       groundMat.map = tex; groundMat.needsUpdate = true;
-      if (this.inkMat) { this.inkMat.uniforms.photo.value = tex; this.inkMat.uniforms.has.value = 1; }
+      if (this.inkMat) {
+        this.inkMat.uniforms.photo.value = tex; this.inkMat.uniforms.has.value = 1;
+        const m = averageColour(tex.image, 0, 1);
+        if (m) this.inkMat.uniforms.pmean.value = Math.pow(0.299 * m.r + 0.587 * m.g + 0.114 * m.b, 0.4545);
+      }
       // Beyond the photo, the ground carries on in the photo's own colour, so there is no visible edge.
       const c = averageColour(tex.image, 0, 1);
       if (c) for (const m of this.apronMats) m.color.copy(c);
@@ -462,7 +507,7 @@ export class Stage {
     const top = Math.max(0.12, t.maxShield * 0.8);
     this.inkMat = new THREE.ShaderMaterial({
       uniforms: {
-        photo: { value: null }, has: { value: 0 }, cls: { value: tex(flipRows(t.cls, 1), false) }, shield: { value: tex(flipRows(t.shield, 255 / top), true) },
+        photo: { value: null }, has: { value: 0 }, pmean: { value: 0.5 }, cls: { value: tex(flipRows(t.cls, 1), false) }, shield: { value: tex(flipRows(t.shield, 255 / top), true) },
         showSlope: { value: 0 }, showShield: { value: 0 }, fogD: { value: 0.0009 }, y0: { value: this.y0 },
         sun: { value: new THREE.Vector3(-0.62, 0.42, 0.66).normalize() }, t0: { value: PAL.t0 }, t1: { value: PAL.t1 }, t2: { value: PAL.t2 },
         ink: { value: PAL.ink }, fogC: { value: PAL.paper }, care: { value: PAL.care }, nogo: { value: PAL.nogo }, shelter: { value: PAL.shelter },
@@ -472,6 +517,67 @@ export class Stage {
     this.ground.material = this.inkMat;
     this.wScene.fog.color.copy(PAL.paper);
     this.wScene.fog.density = 0.0009;
+  }
+
+
+  // The crater around the walk, in 3D at true scale: the MOLA + HRSC elevation (tools/build_midfield.py), drawn in the
+  // plates' ink: flat tones from the sun, contours every 50 m (bold every 250 m), fading into the dust with distance.
+  async loadMidfield(url) {
+    try {
+      const meta = await (await fetch(url)).json();
+      const buf = await (await fetch(meta.file)).arrayBuffer();
+      const H = new Int16Array(buf), { cols, rows, bounds: b } = meta, t = this.t;
+      // datum: match the regional model to the 1 m model over the walk's own box
+      let sumF = 0, nF = 0;
+      for (let i = 0; i < t.z.length; i += 7) { sumF += t.z[i]; nF++; }
+      const lonAt = (c) => b.west + (c + 0.5) / cols * (b.east - b.west), latAt = (r) => b.north - (r + 0.5) / rows * (b.north - b.south);
+      let sumM = 0, nM = 0;
+      const inside = (lon, lat) => lon > t.west && lon < t.east && lat > t.south && lat < t.north;
+      for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) if (inside(lonAt(c), latAt(r))) { sumM += H[r * cols + c]; nM++; }
+      const off = nM ? sumF / nF - sumM / nM : 0;
+      const pos = new Float32Array(cols * rows * 3);
+      for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+        const i = r * cols + c, lon = lonAt(c), lat = latAt(r);
+        const x = (t.fx(lon) - (t.cols - 1) / 2) * t.cellX, z = (t.fy(lat) - (t.rows - 1) / 2) * t.cellY;
+        let y = H[i] + off - this.y0;
+        // under the 1 m model, stay a few metres below it so the fine ground always wins
+        const m = 160, ex = Math.max(t.west - lon, lon - t.east) * t.cellX / t.dLon, ez = Math.max(t.south - lat, lat - t.north) * t.cellY / t.dLat;
+        const edge = Math.max(ex, ez);
+        if (edge < m) { const under = this.heightAt(x, z) - 6; const k = clamp((edge + m) / (2 * m), 0, 1); y = Math.min(y, under * (1 - k) + y * k); }
+        pos[i * 3] = x; pos[i * 3 + 1] = y; pos[i * 3 + 2] = z;
+      }
+      const idx = new Uint32Array((cols - 1) * (rows - 1) * 6);
+      let k = 0;
+      for (let r = 0; r < rows - 1; r++) for (let c = 0; c < cols - 1; c++) { const a = r * cols + c, bb = a + 1, cc = a + cols, d = cc + 1; idx[k++] = a; idx[k++] = cc; idx[k++] = bb; idx[k++] = bb; idx[k++] = cc; idx[k++] = d; }
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      g.setIndex(new THREE.BufferAttribute(idx, 1));
+      g.computeVertexNormals();
+      const mat = new THREE.ShaderMaterial({
+        uniforms: { sun: { value: new THREE.Vector3(-0.62, 0.42, 0.66).normalize() }, t0: { value: PAL.t0 }, t1: { value: PAL.t1 }, t2: { value: PAL.t2 }, ink: { value: PAL.ink }, paper: { value: PAL.paper }, y0: { value: this.y0 } },
+        vertexShader: 'varying vec3 vWP; varying vec3 vN; void main(){ vN = normalize(normal); vec4 w = modelMatrix * vec4(position, 1.0); vWP = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }',
+        fragmentShader: `uniform vec3 sun, t0, t1, t2, ink, paper; uniform float y0; varying vec3 vWP; varying vec3 vN;
+          float lineAt(float v, float px){ float d = abs(fract(v + 0.5) - 0.5); return 1.0 - smoothstep(px * 0.5, px * 1.3, d); }
+          void main(){
+            float ndl = max(0.0, dot(normalize(vN), normalize(sun)));
+            float s = 0.25 + ndl * 0.8;
+            vec3 c = s < 0.42 ? t0 : (s < 0.78 ? t1 : t2);
+            float h = vWP.y + y0, f1 = fwidth(h / 50.0), f2 = fwidth(h / 250.0);
+            float k = max(lineAt(h / 50.0, f1) * (1.0 - smoothstep(0.1, 0.3, f1)) * 0.45, lineAt(h / 250.0, f2 * 1.6) * (1.0 - smoothstep(0.08, 0.25, f2)) * 0.8);
+            c = mix(c, ink, k);
+            float dist = length(vWP - cameraPosition);
+            c = mix(c, paper, smoothstep(600.0, 42000.0, dist) * 0.72);
+            gl_FragColor = vec4(c, 1.0);
+            #include <colorspace_fragment>
+          }`,
+      });
+      const mesh = new THREE.Mesh(g, mat);
+      mesh.frustumCulled = false;
+      mesh.renderOrder = -0.5;
+      this.wScene.add(mesh);
+      this.midfield = mesh;
+      if (this.apron) for (const o of this.apron) o.visible = false;
+    } catch (e) { console.warn('midfield', e); }
   }
 
   // Beyond the 1 m model the ground slopes gently away under the haze, so there is no cliff at the edge.
@@ -497,11 +603,13 @@ export class Stage {
     apronMat.side = THREE.DoubleSide;
     const discMat = toon(PAL.t1.clone());
     this.apronMats = [];
-    this.wScene.add(new THREE.Mesh(g, apronMat));
+    const apron = new THREE.Mesh(g, apronMat);
+    this.wScene.add(apron);
     const disc = new THREE.Mesh(new THREE.CircleGeometry(6000, 64), discMat);
     disc.rotation.x = -Math.PI / 2;
     disc.position.y = -8;
     this.wScene.add(disc);
+    this.apron = [apron, disc];
   }
 
   // The real horizon: a 360° Blender render from the dock (tools/blender_horizon.py), centre = north, east to the right.
@@ -624,7 +732,7 @@ export class Stage {
     const nearTrail = (x, z, r) => { for (let i = 0; i < route.length; i += 2) { const dx = route[i] - x, dz = route[i + 1] - z; if (dx * dx + dz * dz < r * r) return true; } return false; };
     // Drifts: places where stones collect (the lee of ridges, old scree).
     const drifts = [];
-    for (let i = 0; i < 70; i++) {
+    for (let i = 0; i < 140; i++) {
       const v = eva[Math.floor(rand() * eva.length)], c = this.worldOf(v.lon, v.lat), a = rand() * 6.28, r = 6 + rand() * 45;
       drifts.push({ x: c.x + Math.cos(a) * r, z: c.z + Math.sin(a) * r, s: 2.5 + rand() * 9 });
     }
@@ -635,7 +743,7 @@ export class Stage {
           const d = drifts[Math.floor(rand() * drifts.length)], a = rand() * 6.28, r = d.s * Math.pow(rand(), 0.7);
           x = d.x + Math.cos(a) * r; z = d.z + Math.sin(a) * r;
         } else {
-          const v = eva[Math.floor(rand() * eva.length)], c = this.worldOf(v.lon, v.lat), a = rand() * 6.28, r = 3 + rand() * 75;
+          const v = eva[Math.floor(rand() * eva.length)], c = this.worldOf(v.lon, v.lat), a = rand() * 6.28, r = 3 + Math.pow(rand(), 1.4) * 120;
           x = c.x + Math.cos(a) * r; z = c.z + Math.sin(a) * r;
         }
         if (!nearTrail(x, z, clear)) return [x, z];
@@ -643,7 +751,9 @@ export class Stage {
       return null;
     };
     const palette = [[0.2, 0.16, 0.15], [0.3, 0.2, 0.16], [0.42, 0.27, 0.19], [0.5, 0.38, 0.29], [0.58, 0.47, 0.37]];
-    const make = (geos, n, flat, sizeFn, clear) => {
+    const lite = matchMedia('(pointer: coarse)').matches ? 0.5 : 1;
+    const make = (geos, n, flat, sizeFn, clear, outline = 0) => {
+      n = Math.round(n * lite);
       const mat = toon(0xffffff, false);
       const per = Math.ceil(n / geos.length), meshes = [];
       geos.forEach((geo) => {
@@ -670,13 +780,21 @@ export class Stage {
         mesh.castShadow = true; mesh.receiveShadow = true;
         mesh.frustumCulled = false;
         this.wScene.add(mesh);
+        if (outline) {
+          // the plates' ink line around every stone: an inverted hull that shares the stones' placements
+          const om = new THREE.MeshBasicMaterial({ color: PAL.ink, side: THREE.BackSide });
+          om.onBeforeCompile = (sh) => { sh.vertexShader = sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>\ntransformed += normalize(normal) * ${outline.toFixed(3)};`); };
+          const ol = new THREE.InstancedMesh(geo, om, per);
+          ol.instanceMatrix = mesh.instanceMatrix; ol.count = used; ol.frustumCulled = false;
+          this.wScene.add(ol);
+        }
         meshes.push(mesh);
       });
       return meshes;
     };
-    make([0, 1, 2, 3].map((i) => stoneGeometry(2, i * 9.1 + 2, false)), 420, false, (r) => 0.22 + Math.pow(r, 2.6) * 0.8, 2.2);
-    make([0, 1, 2].map((i) => stoneGeometry(2, i * 5.3 + 40, true)), 360, true, (r) => 0.35 + Math.pow(r, 2) * 0.8, 2.0);
-    make([0, 1, 2, 3, 4].map((i) => stoneGeometry(1, i * 3.7 + 90, i % 2 === 0)), 2400, false, (r) => 0.04 + Math.pow(r, 2.2) * 0.12, 1.2);
+    make([0, 1, 2, 3].map((i) => stoneGeometry(2, i * 9.1 + 2, false)), 950, false, (r) => 0.22 + Math.pow(r, 2.6) * 0.85, 2.2, 0.07);
+    make([0, 1, 2].map((i) => stoneGeometry(2, i * 5.3 + 40, true)), 800, true, (r) => 0.35 + Math.pow(r, 2) * 0.85, 2.0, 0.06);
+    make([0, 1, 2, 3, 4].map((i) => stoneGeometry(1, i * 3.7 + 90, i % 2 === 0)), 5200, false, (r) => 0.04 + Math.pow(r, 2.2) * 0.12, 1.2);
   }
 
   #overlay(canvas, opacity = 1) {
@@ -1010,7 +1128,8 @@ export class Stage {
 
   // ------------------------------------------------------------ you: a 1.8 m suited figure, drawn like the plates
   #buildFigure() {
-    // A 1.8 m suited figure, faces +X. Rounded shapes, flat tones, ink outline: the same hand as the plates.
+    // A 1.8 m suited figure, faces +X, jointed at hips, knees, shoulders and elbows so it can walk.
+    // Rounded shapes, flat tones, ink outline: the same hand as the plates.
     const root = new THREE.Group(), suit = toon(0xf1ece2), seam = toon(0xb9b2a6), dark = toon(0x34322f), gold = toon(0xd39a3a), stripe = toon(0xe2742f);
     const part = (geo, mat, x, y, z, parent = root, outline = 0.022) => {
       const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = true;
@@ -1019,46 +1138,70 @@ export class Stage {
       return m;
     };
     const pose = (m, rx, ry, rz) => { m.rotation.set(rx, ry, rz); if (m.userData.ol) m.userData.ol.rotation.set(rx, ry, rz); };
-    this.legs = [];
+    const joint = (parent, x, y, z) => { const g = new THREE.Group(); g.position.set(x, y, z); parent.add(g); return g; };
+    // The body pivots at the hips, so it can lean into the walk and rise and fall with each step.
+    const body = joint(root, 0, 0.92, 0);
+    this.legs = []; this.knees = []; this.arms = []; this.elbows = [];
     for (const side of [-1, 1]) {
-      const hip = new THREE.Group(); hip.position.set(0, 0.92, side * 0.12); root.add(hip);
+      const hip = joint(root, 0, 0.92, side * 0.12);
       part(new THREE.CapsuleGeometry(0.085, 0.36, 6, 12), suit, 0, -0.24, 0, hip);              // thigh
-      part(new THREE.TorusGeometry(0.085, 0.018, 6, 16), seam, 0, -0.46, 0, hip, 0).rotation.x = Math.PI / 2;  // knee ring
-      part(new THREE.CapsuleGeometry(0.078, 0.3, 6, 12), suit, 0, -0.66, 0, hip);               // shin
-      part(new THREE.BoxGeometry(0.27, 0.11, 0.15), dark, 0.04, -0.89, 0, hip);                 // boot
-      this.legs.push(hip);
-      const sh = new THREE.Group(); sh.position.set(0, 1.42, side * 0.27); root.add(sh);
+      const knee = joint(hip, 0, -0.46, 0);
+      part(new THREE.TorusGeometry(0.085, 0.018, 6, 16), seam, 0, 0, 0, knee, 0).rotation.x = Math.PI / 2;  // knee ring
+      part(new THREE.CapsuleGeometry(0.078, 0.3, 6, 12), suit, 0, -0.2, 0, knee);               // shin
+      part(new THREE.BoxGeometry(0.27, 0.11, 0.15), dark, 0.04, -0.43, 0, knee);                // boot
+      this.legs.push(hip); this.knees.push(knee);
+      const sh = joint(body, 0, 0.5, side * 0.27);
       const upper = part(new THREE.CapsuleGeometry(0.07, 0.26, 6, 12), suit, 0, -0.17, 0, sh);
       pose(upper, side * 0.14, 0, 0);
       part(new THREE.BoxGeometry(0.05, 0.03, 0.15), stripe, 0, -0.05, side * 0.02, sh, 0);      // mission stripe
-      const fore = part(new THREE.CapsuleGeometry(0.062, 0.24, 6, 12), suit, 0.04, -0.47, side * 0.03, sh);
+      const elbow = joint(sh, 0.02, -0.33, side * 0.02);
+      const fore = part(new THREE.CapsuleGeometry(0.062, 0.24, 6, 12), suit, 0.02, -0.14, side * 0.01, elbow);
       pose(fore, side * 0.1, 0, 0.15);
-      part(new THREE.SphereGeometry(0.075, 12, 10), dark, 0.07, -0.66, side * 0.04, sh);        // glove
+      part(new THREE.SphereGeometry(0.075, 12, 10), dark, 0.05, -0.33, side * 0.02, elbow);      // glove
+      this.arms.push(sh); this.elbows.push(elbow);
     }
-    part(new THREE.CapsuleGeometry(0.21, 0.36, 8, 16), suit, 0, 1.2, 0);                      // torso
-    part(new THREE.TorusGeometry(0.2, 0.025, 6, 20), seam, 0, 0.98, 0, root, 0).rotation.x = Math.PI / 2;   // waist ring
-    part(new THREE.BoxGeometry(0.12, 0.1, 0.22), seam, 0.2, 1.2, 0);                           // chest controls
-    const pack = part(new THREE.BoxGeometry(0.24, 0.62, 0.44), suit, -0.25, 1.25, 0);          // life-support pack
-    pack.geometry.translate(0, 0, 0);
-    part(new THREE.BoxGeometry(0.02, 0.07, 0.3), stripe, -0.375, 1.42, 0, root, 0);
-    part(new THREE.CylinderGeometry(0.15, 0.17, 0.06, 16), seam, 0, 1.53, 0, root, 0);         // neck ring
-    part(new THREE.SphereGeometry(0.2, 22, 16), suit, 0, 1.72, 0);                             // helmet shell
-    const visor = part(new THREE.SphereGeometry(0.165, 20, 14, -Math.PI / 2.4, Math.PI / 1.2, Math.PI / 4, Math.PI / 2.1), gold, 0.05, 1.72, 0, root, 0);
+    part(new THREE.CapsuleGeometry(0.21, 0.36, 8, 16), suit, 0, 0.28, 0, body);                      // torso
+    part(new THREE.TorusGeometry(0.2, 0.025, 6, 20), seam, 0, 0.06, 0, body, 0).rotation.x = Math.PI / 2;   // waist ring
+    part(new THREE.BoxGeometry(0.12, 0.1, 0.22), seam, 0.2, 0.28, 0, body);                           // chest controls
+    part(new THREE.BoxGeometry(0.24, 0.62, 0.44), suit, -0.25, 0.33, 0, body);                         // life-support pack
+    part(new THREE.BoxGeometry(0.02, 0.07, 0.3), stripe, -0.375, 0.5, 0, body, 0);
+    part(new THREE.CylinderGeometry(0.15, 0.17, 0.06, 16), seam, 0, 0.61, 0, body, 0);                 // neck ring
+    part(new THREE.SphereGeometry(0.2, 22, 16), suit, 0, 0.8, 0, body);                                // helmet shell
+    const visor = part(new THREE.SphereGeometry(0.165, 20, 14, -Math.PI / 2.4, Math.PI / 1.2, Math.PI / 4, Math.PI / 2.1), gold, 0.05, 0.8, 0, body, 0);
     visor.rotation.y = -Math.PI / 2;
     root.visible = false;
     this.figure = root;
+    this.figBody = body;
     this.wScene.add(root);
   }
 
-  // Stand the figure on the real ground at x/z, facing yaw; phase swings the legs while walking.
-  placeFigure(x, z, yaw, phase = 0, visible = true) {
+  // Stand the figure on the real ground at x/z, facing yaw. `phase` is the gait cycle (radians, one cycle = two steps)
+  // and `gait` how much of a stride is in it (0 standing, 1 full walking stride). In Mars gravity (0.38 g) the stride is
+  // long and a little bounding, the body leans into it and the arms swing against the legs.
+  placeFigure(x, z, yaw, phase = 0, visible = true, gait = 0) {
     if (!this.figure) this.#buildFigure();
-    const f = this.figure;
+    const f = this.figure, A = clamp(gait, 0, 1), now = performance.now() / 1000;
     f.visible = visible;
-    f.position.set(x, this.heightAt(x, z), z);
+    // stand on the lower of the two feet's ground, so it never floats over a hollow
+    const fx = Math.cos(yaw), fz = Math.sin(yaw);
+    const g = Math.min(this.heightAt(x, z), this.heightAt(x + fx * 0.35, z + fz * 0.35), this.heightAt(x - fx * 0.35, z - fz * 0.35));
+    const bob = A * 0.05 * Math.cos(2 * phase) + A * 0.03 + (1 - A) * 0.006 * Math.sin(now * 1.6);   // step bounce, or breathing at rest
+    const sway = A * 0.025 * Math.sin(phase);
+    f.position.set(x - fz * sway, g, z + fx * sway);
     f.rotation.y = -yaw;
-    const sw = Math.sin(phase) * 0.42;
-    this.legs[0].rotation.z = sw; this.legs[1].rotation.z = -sw;
+    for (let i = 0; i < 2; i++) {
+      const ph = phase + i * Math.PI;
+      const hip = A * 0.48 * Math.sin(ph);
+      const knee = -A * (0.08 + 0.85 * Math.pow(Math.max(0, Math.cos(ph)), 1.4));
+      this.legs[i].rotation.z = hip;
+      this.knees[i].rotation.z = knee;
+      this.legs[i].position.y = 0.92 + bob;
+      this.arms[i].rotation.z = -A * 0.42 * Math.sin(ph) + (1 - A) * 0.02 * Math.sin(now * 1.6 + i);
+      this.elbows[i].rotation.z = 0.25 + A * 0.25 * Math.max(0, -Math.sin(ph));
+    }
+    this.figBody.position.y = 0.92 + bob;
+    this.figBody.rotation.z = -A * 0.09 - A * 0.02 * Math.cos(2 * phase);
+    this.figBody.rotation.x = A * 0.03 * Math.sin(phase);
   }
 
   // Put the rover on the ground at x/z, facing a direction, wheels turned by the distance it rolled.
