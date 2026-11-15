@@ -204,6 +204,31 @@ function stage(mode) {
   S.stage.setMode(mode === 'globe' ? 'globe' : mode === 'walk' ? 'walk' : 'none');
 }
 
+// Every section can be entered directly. Each jump clears whatever the last one left behind.
+function jump(id) {
+  token();
+  S.stage.rate = 3.2;
+  for (const el of [$('end'), $('boot'), $('h-photo'), $('h-jobs')]) el.hidden = true;
+  document.body.classList.remove('alarm', 'thud');
+  S.verdict = null;
+  S.stage.resetLook();
+  if (id === 'cover') return cover();
+  if (id === 'descent') return descent();
+  if (id === 'suit') {
+    const dock = stops()[0], w = S.stage.worldOf(dock.lon, dock.lat);
+    S.stage.setPinsVisible(false);
+    S.stage.setCairns(0);
+    S.stage.setEye(w.x - 9, w.z + 4, -0.55, -0.12, 0, true);
+    stage('walk');
+    setLayers([]);
+    return suitUp();
+  }
+  if (id === 'walk') return outside();
+  if (id === 'storm') { outside(); S.youD = S.plan.outD; return storm(); }
+  if (id === 'home') { outside(); return homecoming(null); }
+  if (id === 'explore') return explore();
+}
+
 function cover() {
   token();
   S.step = 'cover';
@@ -283,7 +308,7 @@ async function suitUp() {
   ];
   $('boot').innerHTML = `<p class="boot__head">Your visor is waking up</p><ol>${lines.map(([a, b]) => `<li><span>${esc(a)}</span><b>${esc(b)}</b></li>`).join('')}</ol>
     <div class="boot__route"><span>Route</span>${ROUTES.map((r) => { const x = routes[r.id]; return `<button type="button" data-route="${r.id}" aria-pressed="${r.id === S.pick}">${esc(r.name)}<small>${mins(x.tl.end.t)} · ${(x.plan.outD * 2 / 1000).toFixed(1)} km · max ${x.plan.maxSlope.toFixed(0)}°</small></button>`; }).join('')}</div>
-    <p class="boot__note">Rover-proven is longer, but every metre of it has been driven. Orbit can’t see rocks smaller than a metre.</p>
+    <p class="boot__note"><b>Rover-proven</b> follows Curiosity’s own wheel tracks: the longest, but every metre has been driven. <b>Fastest</b> and <b>Gentlest</b> are computed from orbital elevation, which cannot see rocks smaller than a metre.</p>
     <button type="button" class="act" data-a="hatch">Open the hatch</button>`;
   $('boot').hidden = false;
   const items = [...$('boot').querySelectorAll('li, .boot__route, .boot__note, .act')];
@@ -325,9 +350,13 @@ function outside() {
   hud(true);
   readout(sim.stateAt(S.tl, 0));
   S.nextBearing = bearing(stops()[0], stops()[1]);
-  say('This rover drove here alone, a year before you.', 'Today it goes first again. Its old stops are your cairns.');
+  setGoal(`Reach cairn 1 of ${nCairns()}`, (S.story.stops.WP1 || {}).q || '');
+  say('This rover drove here alone, a year before you.', `Your mission: walk to ${nCairns()} cairns, take rock from both sides of the line where this part of Mars began to dry, and be home with air to spare. The rover goes first.`);
   act([{ id: 'go', label: 'Follow the rover', note: `to cairn 1 · ${legM(0)} m` }]);
 }
+
+function setGoal(goal, ask = '') { $('h-goal').textContent = goal; $('h-ask').textContent = ask; }
+const nCairns = () => stops().length - 1;
 
 function legM(k) { return Math.round((S.plan.out[S.plan.idx[k + 1]].d - S.plan.out[S.plan.idx[k]].d) / 10) * 10; }
 
@@ -346,6 +375,7 @@ async function leg(k) {
   const t0 = S.marks.dep[k].t, t1 = S.marks.arr[k + 1].t;
   const dur = Math.max(4200, Math.min(9000, (d1 - d0) * 15));
   S.nextBearing = bearing(stops()[k], stops()[k + 1]);
+  setGoal(`Walking to cairn ${k + 1} of ${nCairns()}`, (S.story.stops[stops()[k + 1].id] || {}).q || '');
   S.stage.markStops(-1, k + 1);
   act([]);
   say('');
@@ -386,7 +416,9 @@ function arrive(k) {
   $('h-photo').hidden = false;
   $('h-jobs').innerHTML = wp.plain.do.map((j) => `<li>${esc(j)}</li>`).join('');
   $('h-jobs').hidden = false;
-  say(`<b>Cairn ${k} · ${esc(s.title || wp.plain.title)}.</b> ${esc(s.line || '')}`);
+  const lay = LAYERS.find((l) => (s.layers || [])[0] === l.id);
+  setGoal(`Cairn ${k} of ${nCairns()} · ${s.title || wp.plain.title}`, s.q || '');
+  say(`<b>${esc(s.q || s.title || wp.plain.title)}</b>`, `${esc(s.a || s.line || '')}${lay ? ` <span class="say__layer">Visor layer on: ${esc(lay.name)}.</span>` : ''}`);
   act(k < last ? [{ id: 'go', label: 'Collect and follow on', note: `${wp.plannedStayMin} min here · cairn ${k + 1} is ${legM(k)} m on` }]
     : [{ id: 'turn', label: 'Collect, then turn for home', note: `${wp.plannedStayMin} min here · the turnaround` }]);
 }
@@ -424,6 +456,7 @@ async function storm() {
   $('h-photo').hidden = true;
   $('h-jobs').hidden = true;
   document.body.classList.add('alarm');
+  setGoal('Get home', 'Which way back is safest?');
   act([]);
   say('<b>Solar particle event.</b> Radiation twenty times normal.', 'Simulated drill, shaped on the storm Curiosity measured in September 2017.');
   await wait(2400); if (!live(t)) return;
@@ -502,11 +535,13 @@ function homecoming(x) {
   // Low, behind you, looking up the trail toward the mountain: the rover drives away into the haze.
   S.stage.flyWalk({ x: c.x, y: c.y, z: c.z, dist: 70, polar: 76, az: 192 });
   say('It walked this ground alone, so that you would not have to.', `Curiosity is still out there, ${vars().roverAheadM} m past your turnaround, climbing.`);
+  const jobs = stops().slice(1).reduce((n, w) => n + w.plain.do.length, 0);
   $('end').innerHTML = `<dl>
-      <div><dt>${mins(end.t)}</dt><dd>outside</dd></div>
-      <div><dt>${mins(end.o2 - reserve())}</dt><dd>air left at the hatch</dd></div>
-      <div><dt>${end.dose.toFixed(2)} mSv</dt><dd>${((end.dose / career) * 100).toFixed(2)}% of a NASA career limit</dd></div>
-    </dl>${S.verdict ? `<p class="end__verdict">${esc(S.verdict)}</p>` : ''}
+      <div><dt>${S.plan.maxSlope.toFixed(0)}°</dt><dd><b>Was it safe to step?</b>The steepest ground on the walk. The suit’s limit is ${S.limits.noGo}°.</dd></div>
+      <div><dt>${nCairns()} cairns</dt><dd><b>Was it worth stopping?</b>${jobs} jobs done, with rock from both sides of the line where Mars began to dry.</dd></div>
+      <div><dt>${mins(end.o2 - reserve())}</dt><dd><b>Did you get home?</b>Of air left at the hatch, after ${mins(end.t)} outside.</dd></div>
+    </dl>
+    <p class="end__dose">Radiation on the way: ${end.dose.toFixed(2)} mSv, ${((end.dose / career) * 100).toFixed(2)}% of a NASA career limit.</p>${S.verdict ? `<p class="end__verdict">${esc(S.verdict)}</p>` : ''}
     <figure class="end__live" id="live" hidden></figure>
     <div class="end__go"><button type="button" class="act" data-a="again">Walk it again</button><button type="button" class="act act--alt" data-a="explore">Explore the map</button><button type="button" class="act act--alt" data-a="about">Data &amp; sources</button></div>`;
   setTimeout(() => { if (live(t)) $('end').hidden = false; }, 2600);
@@ -650,7 +685,7 @@ async function boot() {
     if (a) {
       const id = a.dataset.a;
       if (id === 'begin') return descent();
-      if (id === 'skip') { token(); return suitUp(); }
+      if (id === 'skip') return jump('suit');
       if (id === 'hatch') return outside();
       if (id === 'go') { $('h-photo').hidden = true; $('h-jobs').hidden = true; return leg(S.k); }
       if (id === 'turn') return storm();
@@ -673,6 +708,7 @@ async function boot() {
       layerButtons();
     }
   });
+  $('sections').addEventListener('click', (e) => { const b = e.target.closest('[data-go]'); if (b) jump(b.dataset.go); });
   $('scrub').addEventListener('input', (e) => scrubTo(Number(e.target.value) / 1000));
   $('btn-about').addEventListener('click', openAbout);
   document.addEventListener('keydown', (e) => {

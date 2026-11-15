@@ -1,7 +1,14 @@
 {
   "schema": "redcairn.story/2",
   "note": "Every chapter is one headline and one sentence. Values in {braces} are filled from the data files at run time.",
-  "missions": ["Viking", "Mars Global Surveyor", "Mars Express", "Mars Reconnaissance Orbiter", "Curiosity", "Perseverance"],
+  "missions": [
+    "Viking",
+    "Mars Global Surveyor",
+    "Mars Express",
+    "Mars Reconnaissance Orbiter",
+    "Curiosity",
+    "Perseverance"
+  ],
   "chapters": {
     "mars": {
       "kicker": "Interplanetary Survival Guide: Martian Map",
@@ -40,11 +47,56 @@
     }
   },
   "stops": {
-    "DOCK": { "title": "The rover that brought you", "line": "Check your suit and radio. Every step from here is on ground a rover already crossed." },
-    "WP1": { "title": "The steep part", "line": "Curiosity tilted 17° here. Learn how your suit handles a real slope while home is seven minutes away.", "layers": ["slope"] },
-    "WP2": { "title": "Monte Grande: the boxwork", "line": "Ridges of rock cemented by water that once flowed underground. Drill the ridge top and the hollow below it.", "layers": ["rocks"] },
-    "WP3": { "title": "The last ridges", "line": "Look for pea-sized bumps in the rock: another fingerprint of groundwater.", "layers": ["track"] },
-    "WP4": { "title": "The line in the rock", "line": "The ridges stop, salty layers begin. Sample both sides of the moment this part of Mars began to dry.", "layers": ["rocks"] },
-    "WP5": { "title": "The turnaround", "line": "Rock cracked like dried mud. Look back: every white line is five more minutes from home.", "layers": ["home"] }
+    "DOCK": {
+      "title": "The rover that brought you",
+      "line": "Check your suit and radio. Every step from here is on ground a rover already crossed.",
+      "q": "Where do I start, and can I trust this ground?",
+      "a": "Right here, beside the rover that brought you. Every step ahead is on ground Curiosity has already crossed."
+    },
+    "WP1": {
+      "title": "The steep part",
+      "line": "Curiosity tilted 17° here. Learn how your suit handles a real slope while home is seven minutes away.",
+      "layers": [
+        "slope"
+      ],
+      "q": "Can my suit handle a real hill?",
+      "a": "Yes, with care. Curiosity tilted 17° here and your suit’s limit is 20°. Home is seven minutes away, so this is the safest place to find out."
+    },
+    "WP2": {
+      "title": "Monte Grande: the boxwork",
+      "line": "Ridges of rock cemented by water that once flowed underground. Drill the ridge top and the hollow below it.",
+      "layers": [
+        "rocks"
+      ],
+      "q": "Where did the water go?",
+      "a": "Into the cracks. It left minerals that set like cement, and wind wore the softer rock away, leaving ridges. Core the ridge and the hollow to see what the water carried."
+    },
+    "WP3": {
+      "title": "The last ridges",
+      "line": "Look for pea-sized bumps in the rock: another fingerprint of groundwater.",
+      "layers": [
+        "track"
+      ],
+      "q": "How long did the water last?",
+      "a": "Longer than anyone expected. These pea-sized nodules are another groundwater fingerprint, and they suggest the water lingered."
+    },
+    "WP4": {
+      "title": "The line in the rock",
+      "line": "The ridges stop, salty layers begin. Sample both sides of the moment this part of Mars began to dry.",
+      "layers": [
+        "rocks"
+      ],
+      "q": "When did this part of Mars start to dry?",
+      "a": "At this line. Water-altered ridges end and layered, salty rock begins. Sample both sides of it."
+    },
+    "WP5": {
+      "title": "The turnaround",
+      "line": "Rock cracked like dried mud. Look back: every white line is five more minutes from home.",
+      "layers": [
+        "home"
+      ],
+      "q": "Can I get home from here?",
+      "a": "Yes. Look back: the whole walk is green, and every white line is five more minutes from the rover. Collect, then turn."
+    }
   }
 }

@@ -24,16 +24,25 @@
     <div class="crater" id="crater"></div>
   </div>
 
-  <!-- Cover: one line, one button. -->
+  <!-- Cover: what this is, the three questions it answers, and two honest ways in. -->
   <section class="cover" aria-labelledby="cover-title">
     <p class="cover__mark">Redcairn</p>
-    <h1 id="cover-title">In a few minutes you will be the first person to walk on Mars.</h1>
-    <button type="button" class="act" data-a="begin">Begin the descent</button>
-    <button type="button" class="link" data-a="explore">or open the map</button>
+    <h1 id="cover-title">A survival map for the first walk on Mars.</h1>
+    <p class="cover__lede">Walk 1.5 km of real Martian ground in Gale crater, behind the rover that crossed it first, and answer the three questions every astronaut must.</p>
+    <ol class="cover__qs">
+      <li><b>Where is it safe to step?</b><span>Slope, mapped for a spacesuit</span></li>
+      <li><b>What is worth stopping for?</b><span>Rock that records where Mars’ water went</span></li>
+      <li><b>Can I get home?</b><span>Minutes, air and radiation, always on your visor</span></li>
+    </ol>
+    <div class="cover__go">
+      <button type="button" class="act" data-a="begin">Begin the mission<small>3 minutes · you are the astronaut</small></button>
+      <button type="button" class="act act--alt" data-a="explore">Skip to the map<small>every layer, free to explore</small></button>
+    </div>
+    <p class="cover__meta">NASA Space Apps 2026 · Interplanetary Survival Guide: Martian Map · data from Viking, MGS, Mars Express, MRO, Curiosity and Perseverance</p>
   </section>
 
   <!-- The lander window during descent. -->
-  <div class="lander" aria-live="polite"><div class="lander__txt"><p id="lander-a"></p><p id="lander-b"></p></div><button type="button" class="link" data-a="skip">skip to the landing</button></div>
+  <div class="lander" aria-live="polite"><div class="lander__txt"><p id="lander-a"></p><p id="lander-b"></p></div><button type="button" class="link" data-a="skip">Skip the descent</button></div>
 
   <!-- The visor boots: data sources check in, the route is chosen. -->
   <section class="boot" id="boot" hidden aria-label="Visor start-up"></section>
@@ -42,7 +51,7 @@
   <div class="helmet" aria-hidden="true"></div>
   <section class="hud" aria-label="Helmet display">
     <div class="hud__compass"><div class="hud__strip" id="h-compass-strip"></div><i class="hud__target" id="h-target" hidden></i><b></b></div>
-    <p class="hud__met" id="h-met"></p>
+    <div class="hud__goal"><b id="h-goal"></b><span id="h-ask"></span><small id="h-met"></small></div>
     <dl class="hud__suit">
       <div><dt>Air</dt><dd id="h-air">—</dd></div>
       <div><dt>Walk home</dt><dd id="h-home">—</dd></div>
@@ -66,7 +75,16 @@
   </div>
   <section class="end" id="end" hidden></section>
 
-  <button class="about-btn" id="btn-about" type="button">Data &amp; sources</button>
+  <nav class="sections" id="sections" aria-label="Jump to a part of the mission">
+    <button type="button" data-go="cover">Mission</button>
+    <button type="button" data-go="descent">Land</button>
+    <button type="button" data-go="suit">Suit up</button>
+    <button type="button" data-go="walk">Walk</button>
+    <button type="button" data-go="storm">Storm</button>
+    <button type="button" data-go="home">Home</button>
+    <button type="button" data-go="explore">Map</button>
+    <button type="button" class="sections__about" id="btn-about">Data &amp; sources</button>
+  </nav>
   <dialog class="about" id="about" aria-labelledby="about-title">
     <form method="dialog" class="about__head">
       <h2 id="about-title">Data &amp; sources</h2>

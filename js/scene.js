@@ -28,6 +28,26 @@ const ROVER_PAINT = {
   steel: new THREE.Color(0x44525d), tyre: new THREE.Color(0x1d1c1f), ring: new THREE.Color(0x9aa0a4),
 };
 
+// A stone: a subdivided sphere pushed in and out by layered waves so it has crags and planes, not a ball.
+// `flat` squashes it into a slab. Vertex colours darken the crevices so it reads as rock without a texture.
+function stoneGeometry(detail, seed, flat, tint) {
+  const g = new THREE.IcosahedronGeometry(1, detail), p = g.attributes.position, col = new Float32Array(p.count * 3);
+  const t = tint || new THREE.Color(1, 1, 1);
+  for (let i = 0; i < p.count; i++) {
+    let x = p.getX(i), y = p.getY(i), z = p.getZ(i);
+    const w = (a, b, c) => Math.sin(x * a + y * b + z * c + seed);
+    const d = 1 + 0.2 * w(2.3, 3.1, 1.7) + 0.13 * w(5.1, 4.3, 6.2) + 0.06 * w(11, 9, 13);
+    x *= d; y *= d; z *= d;
+    if (flat) { y *= 0.34; if (y > 0.16) y = 0.16 + (y - 0.16) * 0.2; }
+    p.setXYZ(i, x, y, z);
+    const sh = clamp(0.62 + (d - 0.7) * 0.9 + (flat ? 0 : y * 0.12), 0.45, 1.05) * (0.94 + 0.06 * w(21, 17, 19));
+    col[i * 3] = t.r * sh; col[i * 3 + 1] = t.g * sh; col[i * 3 + 2] = t.b * sh;
+  }
+  g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  g.computeVertexNormals();
+  return g;
+}
+
 // Average colour of a horizontal band of an image (fractions of its height), as a three.js colour.
 function averageColour(img, f0, f1) {
   try {
@@ -418,13 +438,13 @@ export class Stage {
     const sprite = new THREE.CanvasTexture(c);
 
     // Motes: a fixed cloud that wraps around the camera, so there is always dust near you and never any far away.
-    const N = reduce ? 0 : 520, R = 26;
+    const N = reduce ? 0 : 200, R = 24;
     const mp = new Float32Array(N * 3), rand = rng(9091);
     for (let i = 0; i < N; i++) { mp[i * 3] = (rand() - 0.5) * 2 * R; mp[i * 3 + 1] = rand() * 9 - 2; mp[i * 3 + 2] = (rand() - 0.5) * 2 * R; }
     const mg = new THREE.BufferGeometry();
     mg.setAttribute('position', new THREE.BufferAttribute(mp.slice(), 3));
     this.motes = { N, R, base: mp, pts: new THREE.Points(mg, new THREE.PointsMaterial({
-      map: sprite, color: 0xe9c9a4, size: 0.16, sizeAttenuation: true, transparent: true, opacity: 0.4, depthWrite: false, fog: true,
+      map: sprite, color: 0xe9c9a4, size: 0.07, sizeAttenuation: true, transparent: true, opacity: 0.22, depthWrite: false, fog: true,
     })) };
     this.motes.pts.frustumCulled = false;
     this.wScene.add(this.motes.pts);
@@ -488,33 +508,65 @@ export class Stage {
     }
   }
 
-  // Rocks: the HiRISE photo can't show anything smaller than a metre, so scatter the cobbles a walker would see.
+  // Rocks: the HiRISE photo can't show anything smaller than a metre, so scatter what a walker would see:
+  // angular boulders, flat slabs of broken bedrock and loose gravel, gathered in drifts and clear of the trail.
   #buildRocks() {
-    const rand = rng(4711), n = 4200;
-    const geo = new THREE.IcosahedronGeometry(1, 1);
-    const p = geo.attributes.position;
-    for (let i = 0; i < p.count; i++) p.setXYZ(i, p.getX(i) * (0.8 + rand() * 0.4), p.getY(i) * (0.8 + rand() * 0.4), p.getZ(i) * (0.8 + rand() * 0.4));
-    geo.computeVertexNormals();
-    const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.95, flatShading: true });
-    const rocks = new THREE.InstancedMesh(geo, mat, n);
-    const m = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), col = new THREE.Color();
-    const eva = this.data.route.eva;
-    for (let i = 0; i < n; i++) {
-      const v = eva[Math.floor(rand() * eva.length)];
-      const c = this.worldOf(v.lon, v.lat);
-      const ang = rand() * Math.PI * 2, rad = 2.2 + Math.pow(rand(), 1.4) * 70;
-      const x = c.x + Math.cos(ang) * rad, z = c.z + Math.sin(ang) * rad;
-      const sz = 0.04 + Math.pow(rand(), 3.2) * (rad < 8 ? 0.12 : 0.42);
-      e.set(rand() * 3, rand() * 3, rand() * 3);
-      q.setFromEuler(e);
-      m.compose(new THREE.Vector3(x, this.heightAt(x, z) + sz * 0.15, z), q, new THREE.Vector3(sz * (1 + rand() * 0.6), sz * 0.55, sz));
-      rocks.setMatrixAt(i, m);
-      col.setRGB(0.42 + rand() * 0.14, 0.3 + rand() * 0.08, 0.22 + rand() * 0.06);
-      rocks.setColorAt(i, col);
+    const rand = rng(4711), eva = this.data.route.eva;
+    const route = [];
+    for (let i = 0; i < eva.length; i += 2) { const w = this.worldOf(eva[i].lon, eva[i].lat); route.push(w.x, w.z); }
+    const nearTrail = (x, z, r) => { for (let i = 0; i < route.length; i += 2) { const dx = route[i] - x, dz = route[i + 1] - z; if (dx * dx + dz * dz < r * r) return true; } return false; };
+    // Drifts: places where stones collect (the lee of ridges, old scree).
+    const drifts = [];
+    for (let i = 0; i < 70; i++) {
+      const v = eva[Math.floor(rand() * eva.length)], c = this.worldOf(v.lon, v.lat), a = rand() * 6.28, r = 6 + rand() * 45;
+      drifts.push({ x: c.x + Math.cos(a) * r, z: c.z + Math.sin(a) * r, s: 2.5 + rand() * 9 });
     }
-    rocks.castShadow = true;
-    rocks.receiveShadow = true;
-    this.wScene.add(rocks);
+    const pickSpot = (clear) => {
+      for (let tries = 0; tries < 12; tries++) {
+        let x, z;
+        if (rand() < 0.72) {
+          const d = drifts[Math.floor(rand() * drifts.length)], a = rand() * 6.28, r = d.s * Math.pow(rand(), 0.7);
+          x = d.x + Math.cos(a) * r; z = d.z + Math.sin(a) * r;
+        } else {
+          const v = eva[Math.floor(rand() * eva.length)], c = this.worldOf(v.lon, v.lat), a = rand() * 6.28, r = 3 + rand() * 75;
+          x = c.x + Math.cos(a) * r; z = c.z + Math.sin(a) * r;
+        }
+        if (!nearTrail(x, z, clear)) return [x, z];
+      }
+      return null;
+    };
+    const palette = [[0.2, 0.16, 0.15], [0.3, 0.2, 0.16], [0.42, 0.27, 0.19], [0.5, 0.38, 0.29], [0.58, 0.47, 0.37]];
+    const make = (geos, n, flat, sizeFn, clear) => {
+      const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.96, flatShading: true });
+      const per = Math.ceil(n / geos.length), meshes = [];
+      geos.forEach((geo) => {
+        const mesh = new THREE.InstancedMesh(geo, mat, per);
+        let used = 0;
+        const m = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), col = new THREE.Color();
+        for (let i = 0; i < per; i++) {
+          const spot = pickSpot(clear);
+          if (!spot) continue;
+          const [x, z] = spot, sz = sizeFn(rand());
+          e.set(flat ? (rand() - 0.5) * 0.35 : rand() * 3, rand() * 6.28, flat ? (rand() - 0.5) * 0.35 : rand() * 3);
+          q.setFromEuler(e);
+          const sy = flat ? sz * (0.5 + rand() * 0.4) : sz * (0.45 + rand() * 0.4);
+          m.compose(new THREE.Vector3(x, this.heightAt(x, z) + sy * (flat ? 0.05 : 0.18), z), q, new THREE.Vector3(sz * (0.8 + rand() * 0.5), sy, sz * (0.8 + rand() * 0.4)));
+          mesh.setMatrixAt(used, m);
+          const c = palette[Math.floor(Math.pow(rand(), 1.3) * palette.length)], j = 0.88 + rand() * 0.24;
+          mesh.setColorAt(used, col.setRGB(c[0] * j, c[1] * j, c[2] * j));
+          used++;
+        }
+        mesh.count = used;
+        mesh.castShadow = true; mesh.receiveShadow = true;
+        mesh.frustumCulled = false;
+        this.wScene.add(mesh);
+        meshes.push(mesh);
+      });
+      return meshes;
+    };
+    make([0, 1, 2, 3].map((i) => stoneGeometry(2, i * 9.1 + 2, false)), 420, false, (r) => 0.22 + Math.pow(r, 2.6) * 0.8, 2.2);
+    make([0, 1, 2].map((i) => stoneGeometry(2, i * 5.3 + 40, true)), 360, true, (r) => 0.35 + Math.pow(r, 2) * 0.8, 2.0);
+    make([0, 1, 2, 3, 4].map((i) => stoneGeometry(1, i * 3.7 + 90, i % 2 === 0)), 2400, false, (r) => 0.04 + Math.pow(r, 2.2) * 0.12, 1.2);
   }
 
   #overlay(canvas, opacity = 1) {
@@ -647,27 +699,59 @@ export class Stage {
     this.wScene.add(this.back);
   }
 
-  // Cairns at true size: the stones the rover's stops became.
+  // Cairns at true size: a hand-stacked pile of flat stones, a red pennant on a pole so it can be seen from far off,
+  // and, for the one you are heading to, a faint beam of light up into the haze.
   #buildMarkers() {
-    const wps = this.data.mission.waypoints;
+    const wps = this.data.mission.waypoints, rand = rng(2024);
     this.cairns = [];
-    const rock = new THREE.IcosahedronGeometry(1, 1);
-    const sizes = [[0.42, 0.2, 0.38, 0.18], [0.32, 0.17, 0.3, 0.5], [0.24, 0.15, 0.22, 0.78], [0.15, 0.12, 0.14, 1.02]];
+    const tints = [0xd2c0a6, 0xbba083, 0xdccdb6, 0xad9279, 0xc8b295].map((h) => new THREE.Color(h));
+    const poleMat = new THREE.MeshStandardMaterial({ color: 0x2b2b30, roughness: 0.5, metalness: 0.4 });
+    const flagMat = new THREE.MeshBasicMaterial({ color: 0xe5582c, side: THREE.DoubleSide });
+    const beamMat = new THREE.ShaderMaterial({
+      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false,
+      vertexShader: 'varying float vT; void main(){ vT = (position.y + 40.0) / 80.0; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+      fragmentShader: 'varying float vT; void main(){ float a = 0.30 * pow(1.0 - vT, 1.8) * smoothstep(0.0, 0.03, vT); gl_FragColor = vec4(1.0, 0.7, 0.46, a); }',
+    });
     wps.forEach((wp, k) => {
-      const mat = new THREE.MeshStandardMaterial({ color: 0xd9ccb6, roughness: 0.95, flatShading: true, emissive: 0x000000 });
+      const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.95, flatShading: true, emissive: 0x000000 });
       const g = new THREE.Group();
-      sizes.forEach(([rx, ry, rz, y], n) => {
-        const m = new THREE.Mesh(rock, mat);
-        m.scale.set(rx, ry, rz);
-        m.position.y = y;
-        m.rotation.y = n * 1.1 + k;
+      let y = 0;
+      for (let n = 0; n < 8; n++) {
+        const r = 0.8 - n * 0.085, ry = 0.17 - n * 0.007;
+        const mesh = new THREE.Mesh(stoneGeometry(2, k * 13 + n * 4.1, true, tints[(n + k) % tints.length]), mat);
+        mesh.scale.set(r * (0.9 + rand() * 0.3), ry * 1.5, r * (0.85 + rand() * 0.3));
+        y += ry * 0.5;
+        mesh.position.set((rand() - 0.5) * r * 0.22, y, (rand() - 0.5) * r * 0.22);
+        mesh.rotation.set((rand() - 0.5) * 0.18, rand() * 6.28, (rand() - 0.5) * 0.18);
+        y += ry * 0.62;
+        mesh.castShadow = true; mesh.receiveShadow = true;
+        g.add(mesh);
+      }
+      // a few fallen stones at the foot of the pile
+      for (let n = 0; n < 5; n++) {
+        const a = rand() * 6.28, d = 0.85 + rand() * 0.6, sz = 0.07 + rand() * 0.12;
+        const m = new THREE.Mesh(stoneGeometry(1, k * 7 + n * 2.7, n % 2 === 0, tints[n % tints.length]), mat);
+        m.scale.set(sz * 1.3, sz * 0.7, sz); m.position.set(Math.cos(a) * d, sz * 0.25, Math.sin(a) * d); m.rotation.y = rand() * 6;
         m.castShadow = true;
         g.add(m);
-      });
+      }
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.026, 2.5, 6), poleMat);
+      pole.position.y = y + 1.0; pole.castShadow = true;
+      g.add(pole);
+      const flag = new THREE.Group();
+      const cloth = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.44, 6, 1), flagMat);
+      cloth.position.x = 0.35;
+      flag.add(cloth);
+      flag.position.y = y + 2.0;
+      g.add(flag);
+      const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 80, 20, 1, true), beamMat);
+      beam.position.y = 40; beam.visible = false; beam.frustumCulled = false;
+      g.add(beam);
       g.position.copy(this.worldOf(wp.lon, wp.lat, 0));
+      g.rotation.y = rand() * 6.28;
       g.scale.setScalar(k ? 1.25 : 0.001);   // the dock has the rover, not a cairn
       this.wScene.add(g);
-      this.cairns.push({ g, mat, rise: 1 });
+      this.cairns.push({ g, mat, rise: 1, flag, beam });
 
       const el = document.createElement('button');
       el.type = 'button';
@@ -676,7 +760,7 @@ export class Stage {
       if (k === 0) el.dataset.start = '';
       el.addEventListener('click', () => this.onStop(k));
       this.pinRoot.appendChild(el);
-      this.pins.push({ el, kind: 'walk', local: this.worldOf(wp.lon, wp.lat, 2.6), id: k });
+      this.pins.push({ el, kind: 'walk', local: this.worldOf(wp.lon, wp.lat, 4.4), id: k });
     });
   }
 
@@ -686,9 +770,12 @@ export class Stage {
   }
 
   markStops(here, reached) {
-    this.cairns.forEach((c, k) => c.mat.emissive.set(k === here ? 0x5a2410 : 0x000000));
+    // The cairn you are heading to: the next one after where you stand, or the one the leg is aimed at.
+    const next = here >= 0 ? here + 1 : reached >= 1 ? reached : reached === 0 ? 1 : -1;
+    this.cairns.forEach((c, k) => { c.mat.emissive.set(k === here ? 0x5a2410 : 0x000000); c.beam.visible = k > 0 && k === next; });
     for (const p of this.pins) {
       if (p.kind !== 'walk') continue;
+      p.el.toggleAttribute('data-next', p.id === next);
       p.el.toggleAttribute('data-here', p.id === here);
       p.el.toggleAttribute('data-done', p.id < reached && p.id !== here);
     }
@@ -834,7 +921,8 @@ export class Stage {
     const focus = this.rover && this.camMode === 'eye' ? this.rover.position : (this.camMode === 'eye' ? this.wCam.position : new THREE.Vector3(this.cam.x, this.cam.y, this.cam.z));
     this.sun.target.position.copy(focus);
     this.sun.position.copy(focus).addScaledVector(this.sunDir, 200);
-    // Cairns rise out of the ground when the rover leaves them.
+    // Cairns rise out of the ground when the rover leaves them; their pennants stir in the thin wind.
+    this.cairns.forEach((c, i) => { c.flag.rotation.y = Math.sin(now * 0.0017 + i * 1.9) * 0.28; c.flag.rotation.z = Math.sin(now * 0.0023 + i) * 0.05; });
     for (const c of this.cairns) {
       if (c.target === undefined) continue;
       c.rise += ((c.target || 0) - c.rise) * (1 - Math.exp(-2.5 * dt));
