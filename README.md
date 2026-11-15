@@ -1,20 +1,22 @@
-# REDCAIRN: abandoned, but not forgotten
+# REDCAIRN: your first walk on Mars
 
-A walking guide for the first humans on Mars, made from what the machines that went quiet left behind.
+A Marswalk guide for the first astronauts on Mars, layered from six missions' data on the real ground of Gale crater. You play it as the astronaut, in about three minutes.
 
 Live: <https://redcairn.netlify.app>
 
 > Built for the 2026 NASA International Space Apps Challenge, *Interplanetary Survival Guide: Martian Map*. An independent student project, not affiliated with or endorsed by NASA or any space agency.
 
-On Earth, hikers stack stones into cairns to mark the safe way for whoever comes next. REDCAIRN turns the records of the Mars rovers and orbiters into cairns: a real 1.5 km walk on Mount Sharp in Gale crater, built from orbital imagery, elevation, geologic mapping, water minerals seen from orbit, Curiosity's track and photographs, and measured surface radiation. It answers the three questions an astronaut on foot has: where is it safe to step, what is worth stopping for, and can I still get home?
+On Earth, hikers stack stones into cairns to mark the safe way for whoever comes next. On Mars, a rover already did that: every place Curiosity stopped is a cairn. REDCAIRN turns those stops, and the orbital data above them, into the map an astronaut carries: where it is safe to step, what is worth stopping for, and how to get home.
 
-## The story, in three acts
+## How it plays
 
-| Act | What you see | Made from |
-|---|---|---|
-| **I · Remember** | A true-colour Mars globe and the eight machines that landed and went quiet (or, for Curiosity, kept driving) | Viking MDIM 2.1 colour mosaic, stitched in Blender; mission records |
-| **II · Read the mountain** | Gale crater in 3D with layer switches (true colour, height, USGS rock units, water minerals from orbit, Curiosity's track); Curiosity's 38.6 km line drawing itself with its real odometry; Mount Sharp's six rock layers | MOLA + HRSC elevation and relief, Viking colour, USGS SIM 3292, CRISM + OMEGA detections, all rendered through one Blender camera; Curiosity traverse to sol 5,073 |
-| **III · Walk it** | A 2.5D diorama of the real ground: five stops with the rover's own photos, six map layers, a suit readout, walk-home time everywhere, and a solar-storm drill that re-plans the way home | HiRISE photograph (~33 cm/px) on the HiRISE 1 m elevation model, Curiosity's track, raw images, REMS weather and RAD radiation |
+| Phase | The device | What you do | Built from |
+|---|---|---|---|
+| **1 · Brief** | Habitat display | See Mars in true colour, then Gale crater in 3D. Switch layers like Mars Trek: true colour, height, USGS rock units, water minerals from orbit, Curiosity's track drawing itself over 14 years | Viking colour; MOLA + HRSC elevation and relief; USGS SIM 3292; CRISM + OMEGA; Curiosity odometry to sol 5,073. Crater rendered in Blender, one camera per layer |
+| **2 · Plan** | Habitat display | Pick one of three routes through the same five stops: rover-proven, fastest or gentlest. Each shows its true time, distance and steepest slope | Routes computed in the browser on 146,034 cells of the HiRISE 1 m elevation model; suit pace simulated |
+| **3 · Marswalk** | Helmet HUD | At each stop you see Curiosity's real photo from that spot, with air, walk-home time, dose, slope underfoot, bearing to the next cairn and a mini-map. Science tasks cost suit time | Curiosity Navcam images, HiRISE photo and elevation, Curiosity's science findings |
+| **Storm** | Helmet HUD + map | A simulated solar particle event. Choose: a new line home, the way you came, or shelter behind a ridge. The cost of each is computed on the real terrain | Curiosity RAD (Sept 2017 event, ×20 for the drill), 16-direction sky-shielding scan |
+| **4 · Debrief** | | Tasks done, time outside, dose against NASA's career limit, your storm call. Then explore every layer and scrub the walk freely | Perseverance's newest frame, fetched live |
 
 ## The five resources we were given, and where each one shows up
 
@@ -67,10 +69,9 @@ $B -b --python tools/blender_scene.py -- --rover path/to/rover.blend   # site an
 ```
 index.html            the page
 css/styles.css        styles
-js/app.js             the story: beats, suit, drill, sources panel
+js/app.js             the mission: brief, route planning, helmet HUD, storm, debrief
 js/scene.js           three.js stage: the globe and the walk diorama
 js/crater.js          the Blender-rendered crater, its layers and the drawn track
-js/stack.js           Mount Sharp's six layers as an isometric stack
 js/terrain.js         slope, sky shielding and least-time routing on the 2 m grid
 js/sim.js             suit timeline and dose
 data/                 baked mission data (see tools/)

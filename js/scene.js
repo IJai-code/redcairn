@@ -298,14 +298,9 @@ export class Stage {
   }
 
   #buildRoute() {
-    const { route } = this.data, eva = route.eva;
-    this.eva = eva;
-    const pts = eva.map((v) => this.worldOf(v.lon, v.lat, 2.4));
-    const geo = this.routeGeo = this.#tube(pts, 2.6, 720);
-    geo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(geo.attributes.position.count * 3), 3));
-    this.route = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ vertexColors: true, toneMapped: false }));
-    this.wScene.add(this.route);
-    this.#paintRoute();
+    this.route = null;
+    this.alts = [];
+    this.setRoute(this.data.route.eva);
 
     const track = this.data.route.roverTrack.map((p) => this.worldOf(p[0], p[1], 1.0));
     this.track = new THREE.Mesh(this.#tube(track, 0.55, 1600), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85 }));
@@ -313,6 +308,29 @@ export class Stage {
     this.wScene.add(this.track);
 
     this.back = null;
+  }
+
+  // The walk to draw, as [{ lon, lat, distM, slopeDeg }]. Coloured by slope or rock type when those layers are on.
+  setRoute(eva) {
+    if (this.route) { this.wScene.remove(this.route); this.route.geometry.dispose(); }
+    this.eva = eva;
+    const pts = eva.map((v) => this.worldOf(v.lon, v.lat, 2.4));
+    const geo = this.routeGeo = this.#tube(pts, 2.6, 720);
+    geo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(geo.attributes.position.count * 3), 3));
+    this.route = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ vertexColors: true, toneMapped: false }));
+    this.wScene.add(this.route);
+    this.#paintRoute();
+  }
+
+  // Faint lines for the routes you did not pick.
+  setAlternatives(lines) {
+    for (const m of this.alts) { this.wScene.remove(m); m.geometry.dispose(); }
+    this.alts = (lines || []).map((line) => {
+      const m = new THREE.Mesh(this.#tube(line.map((p) => this.worldOf(p.lon, p.lat, 1.6)), 1.2, 500),
+        new THREE.MeshBasicMaterial({ color: 0xf0e7d9, transparent: true, opacity: 0.45, depthWrite: false }));
+      this.wScene.add(m);
+      return m;
+    });
   }
 
   #paintRoute() {

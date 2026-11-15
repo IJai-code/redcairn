@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="description" content="REDCAIRN: a walking guide for the first humans on Mars, built from the tracks, photographs and measurements of the machines that went quiet. NASA Space Apps 2026, Interplanetary Survival Guide: Martian Map.">
+  <meta name="description" content="REDCAIRN: a Marswalk guide for the first astronauts on Mars, layered from six NASA and partner missions on the real ground of Gale crater. NASA Space Apps 2026, Interplanetary Survival Guide: Martian Map.">
   <meta name="theme-color" content="#0d0a08">
-  <meta property="og:title" content="REDCAIRN: abandoned, but not forgotten">
-  <meta property="og:description" content="A guide for the first walk on Mars, made from what the machines left behind.">
+  <meta property="og:title" content="REDCAIRN: your first walk on Mars">
+  <meta property="og:description" content="A Marswalk guide layered from six missions: where it is safe to step, what is worth stopping for, and how to get home.">
   <meta property="og:image" content="https://redcairn.netlify.app/assets/img/gale-wide-color.jpg">
   <meta name="twitter:card" content="summary_large_image">
-  <title>REDCAIRN: abandoned, but not forgotten · a guide for the first walk on Mars</title>
+  <title>REDCAIRN · your first walk on Mars</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230d0a08'/%3E%3Cellipse cx='16' cy='24' rx='10' ry='3.6' fill='%23e0683a'/%3E%3Cellipse cx='16' cy='16.5' rx='7' ry='3.2' fill='%23e0683a'/%3E%3Cellipse cx='16' cy='9.8' rx='4.2' ry='2.8' fill='%23e0683a'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="css/styles.css">
 </head>
@@ -18,54 +18,77 @@
   <div class="stage" id="stage">
     <canvas id="gl"></canvas>
     <div class="pins" id="pins"></div>
-
     <div class="crater" id="crater"></div>
-
-    <div class="stackbig" id="stackbig"><svg id="stack-svg" viewBox="0 20 740 650" preserveAspectRatio="xMidYMid meet"></svg></div>
 
     <div class="hud" id="hud">
       <div class="chips" id="chips" role="group" aria-label="Map layers"></div>
       <div class="legend" id="legend" hidden></div>
-      <div class="mini" id="mini">
-        <svg id="mini-svg" viewBox="20 150 370 500" preserveAspectRatio="xMidYMax meet"></svg>
-        <p id="mini-note"></p>
-      </div>
-      <p class="hint">Drag to look around. Double-click to reset.</p>
       <section class="suit" id="suit" aria-live="polite">
         <p class="suit__line" id="suit-line"></p>
         <dl class="suit__nums">
           <div><dt>Air left</dt><dd id="s-air">—</dd></div>
           <div><dt>Walk home</dt><dd id="s-home">—</dd></div>
-          <div><dt>Time outside</dt><dd id="s-time">—</dd></div>
+          <div><dt>Time out</dt><dd id="s-time">—</dd></div>
           <div><dt>Radiation</dt><dd id="s-dose">—</dd></div>
         </dl>
-        <p class="suit__note">Suit numbers are simulated. The ground, the route and the radiation rate are real.</p>
+        <label class="scrub"><span>Drag to walk the route</span><input type="range" id="scrub" min="0" max="1000" value="0" aria-label="Position along the walk"></label>
+        <p class="suit__note">Suit numbers are simulated. Ground, route and radiation rate are real.</p>
       </section>
     </div>
   </div>
-  <div class="scrim"></div>
 
   <header class="top">
-    <a class="logo" href="#top" aria-label="REDCAIRN, back to the start">
+    <a class="logo" href="#mars" aria-label="REDCAIRN, back to the start">
       <svg viewBox="0 0 32 30" width="26" height="24" aria-hidden="true"><ellipse cx="16" cy="24" rx="12" ry="4.4"/><ellipse cx="16" cy="15" rx="8.4" ry="3.8"/><ellipse cx="16" cy="7" rx="5" ry="3.3"/></svg>
       <span>Redcairn</span>
     </a>
-    <nav class="acts" id="acts" aria-label="Chapters"></nav>
-    <button class="link link--top" id="btn-about" type="button">Sources &amp; honesty</button>
-    <div class="progress" id="progress"></div>
+    <ol class="phases" id="phases" aria-label="Mission phase"></ol>
+    <button class="link link--top" id="btn-about" type="button">Data &amp; sources</button>
   </header>
 
-  <main id="story"></main>
+  <section class="cap" id="cap" aria-live="polite">
+    <p class="cap__kicker" id="cap-kicker"></p>
+    <h1 class="cap__title" id="cap-title"></h1>
+    <p class="cap__line" id="cap-line"></p>
+    <div class="cap__extra" id="cap-extra"></div>
+  </section>
+
+  <!-- The helmet visor: Curiosity's real photo from each stop, with the suit's heads-up display over it. -->
+  <section class="visor" id="visor" hidden aria-label="Helmet display">
+    <img class="visor__pov" id="v-pov" alt="" referrerpolicy="no-referrer">
+    <div class="visor__glass" aria-hidden="true"></div>
+    <div class="visor__top"><span id="v-stop"></span><span id="v-met"></span></div>
+    <div class="visor__left">
+      <div class="gauge"><span>Air</span><b id="v-air">—</b><i><em id="v-airbar"></em></i></div>
+      <div class="gauge"><span>Walk home</span><b id="v-home">—</b></div>
+      <div class="gauge"><span>Dose mSv</span><b id="v-dose">—</b></div>
+    </div>
+    <div class="visor__right">
+      <div class="visor__map" id="v-map"></div>
+      <p class="visor__next"><span class="visor__arrow" id="v-arrow" aria-hidden="true">▲</span><span id="v-next"></span></p>
+    </div>
+    <p class="visor__slope" id="v-slope"></p>
+    <div class="visor__panel">
+      <p class="visor__title" id="v-title"></p>
+      <p class="visor__line" id="v-line"></p>
+      <div class="visor__tasks" id="v-tasks"></div>
+      <button class="btn btn--go" id="v-next-btn" type="button">Walk on ›</button>
+    </div>
+    <p class="visor__credit" id="v-credit"></p>
+    <p class="visor__alert" aria-hidden="true">Solar particle event · simulated drill · radiation ×20</p>
+  </section>
+
+  <p class="toast" id="toast" hidden role="status"></p>
 
   <dialog class="about" id="about" aria-labelledby="about-title">
     <form method="dialog" class="about__head">
-      <h2 id="about-title">Sources and honesty</h2>
+      <h2 id="about-title">Data and sources</h2>
       <button class="btn btn--ghost" type="submit">Close</button>
     </form>
     <div class="about__body" id="about-body"></div>
   </dialog>
 
-  <div class="boot" id="boot"><span id="boot-text">Waking the map…</span></div>
+  <div class="boot" id="boot"><span id="boot-text">Loading Mars…</span></div>
   <noscript><p style="padding:96px 24px;color:#f0e7d9">REDCAIRN needs JavaScript to draw Mars.</p></noscript>
   <script type="module" src="js/app.js"></script>
 </body>
