@@ -398,7 +398,10 @@ function card() {
   if (id === 'intro') {
     kicker = 'A survival map for the first walk on Mars';
     title = 'Fourteen years. One line.';
-    if (S.cairn && S.cairn.count > 0) extra = `<p class="guide__walkers"><b>${num(S.cairn.count)}</b> ${S.cairn.count === 1 ? 'person has' : 'people have'} walked this map before you. Each left a stone on the last cairn.</p>`;
+    if (S.cairn && S.cairn.count > 0) {
+      const c = S.cairn.count, me = S.stoneLaid || stoneCount() > 0;
+      extra = `<p class="guide__walkers"><b>${num(c)}</b> ${c === 1 ? 'person has' : 'people have'} walked this map${me ? ', you among them' : ' before you'}. Each left a stone on the last cairn.</p>`;
+    }
     body = `That orange line is Curiosity, climbing Mount Sharp alone since 2012: ${g.distanceKm.toFixed(1)} km so far. The last 1.5 km of it will be the first walk a person takes on Mars. This map answers the three questions for that walk: <b>where is it safe to step, what is worth stopping for, and can I get home?</b>`;
     extra += `<label class="guide__name"><span>Your name, for the habitat radio</span><input id="callsign" type="text" maxlength="24" autocomplete="off" placeholder="EVA-1" value="${esc(S.name || '')}"></label>`;
     go = btn('next', 'Begin');
