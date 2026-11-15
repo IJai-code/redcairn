@@ -1,6 +1,7 @@
 """REDCAIRN Blender pipeline. Run inside Blender (5.x):
 
     blender -b --python tools/blender_scene.py -- --rover path/to/rover.blend
+    blender -b --python tools/blender_scene.py -- --ortho-only      (just assets/img/site-ortho.jpg)
 
 What it makes, all from the same public elevation and imagery the web app uses:
   assets/img/site-ortho.jpg   orbital mosaic of the site, stitched from art/tiles (HiRISE via Mars Trek), warm-tinted
@@ -76,9 +77,23 @@ class Frame:
 
 
 # ---------------------------------------------------------------- imagery
+def load_grey(fp):
+    img = bpy.data.images.load(fp)
+    img.colorspace_settings.name = "Non-Color"
+    w, h = img.size
+    px = np.empty(w * h * 4, dtype=np.float32)
+    img.pixels.foreach_get(px)
+    bpy.data.images.remove(img)
+    return px.reshape(h, w, 4)[::-1, :, 0]                                       # north-up
+
+
 def build_ortho(meta):
-    """Stitch the zoom-16 tiles, crop to the terrain bounds, tint, save as JPEG."""
+    """The site's orbital photo, tinted, saved as JPEG. Prefers the near-native HiRISE export from
+    tools/build_ortho.py (art/hirise/site.png, already cropped to the bounds); falls back to the zoom-16 tiles."""
     b = meta["bounds"]
+    native = path("art", "hirise", "site.png")
+    if os.path.exists(native):
+        return tint_and_save(load_grey(native))
     names = [n for n in os.listdir(path("art", "tiles")) if n.endswith(".png")]
     rows = sorted({int(n.split("_")[0]) for n in names})
     cols = sorted({int(n.split("_")[1].split(".")[0]) for n in names})
@@ -97,7 +112,10 @@ def build_ortho(meta):
     lat0 = 90.0 - rows[0] / TILES_PER_DEG
     x0, x1 = int(round((b["west"] - lon0) * ppd)), int(round((b["east"] - lon0) * ppd))
     y0, y1 = int(round((lat0 - b["north"]) * ppd)), int(round((lat0 - b["south"]) * ppd))
-    crop = mosaic[y0:y1, x0:x1]
+    return tint_and_save(mosaic[y0:y1, x0:x1])
+
+
+def tint_and_save(crop):
     lo, hi = np.percentile(crop, 1), np.percentile(crop, 99)
     g = np.clip((crop - lo) / (hi - lo), 0, 1) ** 0.9
     h, w = g.shape
@@ -112,6 +130,7 @@ def build_ortho(meta):
     out.pixels.foreach_set(rgba[::-1].ravel())
     out.filepath_raw = path("assets", "img", "site-ortho.jpg")
     out.file_format = "JPEG"
+    bpy.context.scene.render.image_settings.quality = 82
     out.save()
     bpy.data.images.remove(out)
     return bpy.data.images.load(path("assets", "img", "site-ortho.jpg"))
@@ -469,6 +488,11 @@ if __name__ == "__main__":
     import sys
     args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     rover_file = args[args.index("--rover") + 1] if "--rover" in args else None
-    result = build_all(rover_blend=rover_file, do_render="--no-render" not in args)
-    print("REDCAIRN_REPORT", json.dumps(result))
-    bpy.ops.wm.save_as_mainfile(filepath=path("art", "redcairn.blend"))
+    if "--ortho-only" in args:                     # just the walk diorama's ground photo
+        fresh_scene()
+        im = build_ortho(load_terrain()[0])
+        print("REDCAIRN_REPORT", json.dumps({"ortho": tuple(im.size)}))
+    else:
+        result = build_all(rover_blend=rover_file, do_render="--no-render" not in args)
+        print("REDCAIRN_REPORT", json.dumps(result))
+        bpy.ops.wm.save_as_mainfile(filepath=path("art", "redcairn.blend"))

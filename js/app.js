@@ -496,7 +496,7 @@ function aboutHTML() {
     <section>
       <h3>Every layer, and where it comes from</h3>
       <div class="tablewrap"><table><thead><tr><th>Layer</th><th>Kind of data</th><th>Mission or source</th></tr></thead><tbody>
-        <tr><td>Ground photograph (always on)</td><td>Optical</td><td>Mars Reconnaissance Orbiter · HiRISE, 25 cm, via Mars Trek</td></tr>
+        <tr><td>Ground photograph (always on)</td><td>Optical</td><td>Mars Reconnaissance Orbiter · HiRISE (a 25 cm camera), fetched at about 33 cm per pixel from Mars Trek and tinted in Blender</td></tr>
         <tr><td>The globe</td><td>Optical, true colour</td><td>Viking orbiters · MDIM 2.1 colour mosaic, via Mars Trek, stitched in Blender</td></tr>
         <tr><td>Gale crater and Mount Sharp in 3D</td><td>Topographic + optical</td><td>Mars Global Surveyor · MOLA and Mars Express · HRSC elevation, Viking colour, via Mars Trek; rendered in Blender</td></tr>
         <tr><td>Curiosity’s whole track and odometry</td><td>Ground truth</td><td>Curiosity team traverse and waypoint data, current to sol ${num(S.gale.rover.latestSol)}</td></tr>

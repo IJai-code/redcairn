@@ -301,7 +301,7 @@ export class Stage {
     const { route } = this.data, eva = route.eva;
     this.eva = eva;
     const pts = eva.map((v) => this.worldOf(v.lon, v.lat, 2.4));
-    const geo = this.routeGeo = this.#tube(pts, 3.4, 720);
+    const geo = this.routeGeo = this.#tube(pts, 2.6, 720);
     geo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(geo.attributes.position.count * 3), 3));
     this.route = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ vertexColors: true, toneMapped: false }));
     this.wScene.add(this.route);

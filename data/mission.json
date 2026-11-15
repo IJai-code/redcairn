@@ -276,7 +276,7 @@
         ],
         "why": "This rock sits just outside the ridges. It is your “before” sample: what the ground looks like where the water left less of a mark.",
         "layer": "photo",
-        "teach": "You are looking at the sharpest picture of this ground ever taken from orbit. Each pixel is 64 cm."
+        "teach": "You are looking at the sharpest picture of this ground ever taken from orbit. Each pixel here is about 33 cm."
       }
     },
     {
@@ -857,7 +857,7 @@
     {
       "source": "trek",
       "name": "Mars Trek",
-      "role": "Every map pixel and every height: the Viking colour globe, the MOLA and HRSC elevation and colour-shaded relief behind the 3D Gale crater, the water-mineral detections, the 25 cm HiRISE photograph and the 1 m elevation model behind slope, routing, shielding and the walk diorama, and the Exploration Zones layer behind the site choice."
+      "role": "Every map pixel and every height: the Viking colour globe, the MOLA and HRSC elevation and colour-shaded relief behind the 3D Gale crater, the water-mineral detections, the HiRISE photograph and the 1 m elevation model behind slope, routing, shielding and the walk diorama, and the Exploration Zones layer behind the site choice."
     },
     {
       "source": "usgs-geology",

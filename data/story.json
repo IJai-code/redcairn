@@ -26,7 +26,7 @@
     "END": "Every machine on Mars stopped somewhere. None of them stopped for nothing."
   },
   "mapNotes": {
-    "DOCK": { "layers": [], "text": "The ground is the real orbital photograph (HiRISE, 64 cm per pixel) laid over the real elevation model (1 m). Heights are stretched twice so the ridges are easy to read." },
+    "DOCK": { "layers": [], "text": "The ground is the real orbital photograph (HiRISE, about 33 cm per pixel) laid over the real elevation model (1 m). Heights are stretched twice so the ridges are easy to read." },
     "WP1": { "layers": ["slope"], "text": "Colour shows how steep the ground is for a person in a suit. Green is easy, amber needs care, red is too steep. The trail stays on green." },
     "WP2": { "layers": ["rocks"], "text": "The coloured band is the kind of rock under the trail, from what the rover measured on the ground. Blue is boxwork: ridges cemented by ancient groundwater." },
     "WP3": { "layers": ["track"], "text": "The dotted white line is Curiosity's own wheel tracks. Our trail follows ground the rover has already proved." },

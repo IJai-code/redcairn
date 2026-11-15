@@ -20,7 +20,7 @@ One scroll, three acts, one stage behind the words.
 |---|---|---|
 | I · Remember | A true-colour Mars globe with every machine that went quiet | Viking colour mosaic (Mars Trek), stitched in Blender; mission records |
 | II · Read the mountain | Gale crater in 3D, layer switches like Mars Trek, Curiosity's 38.6 km line drawing itself; then Mount Sharp's six rock layers | MOLA + HRSC elevation, Viking colour, USGS geologic map, CRISM + OMEGA water minerals, rendered in Blender through one camera; Curiosity odometry to sol 5,073 |
-| III · Walk it | A 2.5D diorama of the real ground, five stops, the suit, the way home, a solar-storm drill | HiRISE 25 cm photograph and 1 m elevation model (Mars Trek), Curiosity's track, photos and radiation data |
+| III · Walk it | A 2.5D diorama of the real ground, five stops, the suit, the way home, a solar-storm drill | HiRISE photograph (33 cm per pixel) and 1 m elevation model (Mars Trek), Curiosity's track, photos and radiation data |
 
 ## The 3-minute demo
 
@@ -33,7 +33,7 @@ Use the chapter buttons at the top (I, II, III) to jump. Scroll slowly; every sc
 | 0:35 | Click **II · Read the mountain**. | "This is Gale crater, 154 km across, rendered in Blender from real elevation. The mountain in the middle rises 5,502 metres from the floor. We measured that from the data." |
 | 0:50 | Scroll once: **Seen from space first**. Click **Height**, then **Rock units (USGS)**. | "Before any rover landed, two orbiters saw minerals that only form in water, the blue dots. The USGS geologic map shows the mountain as its own rock unit. Every layer is a separate Blender render through the same camera, so you can switch them like in Mars Trek and they line up exactly." |
 | 1:15 | Scroll once: **That thin line is Curiosity**. Let the line draw. | "That line is fourteen years. 38.6 kilometres, 1,029 metres of climbing, and that is only 19% of the way up. The counter is the rover's own odometry, current to sol 5,073. The white bit at the end is our walk." |
-| 1:40 | Click **III · Walk it**. Scroll to **Stop 2**. Toggle **Steepness** and **Radiation shelter**. | "Now we are on the ground: the real 25 cm orbital photo over the 1 m elevation model. Green is walkable in a suit, red is too steep. The route is the track the rover actually drove, and our elevation model agrees with the rover's own measurements to within a metre. This photo is what you will see standing here, taken by Curiosity from this spot." |
+| 1:40 | Click **III · Walk it**. Scroll to **Stop 2**. Toggle **Steepness** and **Radiation shelter**. | "Now we are on the ground: the real HiRISE orbital photo, a third of a metre per pixel, over the 1 m elevation model. Green is walkable in a suit, red is too steep. The route is the track the rover actually drove, and our elevation model agrees with the rover's own measurements to within a metre. This photo is what you will see standing here, taken by Curiosity from this spot." |
 | 2:10 | Scroll to **The way home**. Click **Start the drill**. | "Every point on this map knows how long it takes to walk home. Now a solar storm hits; it is a simulated drill, and it says so. REDCAIRN draws a new white line home in an instant: 18 minutes instead of 32, and 45% less dose. Could you hide behind a hill? The best one here blocks 11%. Not enough. Go home." |
 | 2:40 | Scroll to the end. Add a stone or two. Point at the Perseverance photo. | "Back at the rover with 4 hours 45 minutes of air left. You leave a stone for each machine that made the walk possible. And this picture is live: the newest frame from Perseverance, still working on the other side of Mars." |
 | 2:55 | Stop. | "The rover could not come home. Its last job is to make sure you can." |
@@ -50,7 +50,7 @@ Use the chapter buttons at the top (I, II, III) to jump. Scroll slowly; every sc
 
 | Resource | Where it shows up |
 |---|---|
-| Mars Trek | Every map pixel and height: the colour globe, the 3D crater's elevation and relief, the water minerals, the 25 cm photo and 1 m elevation model of the walk |
+| Mars Trek | Every map pixel and height: the colour globe, the 3D crater's elevation and relief, the water minerals, the HiRISE photo and 1 m elevation model of the walk |
 | USGS planetary geologic mapping | The **Rock units (USGS)** layer on the 3D crater: Mount Sharp (Htu) inside the crater's impact unit (AHi) |
 | Curiosity's proposed path up Mount Sharp | The 38.6 km line the plan became, drawn over the mountain it was planned for; the walk follows it through the sulfate unit |
 | Worldview | Each stop named after a place on Earth opens that place in Worldview |
