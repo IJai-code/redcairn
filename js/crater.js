@@ -188,8 +188,9 @@ export class Crater {
     this.head.setAttribute('r', 6 * k);
     for (const p of this.pins) {
       const x = tx + p.xy[0] * w, y = ty + p.xy[1] * h;
-      // Never under the top bar, and on a wide screen never under the story text on the left.
-      const clear = y > 84 && y < vh - 24 && x > (vw > 900 ? vw * 0.38 : 16) && x < vw - 16;
+      // Never under the top bar, the lander frame, or the lander's own text, and on a wide screen never under the story text on the left.
+      const wideScr = vw > 900;
+      const clear = y > Math.max(84, vh * 0.14) && y < vh * 0.84 && x > (wideScr ? vw * 0.38 : 16) && x < vw * 0.9 && !(wideScr && y > vh * 0.7 && x < vw * 0.62);
       const on = p.show.includes(this.state) && (!p.layer || this.on.has(p.layer)) && clear;
       p.el.style.opacity = on ? 1 : 0;
       // On a narrow screen, put the label on whichever side has room.

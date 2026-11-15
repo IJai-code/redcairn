@@ -33,7 +33,7 @@
   </section>
 
   <!-- The lander window during descent. -->
-  <div class="lander" aria-live="polite"><p id="lander-a"></p><p id="lander-b"></p><button type="button" class="link" data-a="skip">skip to the landing</button></div>
+  <div class="lander" aria-live="polite"><div class="lander__txt"><p id="lander-a"></p><p id="lander-b"></p></div><button type="button" class="link" data-a="skip">skip to the landing</button></div>
 
   <!-- The visor boots: data sources check in, the route is chosen. -->
   <section class="boot" id="boot" hidden aria-label="Visor start-up"></section>
@@ -49,17 +49,21 @@
       <div><dt>Dose mSv</dt><dd id="h-dose">—</dd></div>
       <div><dt>Ground</dt><dd id="h-slope">—</dd></div>
     </dl>
-    <div class="hud__map" id="h-map"></div>
-    <div class="hud__layers" id="h-layers" role="group" aria-label="Map layers"></div>
-    <p class="hud__legend" id="h-legend"></p>
+    <div class="hud__right">
+      <div class="hud__layers" id="h-layers" role="group" aria-label="Map layers"></div>
+      <p class="hud__legend" id="h-legend"></p>
+      <div class="hud__map" id="h-map"></div>
+    </div>
     <figure class="hud__photo" id="h-photo" hidden></figure>
     <ul class="hud__jobs" id="h-jobs" hidden></ul>
     <label class="hud__scrub"><span>Slide along the walk</span><input type="range" id="scrub" min="0" max="1000" value="0"></label>
     <p class="hud__note">Suit numbers and pace are simulated. Ground, route, horizon and radiation rate are real.</p>
   </section>
 
-  <div class="say" id="say" aria-live="polite"></div>
-  <div class="actions" id="act"></div>
+  <div class="dock">
+    <div class="say" id="say" aria-live="polite"></div>
+    <div class="actions" id="act"></div>
+  </div>
   <section class="end" id="end" hidden></section>
 
   <button class="about-btn" id="btn-about" type="button">Data &amp; sources</button>

@@ -22,6 +22,45 @@ function loadTexture(url) {
   });
 }
 
+const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+const ROVER_PAINT = {
+  graphite: new THREE.Color(0x2a2a2e), orange: new THREE.Color(0xe5582c), pearl: new THREE.Color(0xece7dc),
+  steel: new THREE.Color(0x44525d), tyre: new THREE.Color(0x1d1c1f), ring: new THREE.Color(0x9aa0a4),
+};
+
+// Average colour of a horizontal band of an image (fractions of its height), as a three.js colour.
+function averageColour(img, f0, f1) {
+  try {
+    const w = 48, h = 6, c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    const ctx = c.getContext('2d', { willReadFrequently: true });
+    const sy = img.height * f0, sh = Math.max(1, img.height * (f1 - f0));
+    ctx.drawImage(img, 0, sy, img.width, sh, 0, 0, w, h);
+    const d = ctx.getImageData(0, 0, w, h).data;
+    let r = 0, g = 0, b = 0, n = 0;
+    for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; n++; }
+    return new THREE.Color().setRGB(r / n / 255, g / n / 255, b / n / 255, THREE.SRGBColorSpace);
+  } catch (e) { return null; }
+}
+
+// Fine grain underfoot so no surface is a flat colour. `broad` adds slow, wide patches for the far ground.
+function grainShader(mat, broad) {
+  mat.onBeforeCompile = (sh) => {
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vWP;')
+      .replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nvWP = (modelMatrix * vec4(transformed, 1.0)).xyz;');
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>
+varying vec3 vWP;
+float h21(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(h21(i), h21(i + vec2(1, 0)), f.x), mix(h21(i + vec2(0, 1)), h21(i + vec2(1, 1)), f.x), f.y); }`)
+      .replace('#include <map_fragment>', `#include <map_fragment>
+float g = vn(vWP.xz * 1.7) * 0.5 + vn(vWP.xz * 6.3) * 0.3 + vn(vWP.xz * 23.0) * 0.2;
+float near = 1.0 - smoothstep(8.0, 70.0, length(vWP - cameraPosition));
+diffuseColor.rgb *= mix(1.0, 0.78 + 0.44 * g, near);
+${broad ? 'diffuseColor.rgb *= 0.84 + 0.3 * (vn(vWP.xz * 0.011) * 0.6 + vn(vWP.xz * 0.045) * 0.4);' : ''}`);
+  };
+}
+
 function paintCanvas(w, h, fn) {
   const c = document.createElement('canvas');
   c.width = w; c.height = h;
@@ -187,24 +226,18 @@ export class Stage {
     geo.setIndex(new THREE.BufferAttribute(idx, 1));
     geo.computeVertexNormals();
     const groundMat = new THREE.MeshStandardMaterial({ roughness: 1, metalness: 0, color: 0xffffff });
-    groundMat.onBeforeCompile = (sh) => {
-      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vWP;')
-        .replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nvWP = (modelMatrix * vec4(transformed, 1.0)).xyz;');
-      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>
-varying vec3 vWP;
-float h21(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
-float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
-  return mix(mix(h21(i), h21(i + vec2(1, 0)), f.x), mix(h21(i + vec2(0, 1)), h21(i + vec2(1, 1)), f.x), f.y); }`)
-        .replace('#include <map_fragment>', `#include <map_fragment>
-float g = vn(vWP.xz * 1.7) * 0.5 + vn(vWP.xz * 6.3) * 0.3 + vn(vWP.xz * 23.0) * 0.2;
-float near = 1.0 - smoothstep(8.0, 70.0, length(vWP - cameraPosition));
-diffuseColor.rgb *= mix(1.0, 0.78 + 0.44 * g, near);`);
-    };
+    grainShader(groundMat, false);
     this.groundMat = groundMat;
     this.ground = new THREE.Mesh(geo, groundMat);
     this.ground.receiveShadow = true;
     s.add(this.ground);
-    loadTexture('assets/img/site-ortho.jpg').then((tex) => { if (tex) { groundMat.map = tex; groundMat.needsUpdate = true; } });
+    loadTexture('assets/img/site-ortho.jpg').then((tex) => {
+      if (!tex) return;
+      groundMat.map = tex; groundMat.needsUpdate = true;
+      // Beyond the photo, the ground carries on in the photo's own colour, so there is no visible edge.
+      const c = averageColour(tex.image, 0, 1);
+      if (c) for (const m of this.apronMats) m.color.copy(c);
+    });
 
     this.#buildApron(pos);
     this.#buildSky();
@@ -249,8 +282,13 @@ diffuseColor.rgb *= mix(1.0, 0.78 + 0.44 * g, near);`);
     g.setAttribute('position', new THREE.Float32BufferAttribute(sp, 3));
     g.setIndex(si);
     g.computeVertexNormals();
-    this.wScene.add(new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: 0x7c5a43, roughness: 1, side: THREE.DoubleSide })));
-    const disc = new THREE.Mesh(new THREE.CircleGeometry(6000, 64), new THREE.MeshStandardMaterial({ color: 0x765440, roughness: 1 }));
+    const apronMat = new THREE.MeshStandardMaterial({ color: 0x7c5a43, roughness: 1, side: THREE.DoubleSide });
+    const discMat = new THREE.MeshStandardMaterial({ color: 0x7c5a43, roughness: 1 });
+    grainShader(apronMat, true);
+    grainShader(discMat, true);
+    this.apronMats = [apronMat, discMat];
+    this.wScene.add(new THREE.Mesh(g, apronMat));
+    const disc = new THREE.Mesh(new THREE.CircleGeometry(6000, 64), discMat);
     disc.rotation.x = -Math.PI / 2;
     disc.position.y = -8;
     this.wScene.add(disc);
@@ -276,7 +314,13 @@ diffuseColor.rgb *= mix(1.0, 0.78 + 0.44 * g, near);`);
     this.sky.renderOrder = -1;
     this.sky.frustumCulled = false;
     this.wScene.add(this.sky);
-    loadTexture('assets/img/horizon.jpg').then((tex) => { if (tex) { mat.uniforms.map.value = tex; mat.uniforms.has.value = 1; } });
+    loadTexture('assets/img/horizon.jpg').then((tex) => {
+      if (!tex) return;
+      mat.uniforms.map.value = tex; mat.uniforms.has.value = 1;
+      // The distance fades into the colour of the real horizon, so ground and sky meet without a seam.
+      const c = averageColour(tex.image, 0.455, 0.49);
+      if (c) { this.haze.copy(c); this.wScene.fog.color.copy(c); }
+    });
   }
 
   // Rocks: the HiRISE photo can't show anything smaller than a metre, so scatter the cobbles a walker would see.
@@ -506,8 +550,25 @@ diffuseColor.rgb *= mix(1.0, 0.78 + 0.44 * g, near);`);
       }
       g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
       g.setAttribute('normal', new THREE.BufferAttribute(nor, 3, true));
+      // Livery, painted per vertex from the Blender frame (millimetres): graphite chassis, rust-orange body,
+      // pearl deck, steel mast; wheels with graphite tyres, a steel ring and an orange hub.
+      const col = new Float32Array(p.count * 3), body = p.name === 'body', K = ROVER_PAINT;
+      const tmp = new THREE.Color();
+      for (let i = 0; i < p.count; i++) {
+        const x = P[i * 3], y = P[i * 3 + 1], z = P[i * 3 + 2];
+        if (body) {
+          const a = smooth(380, 540, z), b = smooth(980, 1100, z), c = smooth(1680, 1800, z);
+          tmp.copy(K.graphite).lerp(K.orange, a).lerp(K.pearl, b).lerp(K.steel, c);
+          tmp.multiplyScalar(0.9 + 0.1 * Math.min(1, Math.max(0, (y + 1250) / 2500)));
+        } else {
+          const r = Math.hypot(x, z) / 252;
+          tmp.copy(K.tyre).lerp(K.ring, smooth(0.66, 0.6, r)).lerp(K.orange, smooth(0.5, 0.44, r));
+        }
+        col[i * 3] = tmp.r; col[i * 3 + 1] = tmp.g; col[i * 3 + 2] = tmp.b;
+      }
+      g.setAttribute('color', new THREE.BufferAttribute(col, 3));
       g.computeBoundingSphere();
-      const mesh = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: p.colour, roughness: p.name === 'body' ? 0.55 : 0.8, metalness: p.name === 'body' ? 0.15 : 0.35 }));
+      const mesh = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, roughness: body ? 0.36 : 0.62, metalness: body ? 0.22 : 0.12 }));
       mesh.castShadow = true;
       if (p.name === 'body') { model.add(mesh); continue; }
       const pivot = new THREE.Group();
