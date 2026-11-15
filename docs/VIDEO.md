@@ -5,15 +5,18 @@ Stills of every shot are in `docs/video/` (1920×1080, rendered from the live bu
 
 ## The arc
 
-| Time | Picture (open this link) | On screen / voice-over |
-|---|---|---|
-| 0:00–0:05 | Black. Then fade into the intro: Mount Sharp in 3D with the line drawing itself. `…/#intro` (`docs/video/intro.png`) | **Audio:** the 2013 birthday tune. **Caption:** "In 2013, alone on Mars, a rover played itself Happy Birthday." |
-| 0:05–0:12 | Press **Begin**: the slope map paints green, amber, red. Move the cursor along the route so the readout shows slope and minutes home. `…/#plan` (`plan.png`) | **VO:** "Fourteen years later, its tracks are the safest way up. Point anywhere: how steep, how far from home." |
-| 0:12–0:20 | **Start at the rover**, then **Follow it to cairn 1**: the rover drives the leg in the 3D window while the marker moves on the map. The EVA-2 radio line arrives. `…/#stop-0` then Next (`stop-1.png`, `stop-2.png`) | **VO:** "The rover went first. Its stops are your cairns: its own photo, your air, your dose." |
-| 0:20–0:26 | The storm: three ways home drawn on the terrain. Click **Take the new line** and watch the rover lead you home. `…/#storm` (`storm.png`) | **VO:** "When the Sun flares, the map already knows the way home." |
-| 0:26–0:30 | Turnaround: the Earth photo, then **Add a stone to the cairn**. Cut to home: the rover drives off alone, the sol clock ticking. `…/#stop-5`, `…/#home` (`stop-5.png`, `home.png`) | **Caption:** "It walked this ground alone, so you wouldn't have to." End card: **REDCAIRN · redcairn.netlify.app** |
+The opening film is most of the video. Let it play, then show the map doing its job.
 
-Keep the voice-over calm and slow; leave 1 second of silence before the last line.
+| Time | Picture | On screen / voice-over |
+|---|---|---|
+| 0:00–0:04 | Plate 1, Mount Sharp (the opening, root URL) | **Audio:** the 2013 birthday tune, quiet. Caption on screen: "In August 2012, a rover landed alone in Gale crater…" |
+| 0:04–0:08 | Plate 2, the rover at dusk | "On its first birthday, it played itself Happy Birthday. Once." |
+| 0:08–0:11 | Plate 3, the wheels | "Sharp rock tore its wheels. It kept climbing." |
+| 0:11–0:14 | Plate 4, Earth as a point of light | "One evening, it photographed Earth." |
+| 0:14–0:18 | Plate 5, you at the hatch, then the map with the slope layer | **VO:** "Fourteen years later, you land. This map gets you to it: slope, air, radiation, the way home." |
+| 0:18–0:24 | Walk to the rover in the 3D window (`#stop-5` → Follow its tracks); plate 6, "You found it." | **Radio (EVA-2):** "There it is. Fourteen years, and it's still working." |
+| 0:24–0:28 | The storm: three ways home on the map | **VO:** "When the Sun flares, the map already knows the way home." |
+| 0:28–0:30 | Home card | Caption: "It walked this ground alone, so you wouldn't have to." End card: **REDCAIRN · redcairn.netlify.app** |
 
 ## How to record (Mac)
 
@@ -39,14 +42,16 @@ Record each line on its own in **Voice Memos** or **QuickTime → New Audio Reco
 |---|---|---|
 | `01-curiosity-landing.m4a` | Curiosity (excited, a little robotic) | "I'm safely on the surface of Mars. Gale Crater, I am in you!" |
 | `02-habitat-route.m4a` | Habitat (calm controller) | "Habitat to EVA-1 and EVA-2: route uploaded. Pick your line." |
-| `03-habitat-clear.m4a` | Habitat | "Habitat to EVA-1, EVA-2: you are clear. Follow the rover." |
+| `03-habitat-clear.m4a` | Habitat | "Habitat to EVA-1, EVA-2: you are clear. Follow its tracks." |
 | `04-eva2-slope.m4a` | EVA-2 (your partner, warm) | "Seventeen degrees. It made it on torn wheels. We'll make it on boots." |
 | `05-eva2-line.m4a` | EVA-2 | "One boot on each side. Wet Mars behind us, dry Mars ahead." |
-| `06-eva2-turnaround.m4a` | EVA-2 | "Turnaround. Leave something for whoever comes next." |
-| `07-habitat-storm.m4a` | Habitat (urgent but steady) | "Habitat to EVA-1: solar particle event inbound. Bring EVA-2 home." |
+| `06-eva2-turnaround.m4a` | EVA-2 | "Turnaround. Leave something for whoever comes next." (at the last cairn) |
+| `07-habitat-storm.m4a` | Habitat (urgent but steady) | "Habitat to EVA-1: solar particle event inbound. Leave the rover. Bring EVA-2 home." |
 | `08-eva2-yourcall.m4a` | EVA-2 | "I'm with you. Your call." |
 | `09-eva2-behind.m4a` | EVA-2 | "Right behind you." |
 | `10-habitat-home.m4a` | Habitat | "Both suits at the hatch. Welcome home." |
+| `11-eva2-found.m4a` | EVA-2 (quiet, moved) | "There it is. Fourteen years, and it's still working." |
+| `12-habitat-camera.m4a` | Habitat | "Habitat to EVA-1: we see you on its camera. You're standing next to it." |
 
 On screen, Curiosity's line is marked **real** (its first post from Mars, 6 August 2012); all the others say **imagined**. If you use an AI voice instead of a person, say so in the description.
 

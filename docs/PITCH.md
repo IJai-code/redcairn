@@ -5,19 +5,17 @@ Challenge: Interplanetary Survival Guide: Martian Map (NASA Space Apps 2026)
 
 ## The one sentence
 
-A survival map for the first walk on Mars: it walks you, cairn by cairn, along the line Curiosity drove up Mount Sharp, on Mars Trek's own tiles, and answers where it is safe to step, what is worth stopping for, and whether you can get home.
+Curiosity has been alone on Mount Sharp since 2012: REDCAIRN is the survival map for the first person on Mars to walk its tracks, find it, and come home.
 
 ## What judges need to get in 3 minutes
-
-The judging guide scores Impact, Creativity, Validity, Relevance and Presentation, 1 to 5 each. The demo must be **a video of 30 seconds or less, or at most 7 slides**; longer demos are not eligible for global judging.
 
 | Criterion | What proves it, on screen |
 |---|---|
 | Impact | The map knows the walk home from every point (point anywhere: elevation, slope, minutes home); when the Sun flares it draws three ways home on the real terrain and costs each in minutes and dose |
-| Creativity | The rover that went first is the guide: its old stops are your cairns, each with one true moment from its mission and its own photo from that spot. A 3D window beside the map shows the rover driving each leg on the real ground while its marker moves on the map; any cairn opens in first person |
-| Validity | Slope from a 1 m elevation model that matches the rover's own heights to 0.99 m; routes, time, air and dose computed live; simulated values labelled |
-| Relevance | A real layered map on Mars Trek tiles: optical, topographic, thermal, spectral, geologic, chemical, radiation and ground-truth layers from Viking, Mars Global Surveyor, Mars Odyssey, Mars Express, MRO, Curiosity and Perseverance, plus NASA DONKI space weather; all five listed resources visible |
-| Presentation | One card, one map, one panel. One beat at a time, a story anyone can follow, a rover you come to care about |
+| Creativity | A survival map with a destination and a character: the rover that went first. An opening film of illustrations drawn by Blender from the real elevation data, no AI images |
+| Validity | 1 m elevation model checked against the rover's own heights (1.65 m RMS over 2.7 km); routes, air, dose computed live; simulated values and imagined radio lines labelled |
+| Relevance | Mars Trek tiles and elevation, USGS geology, Curiosity's planned path and real track, Worldview, Perseverance raw images; eight kinds of data from seven missions; NASA DONKI space weather |
+| Presentation | One true line per plate; one card, one map, one panel; a story anyone can follow |
 
 ## 30-second video (the demo we submit)
 
@@ -37,28 +35,27 @@ The full kit (shot list with links, voice-over, birthday audio, radio lines to r
 
 | Time | Click | Say |
 |---|---|---|
-| 0:00 | Open the site | (The line draws itself over Mount Sharp, rendered in Blender.) "That orange line is Curiosity: 38.6 km up Mount Sharp in fourteen years. The last 1.5 km will be the first walk a person takes on Mars. This map answers three questions for that walk." |
-| 0:15 | **Begin** | "Where is it safe to step? Slope for a spacesuit from the 1 m elevation model. Three routes; the rover's is longer, but every metre has been driven." In the panel, tap **Night-time ground temperature** and **Rock units**: "Thermal, geologic, spectral, radiation: eight kinds of data from seven missions." |
-| 0:50 | **Start at the rover**, then **Follow it** through the cairns | "In the window, the rover drives each leg on the real ground at true scale; on the map its marker moves with it. At each cairn the map switches on the layer that matters there. One true moment from the rover's mission, its own photo from this spot, the Earth place it's named after in Worldview, and my air, the walk home and dose." |
-| 1:30 | Move the cursor over the map, then **See it from the ground** at a cairn | "Anywhere I point: elevation, slope for a suit, minutes home." Then: "The same stop in 3D at true scale: real ground, real horizon rendered in Blender, our rover. **Follow the rover on**, then **Back to the map**." |
-| 2:00 | **Next** to the storm | "Solar storm, simulated at twenty times the September 2017 event. Three ways home, drawn on the real terrain. Shelter sounds right; the best ridge blocks 9%. Six times the dose. Go home." |
-| 2:35 | **Go home** | The rover drives on alone up its track. "It walked this ground alone, so that you would not have to." |
+| 0:00 | Open the site; let the opening play | "Every picture here is drawn by Blender from NASA's real elevation data. No AI images. Everything said is true." |
+| 0:35 | **Begin** | "Curiosity has been alone on Mount Sharp for fourteen years. Your first walk on Mars: walk the last 2.7 km of its tracks, find it, come home." |
+| 0:50 | Plan: point at the map | "Slope for a spacesuit from the 1 m elevation model. Point anywhere: elevation, slope, minutes home. Three routes; the rover's is longer, but every metre has been driven." |
+| 1:20 | **Follow its tracks** through two cairns | "At each cairn, one true moment from the mission and Curiosity's own photo from that spot. The 3D window is the real ground, through your eyes." |
+| 1:50 | Jump to `#stop-5`, then follow to the rover | "Its real latest position, sol 5,073. Its newest picture, fetched live. Kneel at its wheel: torn since 2013, still driving." |
+| 2:20 | **Turn for home**: the storm | "A simulated solar storm as you leave. Three ways home on the real terrain. Shelter sounds right; the best ridge blocks 10%. The map already knew the way." |
+| 2:45 | **Go home** | "It walked this ground alone, so that you would not have to." |
 
-Shortcuts: `#intro`, `#plan`, `#stop-0` to `#stop-5`, `#storm`, `#home`, `#ground-2` (a cairn in 3D), `#map` (free map). Press Space or Enter for the main button.
+Shortcuts: the root URL plays the opening; `#intro`, `#plan`, `#stop-0` to `#stop-5` (cairns), `#stop-6` (Curiosity), `#storm`, `#home`, `#ground-2` (a cairn in first person), `#map` (free map). Press Space or Enter for the main button.
 
 ## Numbers to know cold
 
 | Fact | Value |
 |---|---|
-| Gale crater | 154 km across; Mount Sharp 5,502 m floor to summit (our MOLA + HRSC measurement) |
-| Curiosity, sol 5,073 (Nov 2026) | 38.6 km, 1,029 m climbed |
-| Routes (round trip) | Rover-proven 3.0 km, 3 h 20 · Fastest 1.9 km, 2 h 56 · Gentlest 2.0 km, 2 h 57 |
-| Storm from the turnaround | New line 18 min, 0.16 mSv · Way you came 32 min, 0.29 mSv · Shelter 2 h then home, 1.08 mSv |
-| Best terrain shelter near the turnaround | blocks 9% of the dose (Curiosity measured 4% at Murray Buttes) |
-| Horizon from the dock | 10° high to the east, where Mount Sharp's bulk rises 17 km away |
-| Elevation model vs rover | 0.99 m RMS |
+| Curiosity, sol 5,073 (13 Nov 2026) | 38.6 km driven, 1,029 m climbed |
+| The walk | hatch to the rover 2.7 km along its tracks; 5 cairns on the way |
+| Routes (round trip) | Rover-proven 5.3 km, 4 h 39 · Fastest 3.6 km, 3 h 59 · Gentlest 3.7 km, 4 h 02 |
+| Storm from the rover | New line 35 min, 0.31 mSv · Way you came 57 min, 0.52 mSv · Shelter 2 h then home, 1.12 mSv |
+| Best terrain shelter | blocks 10% of the dose |
+| Elevation model vs rover | 1.65 m RMS along the route |
 | Normal radiation at Gale | 0.67 mSv per day (Curiosity RAD) |
-| NASA career dose limit | 600 mSv (NASA-STD-3001, 2022) |
 
 ## Questions judges may ask
 
@@ -68,7 +65,7 @@ Shortcuts: `#intro`, `#plan`, `#stop-0` to `#stop-5`, `#storm`, `#home`, `#groun
 
 **"What's simulated?"** The suit, you, the walk's time compression, the storm's strength, and small rocks scattered for scale (HiRISE can't see anything under about a metre).
 
-**"How did you use Blender?"** Headless scripts in `tools/`: Mount Sharp in 3D through one camera with Curiosity's track projected into it (the intro), the 360° horizon behind the 3D window, the site photo the rover drives on, and our rover model split into body and six wheels so they turn in the browser.
+**"How did you use Blender?"** Headless scripts in `tools/`: the opening's illustrated plates (the real elevation model drawn as ink contours and flat tones, with the rover and a suited figure at real waypoints), Mount Sharp in 3D through one camera with Curiosity's track projected into it (the intro), the 360° horizon behind the 3D window, the site photo the rover drives on, and our rover model split into body and six wheels so they turn in the browser.
 
 **"Is that Curiosity in the window?"** It is our team's rover model, standing in for Curiosity, and the window says so. The ground, the horizon and the track it follows are real.
 

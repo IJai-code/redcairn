@@ -1,40 +1,28 @@
-# REDCAIRN: a survival map for the first walk on Mars
+# REDCAIRN: Finding Curiosity
 
-A layered survival map for the first walk on Mars. It walks you, cairn by cairn, along the line Curiosity drove up Mount Sharp, on Mars Trek's own tiles, and answers three questions: where is it safe to step, what is worth stopping for, and can I get home? Beside the map, a 3D window follows a rover across the real ground as it drives from cairn to cairn. About three minutes.
+**A survival map for the first walk on Mars, and the walk has a destination: the rover itself.**
+
+Curiosity has been alone on Mount Sharp since 2012. Its real track ends at its latest stop, sol 5,073. REDCAIRN sends the first person on Mars to walk the last 2.7 km of its tracks, find it, and come home alive. The survival map (slope for a suit, air, radiation, the way home from every point, a solar storm) is how you get there.
 
 Live: <https://redcairn.netlify.app>
 
 > Built for the 2026 NASA International Space Apps Challenge, *Interplanetary Survival Guide: Martian Map*. An independent student project, not affiliated with or endorsed by NASA or any space agency.
 
-On Earth, hikers stack stones into cairns to mark the safe way for whoever comes next. On Mars, a rover already did that: every place Curiosity stopped is a cairn. REDCAIRN turns those stops, and the orbital data above them, into the map an astronaut carries.
+## How it plays
 
-## How it plays: map first, walk second
+1. **The opening.** Five illustrated plates, one true line each: it landed alone in 2012; it played itself "Happy Birthday" once; rock tore its wheels and it kept climbing; it photographed Earth as a point of light; fourteen years later, you land. *Go and find it.* Every plate is **drawn by Blender from the real elevation data** (`tools/blender_plates.py`): ink contour lines every 2 m of real height, flat tones, the team's rover and a suited figure standing at real waypoints. No AI images.
+2. **The map.** Mars Trek tiles, Curiosity's whole 14-year line, and the three questions: where is it safe to step, what is worth stopping for, can I get home?
+3. **The plan.** Slope for a spacesuit and three routes to the rover: rover-proven 5.3 km round trip (4 h 39), fastest 3.6 km, gentlest 3.7 km.
+4. **Five cairns along its tracks.** At each, the map flies in and switches on the layer that matters; one true moment from the mission, Curiosity's own photo from that spot, your air, the walk home and dose. A 3D window shows the real ground through your eyes at true scale, and you walk each leg in first person.
+5. **Curiosity.** You reach it at its real position. Its newest raw image is fetched live from NASA. You can kneel at its torn wheel.
+6. **The storm.** A simulated solar storm as you leave the rover. Three ways home drawn on the real terrain: the new line (35 min, 0.31 mSv), the way you came (57 min, 0.52 mSv), shelter behind a ridge (1.12 mSv; the best ridge blocks 10%).
+7. **Home.** The three questions answered with your numbers, and its mission clock still ticking, years past its planned one Mars year.
 
-The map is the product. A story card on the left tells the walk one beat at a time and moves the map with it. At the top of the card, a 3D window shows the same moment on the ground: our rover, standing in for Curiosity, on the HiRISE photo draped over the 1 m elevation model at true scale, under Mount Sharp. When you press next, the rover drives the leg in the window while its marker moves along the map. The panel on the right holds every layer and today's conditions. Wherever the cursor is on the map, a readout gives the latitude and longitude and, on the walk site, the elevation, the slope for a suit, and the minutes to walk home from there. During the story the panel shows only the layers that are on, with what their colours mean; **All 11 layers** opens the full legend. Ten beats, about three minutes, then the map is yours. The bar across the top jumps to Plan, Walk, Storm or Home.
-
-| Beat | On the map | Built from |
-|---|---|---|
-| **Intro** | Curiosity's whole 14-year line across Gale crater, and the three questions. The window: Mount Sharp rendered in 3D in Blender, with the line drawing itself up its flank and the water minerals seen from orbit | Mars Trek tiles (CTX, HiRISE); MOLA + HRSC elevation and Viking colour, rendered in Blender; CRISM + OMEGA; Curiosity traverse to sol 5,073 |
-| **Plan** | Slope for a spacesuit (green safe, amber care, red over 20°) and three routes to the same five cairns: rover-proven, fastest, gentlest, each timed and costed | HiRISE 1 m elevation via Mars Trek; routes computed in the browser |
-| **The dock + five cairns** | The map flies to each stop and switches on the layer that matters there. One true moment from the rover's mission, Curiosity's own photo from that spot, its Earth namesake in Worldview, and your air, walk home, dose and time out | Curiosity Navcam and mission blog; NASA Worldview; suit timeline (simulated). The window: the rover drives each leg and the cairn rises when it arrives |
-| **Storm** | A simulated solar storm at the turnaround. The map draws three ways home on the real terrain (the new line, the way you came, shelter behind a ridge) over the terrain-shielding layer; you choose, see the dose, and follow the rover home on that line in the window | Curiosity RAD (Sept 2017 event ×20); 16-direction sky-shielding scan |
-| **Home** | The three questions answered with your numbers. In the window, the rover turns away and drives on up its own track, alone | Curiosity's track beyond the walk |
-| **See it from the ground** | A button on the window at any stop: first person at true scale, under the real horizon, beside the team's rover (wheels turning, body tilting to the ground), with the same data on a helmet visor. Follow the rover to the next cairn, or go back to the map | HiRISE photo on the 1 m elevation model; 360° horizon and rover prepared in Blender |
-
-The right-hand panel groups every layer by kind of data (optical, topographic, thermal, spectral, geologic, chemical, radiation, ground truth, computed) with its mission, and shows today's REMS weather, the RAD radiation rate, NASA DONKI space weather, and Perseverance's newest raw image under "The other rover, today". On a phone the story card sits at the bottom and the panel opens from a Layers button.
-
-## The people in it
-
-- **Curiosity speaks first, in its own words.** Its first post from Mars ("I'm safely on the surface of Mars. GALE CRATER I AM IN YOU!!!", 6 August 2012) arrives on the suit radio, dated and marked *real*.
-- **You walk with a partner.** EVA-2 and the habitat talk to you on the radio; every one of their lines is marked *imagined*. Type your name at the start and the habitat says it when you get home.
-- **True moments carry the feeling.** At cairn 1, Curiosity's wheels have been torn since 2013 and it climbed anyway. At the turnaround, the real Mastcam picture of Earth as the evening star from Gale crater (sol 529). At home, its 2013 "Happy Birthday" played alone by its sample lab, and its mission clock ticking, years past its one-Mars-year plan.
-- **A cairn built by everyone who walks it.** At the turnaround you add a stone for whoever walks next. The count is shared (a small Netlify function, `netlify/functions/stones.mjs`, one stone per visitor per day; only a short hash of the address is kept). Every stone is drawn around the cairn in 3D, so it grows with each visitor; the intro tells you how many walked before you, and you learn the number of your own stone. No other Mars map remembers the people who used it.
-
-Recorded voices for the radio go in `assets/audio/` (names and lines in `docs/VIDEO.md`).
+Point anywhere on the map for coordinates and, on the site, elevation, slope for a suit and minutes to walk home. The panel shows only the layers that are on, with legends; **All 11 layers** opens the full set (optical, topographic, thermal, spectral, geologic, chemical, radiation, ground truth, computed). On the suit radio, Curiosity's real first post from Mars is marked *real*; the habitat and your partner EVA-2 are marked *imagined*.
 
 ## Why it looks like this
 
-One story card, one map, one panel. The 3D stays low and close, where the HiRISE ground looks real; from high up the site is only a narrow strip, so the map does the overview and the window does the ground. The card says one thing per beat: a moment from the rover's mission, in the team's own words where we have them. The rover is the emotional thread: it drove this ground alone a year before you, its stops are your cairns, and it is still out there, climbing.
+Most entries open as a dark dashboard. REDCAIRN opens as a story with a look of its own, and every picture in it is the real ground: the plates are Blender renders of the 1 m elevation model, the map is Mars Trek's own tiles, the 3D window is the HiRISE photo on the same elevation model. One story card, one map, one panel, one accent colour.
 
 ## The five resources we were given, and where each one shows up
 
@@ -48,7 +36,7 @@ One story card, one map, one panel. The 3D stays low and close, where the HiRISE
 
 ## What is real and what is simulated
 
-**Real:** the ground, its height and slope, the route (the rover's own track), the photographs, the rock findings, the weather report, the normal radiation rate and the measured effect of terrain on it, the water-mineral detections, the geologic units, and every date and figure about the machines. The 1 m elevation model agrees with the rover's own elevations to 0.99 m RMS along the route.
+**Real:** the ground, its height and slope, the route (the rover's own track), the photographs, the rock findings, the weather report, the normal radiation rate and the measured effect of terrain on it, the water-mineral detections, the geologic units, and every date and figure about the machines. The 1 m elevation model agrees with the rover's own elevations to 1.65 m RMS along the 2.7 km route.
 
 **Simulated, and labelled in the app:** the suit (air, battery, pace), you, the time compression of the walk, the solar storm (made 20 times stronger than the September 2017 event so the drill is easy to follow, and 2 h long for the shelter option), and the rocks smaller than a metre scattered for scale, since HiRISE cannot resolve them. The walk is at true scale; the Blender crater render in the intro stretches heights ×3.
 
@@ -79,6 +67,7 @@ B=/Applications/Blender.app/Contents/MacOS/Blender
 $B -b --python tools/blender_globe.py                    # Viking colour globe -> assets/img/mars-viking.jpg
 $B -b --python tools/blender_gale.py                     # Gale crater layers + projected track -> assets/img/gale-wide-*.jpg, data/gale-view.json
 $B -b --python tools/blender_scene.py -- --ortho-only    # tinted site photo -> assets/img/site-ortho.jpg
+$B -b --python tools/blender_plates.py                  # the opening's illustrated plates -> assets/img/plates/p1..p6.jpg
 $B -b --python tools/blender_horizon.py                  # 360° true-scale horizon from the dock -> assets/img/horizon.jpg
 $B -b --python tools/blender_rover.py -- path/to/rover.stl   # team rover -> assets/models/rover.bin, data/rover.json (six spinning wheels)
 $B -b --python tools/blender_scene.py -- --rover path/to/rover.blend   # site and stop models, hero render
