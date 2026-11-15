@@ -855,6 +855,27 @@
       "url": "https://kauai.ccmc.gsfc.nasa.gov/DONKI/",
       "org": "NASA Community Coordinated Modeling Center",
       "use": "Real solar energetic particle events, shown with today's conditions on the map."
+    },
+    {
+      "id": "pia17936",
+      "title": "Bright 'Evening Star' Seen from Mars is Earth (PIA17936)",
+      "org": "NASA/JPL-Caltech/MSSS/TAMU",
+      "url": "https://science.nasa.gov/resource/bright-evening-star-seen-from-mars-is-earth/",
+      "use": "Earth and the Moon from Gale crater, Mastcam, sol 529: shown at the turnaround."
+    },
+    {
+      "id": "happy-birthday",
+      "title": "Happy Birthday, Curiosity",
+      "org": "NASA",
+      "url": "https://science.nasa.gov/resource/happy-birthday-curiosity/",
+      "use": "The SAM instrument played 'Happy Birthday' on 5 August 2013: told at home."
+    },
+    {
+      "id": "marscuriosity-landing",
+      "title": "@MarsCuriosity first post from the surface, 6 August 2012",
+      "org": "NASA/JPL (rover social account)",
+      "url": "https://x.com/MarsCuriosity",
+      "use": "Curiosity's first radio line, quoted."
     }
   ],
   "aiDisclosure": "AI coding assistants were used to accelerate scaffolding, data retrieval scripts, code generation and review. All positions, elevations, imagery and mission findings come from the public sources listed. Suit telemetry and space-weather scenarios are simulated and labelled as such.",

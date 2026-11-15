@@ -21,14 +21,7 @@ The judging guide scores Impact, Creativity, Validity, Relevance and Presentatio
 
 ## 30-second video (the demo we submit)
 
-| Time | Picture | Words (voice or caption) |
-|---|---|---|
-| 0:00 | Intro beat: Curiosity's line drawing itself over Mount Sharp in 3D, and across the map | "We're [team], for the Martian Map challenge. This is REDCAIRN: a survival map for the first walk on Mars." |
-| 0:05 | Plan beat: slope turns the ground green, amber, red; tap Fastest, then Rover-proven | "Mars Trek's own tiles, at walking scale. Where is it safe to step in a spacesuit?" |
-| 0:11 | Next: the rover drives to cairn 2 in the window while the map follows; the cairn rises | "The rover that drove here first is your guide. Its stops are your cairns." |
-| 0:17 | Curiosity's own photo from that spot; cursor readout on the map | "Point anywhere: how steep, how far from home." |
-| 0:22 | Storm beat: three ways home drawn on the map | "When the Sun flares, the map already knows the way home." |
-| 0:27 | Home beat: the rover drives on alone in the window | "It walked this ground alone, so you wouldn't have to." |
+The full kit (shot list with links, voice-over, birthday audio, radio lines to record, how to record and edit) is in [`VIDEO.md`](VIDEO.md); stills are in `video/`.
 
 ## 7-slide version (if we choose slides)
 
@@ -81,4 +74,4 @@ Shortcuts: `#intro`, `#plan`, `#stop-0` to `#stop-5`, `#storm`, `#home`, `#groun
 
 **"Would this work elsewhere?"** The engine needs an elevation model and a photo. Jezero, with Perseverance's track and photos, is next.
 
-**"What did AI do?"** AI assistants helped write code and data scripts. The data, the site choice and every figure come from the public sources in Data & sources.
+**"What did AI do?"** AI assistants helped write code and data scripts. The data, the site choice and every figure come from the public sources in the app's System architecture & data attribution panel.

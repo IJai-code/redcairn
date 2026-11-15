@@ -781,6 +781,27 @@ export class Stage {
     return this.cairnAt[k].clone();
   }
 
+  // A walker adds a stone to a cairn: it drops onto the top of the pile and stays.
+  addStone(k, instant = false) {
+    const c = this.cairns[k];
+    if (!c) return;
+    let top = 0;
+    for (const m of c.g.children) {
+      if (!m.isMesh || m === c.beam) continue;
+      if (!m.geometry.boundingBox) m.geometry.computeBoundingBox();
+      top = Math.max(top, m.position.y + m.geometry.boundingBox.max.y * m.scale.y);
+    }
+    const n = (c.added = (c.added || 0) + 1), sz = 0.15 + ((n * 37) % 5) * 0.012;
+    const m = new THREE.Mesh(stoneGeometry(2, 991 + n * 3.7, true, new THREE.Color(0xe8dcc6)), c.mat);
+    m.scale.set(sz * 1.5, sz * 0.85, sz * 1.25);
+    m.rotation.y = n * 1.7;
+    const rest = top + sz * 0.3;
+    m.position.set(((n * 13) % 7 - 3) * 0.015, instant ? rest : rest + 1.4, ((n * 7) % 5 - 2) * 0.015);
+    m.castShadow = true;
+    c.g.add(m);
+    if (!instant) (this.drops = this.drops || []).push({ m, rest, v: 0 });
+  }
+
   // Raise or hide cairns: before the rover has stopped somewhere, there is nothing there.
   setCairns(visibleUpTo) {
     this.cairns.forEach((c, k) => { c.target = k > 0 && k <= visibleUpTo ? 1 : 0; });
@@ -933,6 +954,13 @@ export class Stage {
       this.heading = c.az + this.look.yaw / DEG;
     }
     this.#tickAir(dt, now);
+    if (this.drops && this.drops.length) {
+      this.drops = this.drops.filter((d) => {
+        d.v += 9.8 * 0.38 * Math.min(dt, 0.05) * 4;          // Mars gravity, a little hurried
+        d.m.position.y = Math.max(d.rest, d.m.position.y - d.v * Math.min(dt, 0.05));
+        return d.m.position.y > d.rest;
+      });
+    }
     // Keep the sky around the eye and the sun's shadow box around what we look at.
     this.sky.position.copy(this.wCam.position);
     const focus = this.rover && this.camMode === 'eye' ? this.rover.position : (this.camMode === 'eye' ? this.wCam.position : new THREE.Vector3(this.cam.x, this.cam.y, this.cam.z));

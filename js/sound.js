@@ -3,6 +3,7 @@
 //   suit     your own breathing inside the helmet, faster when the alarm sounds
 //   outside  the thin wind, the rover's motors when it rolls
 //   radio    a click of static before the habitat speaks
+//   voice    a recorded line through a radio filter, when assets/audio has it
 //   alarm    two-tone warning for the solar storm
 
 export class Sound {
@@ -109,6 +110,34 @@ export class Sound {
     this.#static(t, 0.18, 0.5);
     this.#blip(1320, t + 0.2, 0.09, 0.12);
     this.#static(t + 0.32, 0.12, 0.25);
+  }
+
+  // A recorded line (assets/audio/*.m4a, if it exists), played as if over a suit radio:
+  // narrowed to a radio band, lightly overdriven, with a click of static at each end.
+  async voice(url) {
+    if (!this.ctx || !this.on) return;
+    this.vcache = this.vcache || {};
+    try {
+      let buf = this.vcache[url];
+      if (buf === null) return;
+      if (!buf) {
+        const r = await fetch(url);
+        if (!r.ok) { this.vcache[url] = null; return; }
+        buf = this.vcache[url] = await this.ctx.decodeAudioData(await r.arrayBuffer());
+      }
+      const ctx = this.ctx, src = ctx.createBufferSource();
+      src.buffer = buf;
+      const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 380;
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 3000;
+      const sh = ctx.createWaveShaper(), curve = new Float32Array(1024);
+      for (let i = 0; i < 1024; i++) { const x = (i / 1023) * 2 - 1; curve[i] = Math.tanh(2.2 * x); }
+      sh.curve = curve;
+      const g = ctx.createGain(); g.gain.value = 0.85;
+      src.connect(hp).connect(lp).connect(sh).connect(g).connect(this.master);
+      const t = ctx.currentTime + 0.32;
+      src.start(t);
+      this.#static(t + buf.duration, 0.16, 0.4);
+    } catch (e) { this.vcache[url] = null; }
   }
 
   alarm() {

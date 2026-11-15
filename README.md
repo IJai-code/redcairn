@@ -10,7 +10,7 @@ On Earth, hikers stack stones into cairns to mark the safe way for whoever comes
 
 ## How it plays: map first, walk second
 
-The map is the product. A story card on the left tells the walk one beat at a time and moves the map with it. At the top of the card, a 3D window shows the same moment on the ground: our rover, standing in for Curiosity, on the HiRISE photo draped over the 1 m elevation model at true scale, under Mount Sharp. When you press next, the rover drives the leg in the window while its marker moves along the map. The panel on the right holds every layer and today's conditions. Wherever the cursor is on the map, a readout gives the latitude and longitude and, on the walk site, the elevation, the slope for a suit, and the minutes to walk home from there. Ten beats, about three minutes, then the map is yours. The bar across the top jumps to Plan, Walk, Storm or Home.
+The map is the product. A story card on the left tells the walk one beat at a time and moves the map with it. At the top of the card, a 3D window shows the same moment on the ground: our rover, standing in for Curiosity, on the HiRISE photo draped over the 1 m elevation model at true scale, under Mount Sharp. When you press next, the rover drives the leg in the window while its marker moves along the map. The panel on the right holds every layer and today's conditions. Wherever the cursor is on the map, a readout gives the latitude and longitude and, on the walk site, the elevation, the slope for a suit, and the minutes to walk home from there. During the story the panel shows only the layers that are on, with what their colours mean; **All 11 layers** opens the full legend. Ten beats, about three minutes, then the map is yours. The bar across the top jumps to Plan, Walk, Storm or Home.
 
 | Beat | On the map | Built from |
 |---|---|---|
@@ -22,6 +22,15 @@ The map is the product. A story card on the left tells the walk one beat at a ti
 | **See it from the ground** | A button on the window at any stop: first person at true scale, under the real horizon, beside the team's rover (wheels turning, body tilting to the ground), with the same data on a helmet visor. Follow the rover to the next cairn, or go back to the map | HiRISE photo on the 1 m elevation model; 360° horizon and rover prepared in Blender |
 
 The right-hand panel groups every layer by kind of data (optical, topographic, thermal, spectral, geologic, chemical, radiation, ground truth, computed) with its mission, and shows today's REMS weather, the RAD radiation rate, NASA DONKI space weather, and Perseverance's newest raw image under "The other rover, today". On a phone the story card sits at the bottom and the panel opens from a Layers button.
+
+## The people in it
+
+- **Curiosity speaks first, in its own words.** Its first post from Mars ("I'm safely on the surface of Mars. GALE CRATER I AM IN YOU!!!", 6 August 2012) arrives on the suit radio, dated and marked *real*.
+- **You walk with a partner.** EVA-2 and the habitat talk to you on the radio; every one of their lines is marked *imagined*. Type your name at the start and the habitat says it when you get home.
+- **True moments carry the feeling.** At cairn 1, Curiosity's wheels have been torn since 2013 and it climbed anyway. At the turnaround, the real Mastcam picture of Earth as the evening star from Gale crater (sol 529). At home, its 2013 "Happy Birthday" played alone by its sample lab, and its mission clock ticking, years past its one-Mars-year plan.
+- **One act of care.** At the turnaround you add a stone to the cairn for whoever walks next. It stays there on your next visit.
+
+Recorded voices for the radio go in `assets/audio/` (names and lines in `docs/VIDEO.md`).
 
 ## Why it looks like this
 

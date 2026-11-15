@@ -31,7 +31,7 @@ export class MapView {
     this.map = L.map(el, { crs: L.CRS.EPSG4326, minZoom: 6, maxZoom: 19, zoomSnap: 0.25, zoomDelta: 0.5 });
     this.map.attributionControl.setPrefix(false);
 
-    const z = { ctx: 201, hirise: 202, mola: 210, thermal: 211, geology: 212, relief: 250, slope: 260, shield: 270, home: 280,
+    const z = { under: 199, ctx: 201, hirise: 202, site: 205, mola: 210, thermal: 211, geology: 212, relief: 250, slope: 260, shield: 270, home: 280,
       minerals: 405, rocks: 410, track: 415, curiosity: 417, route: 420, ret: 430 };
     for (const [name, zi] of Object.entries(z)) this.map.createPane(name).style.zIndex = zi;
 
@@ -44,7 +44,11 @@ export class MapView {
         opacity: base ? 1 : 0.75, attribution: `${b.label}: ${b.credit}`,
       });
       if (base) layer.addTo(this.map); else this.layers[b.id] = layer;
+      // Colour height (MOLA + HRSC) is also the ground under everything, so no view is ever an empty void.
+      if (b.id === 'mola') L.tileLayer(b.url, { pane: 'under', tileSize: 256, minZoom: 0, maxNativeZoom: b.maxNativeZoom, maxZoom: 19, noWrap: true }).addTo(this.map);
     }
+    // The walk site at about 33 cm per pixel (HiRISE, cut to the site in tools/build_ortho.py): sharp at walking zoom.
+    L.imageOverlay('assets/img/site-hirise.jpg', this.bounds, { pane: 'site', interactive: false }).addTo(this.map);
     for (const name of ['rocks', 'track', 'minerals', 'shelters', 'curiosity']) this.layers[name] = L.layerGroup();
     this.routeGroup = L.layerGroup().addTo(this.map);
     this.retGroup = L.layerGroup().addTo(this.map);

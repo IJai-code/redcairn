@@ -64,7 +64,7 @@
       "q": "Can my suit handle a real hill?",
       "a": "Yes, with care. Curiosity tilted 17° here and your suit’s limit is 20°. Home is seven minutes away, so this is the safest place to find out.",
       "moment": "On this slope, the rover tilted 17° and kept going.",
-      "sub": "Your suit’s limit is 20°. Home is seven minutes behind you, so this is the place to learn how a pressurised suit handles a real hill."
+      "sub": "Its wheels have been punctured and torn by sharp rock since 2013. It climbed this anyway. Your suit’s limit is 20°, and home is seven minutes behind you: the place to learn how a pressurised suit handles a real hill."
     },
     "WP2": {
       "title": "Monte Grande: the boxwork",
@@ -112,9 +112,77 @@
     }
   },
   "radio": {
-    "hatch": "Habitat to EVA-1: you are clear. Follow the rover.",
-    "storm": "Habitat to EVA-1: solar particle event inbound. Come home now.",
-    "home": "Habitat to EVA-1: welcome home."
+    "_note": "Lines heard on the suit radio, one at a time. 'real' lines are quoted from the source named; every other line is imagined and says so on screen. 'audio' is played through the radio filter if the file exists.",
+    "intro": [
+      {
+        "who": "Curiosity",
+        "when": "sol 0 · 6 August 2012",
+        "text": "I'm safely on the surface of Mars. GALE CRATER I AM IN YOU!!!",
+        "real": "its first post from Mars, @MarsCuriosity",
+        "audio": "assets/audio/01-curiosity-landing.m4a"
+      }
+    ],
+    "plan": [
+      {
+        "who": "Habitat",
+        "text": "Habitat to EVA-1 and EVA-2: route uploaded. Pick your line.",
+        "audio": "assets/audio/02-habitat-route.m4a"
+      }
+    ],
+    "stop-0": [
+      {
+        "who": "Habitat",
+        "text": "Habitat to EVA-1, EVA-2: you are clear. Follow the rover.",
+        "audio": "assets/audio/03-habitat-clear.m4a"
+      }
+    ],
+    "stop-1": [
+      {
+        "who": "EVA-2",
+        "text": "Seventeen degrees. It made it on torn wheels. We'll make it on boots.",
+        "audio": "assets/audio/04-eva2-slope.m4a"
+      }
+    ],
+    "stop-4": [
+      {
+        "who": "EVA-2",
+        "text": "One boot on each side. Wet Mars behind us, dry Mars ahead.",
+        "audio": "assets/audio/05-eva2-line.m4a"
+      }
+    ],
+    "stop-5": [
+      {
+        "who": "EVA-2",
+        "text": "Turnaround. Leave something for whoever comes next.",
+        "audio": "assets/audio/06-eva2-turnaround.m4a"
+      }
+    ],
+    "storm": [
+      {
+        "who": "Habitat",
+        "text": "Habitat to EVA-1: solar particle event inbound. Bring EVA-2 home.",
+        "audio": "assets/audio/07-habitat-storm.m4a"
+      },
+      {
+        "who": "EVA-2",
+        "text": "I'm with you. Your call.",
+        "audio": "assets/audio/08-eva2-yourcall.m4a"
+      }
+    ],
+    "storm-chosen": [
+      {
+        "who": "EVA-2",
+        "text": "Right behind you.",
+        "audio": "assets/audio/09-eva2-behind.m4a"
+      }
+    ],
+    "home": [
+      {
+        "who": "Habitat",
+        "text": "Both suits at the hatch. Welcome home, {name}.",
+        "audio": "assets/audio/10-habitat-home.m4a"
+      }
+    ]
   },
   "objective": "Today: bring back rock from both sides of the line where this part of Mars began to dry, and be home with air to spare."
 }
