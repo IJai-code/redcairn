@@ -43,21 +43,104 @@ function averageColour(img, f0, f1) {
   } catch (e) { return null; }
 }
 
-// Fine grain underfoot so no surface is a flat colour. `broad` adds slow, wide patches for the far ground.
+// The surface of Mars underfoot, built in the shader so it holds up from a hand's breadth to the horizon:
+// wind ripples, drifted dust, dark basaltic sand, gravel and pebbles, desiccation cracks and wind scratches.
+// Every layer fades out as it gets smaller than a pixel, so nothing shimmers. `broad` is the plain apron beyond the photo.
+const SURFACE_GLSL = `
+varying vec3 vWP;
+float gPeb, gCrack, gScr, gRip, mH;
+float h21(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(h21(i), h21(i + vec2(1.0, 0.0)), f.x), mix(h21(i + vec2(0.0, 1.0)), h21(i + vec2(1.0, 1.0)), f.x), f.y); }
+float fbm(vec2 p){ float a = 0.5, s = 0.0; mat2 m = mat2(1.6, 1.2, -1.2, 1.6); for (int i = 0; i < 4; i++){ s += a * vn(p); p = m * p; a *= 0.5; } return s / 0.9375; }
+vec3 vor(vec2 p){
+  vec2 i = floor(p), f = fract(p); float d1 = 8.0, d2 = 8.0, id = 0.0;
+  for (int y = -1; y <= 1; y++) for (int x = -1; x <= 1; x++){
+    vec2 g = vec2(float(x), float(y));
+    vec2 o = vec2(h21(i + g), h21(i + g + vec2(17.3, 9.1)));
+    vec2 r = g + o - f; float d = dot(r, r);
+    if (d < d1){ d2 = d1; d1 = d; id = h21(i + g + vec2(5.1, 2.7)); } else if (d < d2){ d2 = d; }
+  }
+  return vec3(sqrt(d1), sqrt(d2), id);
+}
+float wOct(float f, float fp){ return 1.0 - smoothstep(0.2, 0.55, fp * f); }
+float surfH(vec2 p, float fp){
+  float h = 0.0;
+  vec2 dir = vec2(0.83, 0.56);
+  float warp = fbm(p * 0.3) * 3.0;
+  float w = wOct(0.3, fp);
+  if (w > 0.001) h += (sin((dot(p, dir) + warp) * 1.7) * 0.5 + 0.5) * 0.09 * w;
+  w = wOct(1.0, fp);
+  gRip = 0.0;
+  if (w > 0.001){ gRip = sin((dot(p, dir) + warp * 1.3) * 6.0); h += gRip * 0.018 * w * (0.4 + 0.6 * fbm(p * 0.15)); }
+  w = wOct(9.0, fp);   if (w > 0.001) h += (vn(p * 9.0) - 0.5) * 0.03 * w;
+  w = wOct(38.0, fp);  if (w > 0.001) h += (vn(p * 38.0) - 0.5) * 0.016 * w;
+  w = wOct(130.0, fp); if (w > 0.001) h += (vn(p * 130.0) - 0.5) * 0.008 * w;
+  gPeb = 0.0;
+  w = wOct(6.0, fp);
+  if (w > 0.001){
+    float zone = 0.3 + 0.7 * smoothstep(0.3, 0.6, fbm(p * 0.07 + 4.0));
+    vec3 v = vor(p * 6.0);
+    float r = 0.16 + 0.22 * v.z;
+    gPeb = smoothstep(r, r * 0.55, v.x) * step(0.42, v.z) * w * zone;
+    vec3 u = vor(p * 17.0 + 3.0);
+    gPeb = max(gPeb, smoothstep(0.3, 0.12, u.x) * step(0.5, u.z) * wOct(17.0, fp) * zone * 0.8);
+    h += gPeb * 0.045;
+  }
+  gCrack = 0.0;
+  w = wOct(10.0, fp);
+  if (w > 0.001){
+    vec3 v = vor(p * 1.25 + warp * 0.1);
+    float m = smoothstep(0.42, 0.62, fbm(p * 0.06 + 11.0));
+    gCrack = (1.0 - smoothstep(0.0, 0.07, v.y - v.x)) * m * w;
+    h -= gCrack * 0.05;
+  }
+  gScr = 0.0;
+  w = wOct(45.0, fp);
+  if (w > 0.001){
+    float s = 0.0;
+    vec2 q1 = mat2(0.8776, -0.4794, 0.4794, 0.8776) * p;
+    vec2 q2 = mat2(0.6216, 0.7833, -0.7833, 0.6216) * p;
+    s += smoothstep(0.86, 0.97, vn(vec2(q1.x * 55.0, q1.y * 1.8)));
+    s += smoothstep(0.88, 0.98, vn(vec2(q2.x * 40.0, q2.y * 1.3 + 7.0)));
+    gScr = min(1.0, s) * w * smoothstep(0.35, 0.6, fbm(p * 0.2 + 2.0));
+    h -= gScr * 0.006;
+  }
+  return h;
+}`;
+
 function grainShader(mat, broad) {
   mat.onBeforeCompile = (sh) => {
     sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vWP;')
       .replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nvWP = (modelMatrix * vec4(transformed, 1.0)).xyz;');
-    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>
-varying vec3 vWP;
-float h21(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
-float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
-  return mix(mix(h21(i), h21(i + vec2(1, 0)), f.x), mix(h21(i + vec2(0, 1)), h21(i + vec2(1, 1)), f.x), f.y); }`)
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>\n${SURFACE_GLSL}`)
       .replace('#include <map_fragment>', `#include <map_fragment>
-float g = vn(vWP.xz * 1.7) * 0.5 + vn(vWP.xz * 6.3) * 0.3 + vn(vWP.xz * 23.0) * 0.2;
-float near = 1.0 - smoothstep(8.0, 70.0, length(vWP - cameraPosition));
-diffuseColor.rgb *= mix(1.0, 0.78 + 0.44 * g, near);
-${broad ? 'diffuseColor.rgb *= 0.84 + 0.3 * (vn(vWP.xz * 0.011) * 0.6 + vn(vWP.xz * 0.045) * 0.4);' : ''}`);
+{
+  vec2 P = vWP.xz;
+  float fp = length(fwidth(P));
+  mH = surfH(P, fp);
+  float pch = fbm(P * 0.035 + 3.7);
+  float dust = smoothstep(0.3, 0.7, fbm(P * 0.11 + 8.1));
+  float sand = smoothstep(0.58, 0.72, fbm(P * 0.05 + 21.0));
+  vec3 c = diffuseColor.rgb;
+  c *= ${broad ? '0.74 + 0.52' : '0.86 + 0.28'} * pch + ${broad ? '0.0' : '0.0'};
+  c = mix(c, c * vec3(1.2, 1.03, 0.86) + 0.02, dust * 0.5);
+  c = mix(c, c * vec3(0.62, 0.6, 0.66), sand * 0.7);
+  c *= 1.0 + mH * 1.4;
+  c *= 1.0 - gCrack * 0.55;
+  c *= 1.0 - gPeb * 0.38 * (0.6 + 0.8 * vn(P * 23.0));
+  c += gScr * 0.05 * vec3(1.0, 0.8, 0.6);
+  c *= mix(1.0, 0.84 + 0.32 * vn(P * 38.0), wOct(38.0, fp));
+  diffuseColor.rgb = c;
+}`)
+      .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+{
+  vec3 sx = dFdx(-vViewPosition), sy = dFdy(-vViewPosition);
+  vec3 r1 = cross(sy, normal), r2 = cross(normal, sx);
+  float det = dot(sx, r1);
+  vec3 grad = sign(det) * (dFdx(mH) * r1 + dFdy(mH) * r2);
+  normal = normalize(abs(det) * normal - grad * 1.7);
+}`);
   };
 }
 
