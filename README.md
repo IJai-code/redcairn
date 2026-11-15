@@ -28,7 +28,7 @@ The right-hand panel groups every layer by kind of data (optical, topographic, t
 - **Curiosity speaks first, in its own words.** Its first post from Mars ("I'm safely on the surface of Mars. GALE CRATER I AM IN YOU!!!", 6 August 2012) arrives on the suit radio, dated and marked *real*.
 - **You walk with a partner.** EVA-2 and the habitat talk to you on the radio; every one of their lines is marked *imagined*. Type your name at the start and the habitat says it when you get home.
 - **True moments carry the feeling.** At cairn 1, Curiosity's wheels have been torn since 2013 and it climbed anyway. At the turnaround, the real Mastcam picture of Earth as the evening star from Gale crater (sol 529). At home, its 2013 "Happy Birthday" played alone by its sample lab, and its mission clock ticking, years past its one-Mars-year plan.
-- **One act of care.** At the turnaround you add a stone to the cairn for whoever walks next. It stays there on your next visit.
+- **A cairn built by everyone who walks it.** At the turnaround you add a stone for whoever walks next. The count is shared (a small Netlify function, `netlify/functions/stones.mjs`, one stone per visitor per day; only a short hash of the address is kept). Every stone is drawn around the cairn in 3D, so it grows with each visitor; the intro tells you how many walked before you, and you learn the number of your own stone. No other Mars map remembers the people who used it.
 
 Recorded voices for the radio go in `assets/audio/` (names and lines in `docs/VIDEO.md`).
 

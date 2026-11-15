@@ -787,7 +787,7 @@ export class Stage {
     if (!c) return;
     let top = 0;
     for (const m of c.g.children) {
-      if (!m.isMesh || m === c.beam) continue;
+      if (!m.isMesh || m === c.beam || m.isInstancedMesh) continue;
       if (!m.geometry.boundingBox) m.geometry.computeBoundingBox();
       top = Math.max(top, m.position.y + m.geometry.boundingBox.max.y * m.scale.y);
     }
@@ -800,6 +800,31 @@ export class Stage {
     m.castShadow = true;
     c.g.add(m);
     if (!instant) (this.drops = this.drops || []).push({ m, rest, v: 0 });
+  }
+
+  // Everyone else's stones: laid in a widening spiral around the foot of the cairn, a mound that grows
+  // with every visitor (the first few hundred are drawn; after that the mound is full).
+  setCommunal(k, n) {
+    const c = this.cairns[k];
+    if (!c) return;
+    if (c.communal) { c.g.remove(c.communal); c.communal = null; }
+    n = Math.min(n, 420);
+    if (!n) return;
+    const geo = stoneGeometry(1, 404, true, new THREE.Color(0xd9c9ae));
+    const mesh = new THREE.InstancedMesh(geo, c.mat, n);
+    const m = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), p = new THREE.Vector3(), sc = new THREE.Vector3();
+    for (let i = 0; i < n; i++) {
+      const a = i * 2.39996, r = 1.05 + 0.13 * Math.sqrt(i), sz = 0.1 + ((i * 7919) % 11) * 0.009;
+      const layer = Math.floor(i / 60);
+      p.set(Math.cos(a) * (r - layer * 0.35), sz * 0.3 + layer * 0.14, Math.sin(a) * (r - layer * 0.35));
+      e.set(((i * 31) % 7 - 3) * 0.05, i * 1.3, ((i * 17) % 5 - 2) * 0.05);
+      sc.set(sz * 1.5, sz * 0.8, sz * 1.2);
+      m.compose(p, q.setFromEuler(e), sc);
+      mesh.setMatrixAt(i, m);
+    }
+    mesh.castShadow = true; mesh.receiveShadow = true;
+    c.communal = mesh;
+    c.g.add(mesh);
   }
 
   // Raise or hide cairns: before the rover has stopped somewhere, there is nothing there.

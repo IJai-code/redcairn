@@ -1,0 +1,9 @@
+{
+  "name": "redcairn",
+  "private": true,
+  "description": "REDCAIRN: the site is static (no build step). This file only gives the shared-cairn function its one dependency.",
+  "type": "module",
+  "dependencies": {
+    "@netlify/blobs": "11.1.7"
+  }
+}

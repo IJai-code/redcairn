@@ -378,6 +378,14 @@ const EARTH_IMG = 'https://assets.science.nasa.gov/dynamicimage/assets/science/p
 // Curiosity's mission clock: sols since landing (one sol = 88,775 s), counting from the start of sol 0.
 const solNow = () => (Date.now() - Date.UTC(2012, 7, 5, 13, 50)) / 88775244;
 const solText = () => { const v = solNow(); return `sol ${num(Math.floor(v))}.${String(Math.floor((v % 1) * 1e5)).padStart(5, '0')}`; };
+// The shared cairn (netlify/functions/stones.mjs): one count for everyone who walks this map.
+async function cairnGet() {
+  try { const r = await fetch('/api/stones', { cache: 'no-store', signal: AbortSignal.timeout(3500) }); if (!r.ok) return; const j = await r.json(); if (typeof j.count === 'number') S.cairn = j; } catch (e) { /* offline or local: the cairn is just yours */ }
+}
+async function cairnAdd() {
+  try { const r = await fetch('/api/stones', { method: 'POST' }); if (!r.ok) return null; const j = await r.json(); if (typeof j.count === 'number') S.cairn = j; return j; } catch (e) { return null; }
+}
+const ordinal = (n) => { const s = ['th', 'st', 'nd', 'rd'], v = n % 100; return `${num(n)}${s[(v - 20) % 10] || s[v] || s[0]}`; };
 function stoneCount() { try { return Number(localStorage.getItem('redcairn.stones') || 0); } catch (e) { return S.stoneLaid ? 1 : 0; } }
 const camName = (c) => (/navigation/i.test(c) ? 'Navcam' : /mast/i.test(c) ? 'Mastcam' : /hazard/i.test(c) ? 'Hazcam' : /mahli/i.test(c) ? 'MAHLI' : c || 'Camera');
 function btn(id, label, alt) { return `<button type="button" class="act${alt ? ' act--alt' : ''}" data-a="${id}">${label}</button>`; }
@@ -390,8 +398,9 @@ function card() {
   if (id === 'intro') {
     kicker = 'A survival map for the first walk on Mars';
     title = 'Fourteen years. One line.';
+    if (S.cairn && S.cairn.count > 0) extra = `<p class="guide__walkers"><b>${num(S.cairn.count)}</b> ${S.cairn.count === 1 ? 'person has' : 'people have'} walked this map before you. Each left a stone on the last cairn.</p>`;
     body = `That orange line is Curiosity, climbing Mount Sharp alone since 2012: ${g.distanceKm.toFixed(1)} km so far. The last 1.5 km of it will be the first walk a person takes on Mars. This map answers the three questions for that walk: <b>where is it safe to step, what is worth stopping for, and can I get home?</b>`;
-    extra = `<label class="guide__name"><span>Your name, for the habitat radio</span><input id="callsign" type="text" maxlength="24" autocomplete="off" placeholder="EVA-1" value="${esc(S.name || '')}"></label>`;
+    extra += `<label class="guide__name"><span>Your name, for the habitat radio</span><input id="callsign" type="text" maxlength="24" autocomplete="off" placeholder="EVA-1" value="${esc(S.name || '')}"></label>`;
     go = btn('next', 'Begin');
     S.win = winCrater();
   } else if (id === 'plan') {
@@ -410,11 +419,14 @@ function card() {
     extra = `<figure class="guide__photo"><a href="${esc(wp.pov.imageUrl)}" target="_blank" rel="noopener"><img src="${esc(wp.pov.imageUrl)}" alt="${esc(wp.plain.see)}" referrerpolicy="no-referrer"></a><figcaption><b>What Curiosity saw from here</b>${esc(camName(wp.pov.camera))}, sol ${num(wp.pov.sol)}, ${esc(day(wp.pov.utc))}.${earth}</figcaption></figure>${numbersAt(k)}`;
     if (k === last) {
       extra += `<figure class="guide__photo"><a href="${EARTH_IMG}" target="_blank" rel="noopener"><img src="${EARTH_IMG}?w=600" alt="Earth as a bright point in the Martian evening sky, with the Moon below it"></a><figcaption><b>Look up after sunset</b>The brightest point in the sky is Earth, with the Moon just below. Curiosity took this from Gale crater: Mastcam, sol 529, 31 January 2014. NASA/JPL-Caltech/MSSS/TAMU.</figcaption></figure>`;
-      extra += S.stoneLaid ? `<p class="guide__stone">You added a stone to this cairn for whoever walks here next.${stoneCount() > 1 ? ` That is ${stoneCount()} from you.` : ''}</p>` : '';
+      const n = S.cairn ? S.cairn.count : 0;
+      extra += S.stoneLaid
+        ? `<p class="guide__stone">${S.myStone ? `Yours is the <b>${ordinal(S.myStone)}</b> stone on this cairn.` : 'Your stone is on this cairn.'} Whoever walks this map next will find it.</p>`
+        : n ? `<p class="guide__stone guide__stone--others">This cairn holds <b>${num(n)}</b> ${n === 1 ? 'stone' : 'stones'}, one from each person who walked this map before you.</p>` : '';
     }
     const nextLabel = k < last ? `Follow it to cairn ${k + 1}<small>${legM(k)} m on</small>` : 'Turn for home';
     go = btn('next', nextLabel) + (k === last && !S.stoneLaid ? btn('stone', 'Add a stone to the cairn<small>for whoever walks here next</small>', true) : '') + btn('prev', 'Back', true);
-    S.win = win3d(k ? 'Our rover, standing in for Curiosity, on the real ground at true scale. Drag to look around.' : 'Our rover, standing in for Curiosity, where your walk begins. Drag to look around.', true);
+    S.win = win3d(k === last && S.cairn && S.cairn.count ? 'Every stone around this cairn was left by a real person who walked this map. Drag to look around.' : k ? 'Our rover, standing in for Curiosity, on the real ground at true scale. Drag to look around.' : 'Our rover, standing in for Curiosity, where your walk begins. Drag to look around.', true);
   } else if (id === 'storm') {
     const o = stormOptionsFor(R());
     kicker = 'Simulated drill · solar storm at the turnaround';
@@ -441,7 +453,8 @@ function card() {
     const jobs = stops().slice(1).reduce((s2, w) => s2 + w.plain.do.length, 0);
     kicker = 'Back at the hatch';
     title = 'It walked this ground alone, so that you would not have to.';
-    body = `Curiosity is still out there, ${vars().roverAheadM} m past your turnaround, climbing. On 5 August 2013, alone in this crater, it played “Happy Birthday” to itself by shaking its sample lab (SAM) at the right pitches. It has done that once.`;
+    const mine = S.myStone ? ` Your stone is the ${ordinal(S.myStone)} on the last cairn.` : '';
+    body = `Curiosity is still out there, ${vars().roverAheadM} m past your turnaround, climbing.${mine} On 5 August 2013, alone in this crater, it played “Happy Birthday” to itself by shaking its sample lab (SAM) at the right pitches. It has done that once.`;
     extra = `<p class="guide__sol"><span>Curiosity, today</span><b id="sol-now">${solText()}</b><em>Its prime mission was one Mars year: 669 sols.</em></p>`;
     extra += `<dl class="guide__answers">
       <div><dt>Where was it safe to step?</dt><dd>Everywhere on the route: the steepest ground was ${S.plan.maxSlope.toFixed(0)}°, under the suit’s ${S.limits.noGo}° limit.</dd></div>
@@ -582,11 +595,13 @@ function window3d(id, prev) {
     // Settle on a three-quarter view of the cairn with the rover parked just beyond it.
     const settle = (immediate) => {
       const p = S.path.at(park), c = k ? S.stage.cairnPoint(k) : p;
-      chaseCam({ x: (p.x + c.x) / 2, z: (p.z + c.z) / 2 }, S.path.dir(park), { side: 58, dist: k ? 17 : 15, polar: 72 }, immediate);
+      // At the turnaround the cairn is the subject: close in on it and everyone's stones around it.
+      if (k === n - 1) chaseCam(c, S.path.dir(park), { side: 70, dist: 8.5, polar: 64 }, immediate);
+      else chaseCam({ x: (p.x + c.x) / 2, z: (p.z + c.z) / 2 }, S.path.dir(park), { side: 58, dist: k ? 17 : 15, polar: 72 }, immediate);
       S.spin = 1.6;
     };
     // Stones this browser added on earlier visits are still on the last cairn.
-    if (k === n - 1 && !S.stonesBack) { S.stonesBack = true; for (let j = 0; j < stoneCount(); j++) S.stage.addStone(k, true); }
+    if (k === n - 1) S.stage.setCommunal(k, Math.max(0, (S.cairn ? S.cairn.count : 0) - (S.stoneLaid ? 1 : 0)));
     const fromPrev = prev === `stop-${k - 1}` && S.roverD < park;
     if (fromPrev) {
       // The cairn ahead is not there yet: it rises when the rover reaches it.
@@ -932,6 +947,7 @@ async function boot() {
       if (id === 'stone') {
         S.stoneLaid = true;
         try { localStorage.setItem('redcairn.stones', String(stoneCount() + 1)); } catch (e) { /* private mode */ }
+        cairnAdd().then((j) => { if (j) { S.myStone = j.yours || j.already || null; if (beatIds()[S.beat] === `stop-${stops().length - 1}`) card(); } });
         const k = stops().length - 1, c = S.stage.cairnPoint(k), p = S.path.at(S.roverD);
         S.stage.addStone(k);
         S.spin = 0;
@@ -978,6 +994,7 @@ async function boot() {
   $('sections').addEventListener('click', (e) => { const b = e.target.closest('[data-go]'); if (b) jump(b.dataset.go); });
   $('btn-about').addEventListener('click', openAbout);
   try { S.name = localStorage.getItem('redcairn.name') || ''; } catch (e) { S.name = ''; }
+  await cairnGet();
   S.sound = new Sound();
   $('btn-sound').addEventListener('click', () => {
     const on = !S.sound.on;
