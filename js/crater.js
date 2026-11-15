@@ -44,6 +44,7 @@ export class Crater {
     this.chips.addEventListener('click', (e) => {
       const b = e.target.closest('button');
       if (!b) return;
+      this.root.dataset.touched = '';
       const id = b.dataset.layer, L = this.layers.find((l) => l.id === id);
       if (L.base) { for (const l of this.layers) if (l.base) this.on.delete(l.id); this.on.add(id); }
       else if (this.on.has(id)) this.on.delete(id); else this.on.add(id);
@@ -153,24 +154,30 @@ export class Crater {
 
   #target(state) {
     const vw = innerWidth, vh = innerHeight, wide = vw > 900;
-    const cover = Math.max(vw / this.W, vh / this.H);
+    // On a phone the words cover the lower part of the screen, so the picture only has to fill the band above them.
+    const cover = Math.max(vw / this.W, this.#band() / this.H);
     if (state === 'line') {
       // Close enough to follow the line, far enough to keep the mountain it has not yet climbed above it.
       const xs = this.v.track.map((p) => p[0]), ys = this.v.track.map((p) => p[1]);
       const fx = (Math.min(...xs) + Math.max(...xs)) / 2;
-      const fy = (Math.min(...ys) + Math.max(...ys)) / 2 * 0.7 + this.v.places.summit.xy[1] * 0.3;
-      return { fx, fy, s: cover * (wide ? 1.55 : 2.3), sx: wide ? 0.64 : 0.5, sy: wide ? 0.5 : 0.2 };
+      const mid = (Math.min(...ys) + Math.max(...ys)) / 2;
+      const fy = wide ? mid * 0.7 + this.v.places.summit.xy[1] * 0.3 : mid;
+      return { fx, fy, s: cover * (wide ? 1.55 : 3), sx: wide ? 0.64 : 0.5, sy: wide ? 0.5 : 0.3 };
     }
-    if (state === 'orbit') return { fx: 0.56, fy: 0.5, s: cover * 1.1, sx: wide ? 0.62 : 0.5, sy: wide ? 0.5 : 0.3 };
-    return { fx: 0.47, fy: 0.46, s: cover * 1.04, sx: wide ? 0.62 : 0.5, sy: wide ? 0.5 : 0.32 };
+    if (state === 'orbit') return wide ? { fx: 0.56, fy: 0.5, s: cover * 1.1, sx: 0.62, sy: 0.5 } : { fx: 0.55, fy: 0.5, s: cover * 1.25, sx: 0.5, sy: 0.3 };
+    return wide ? { fx: 0.47, fy: 0.46, s: cover * 1.04, sx: 0.62, sy: 0.5 } : { fx: 0.47, fy: 0.45, s: cover, sx: 0.5, sy: 0.3 };
+  }
+
+  #band() {
+    return innerWidth > 900 ? innerHeight : Math.round(innerHeight * 0.58);
   }
 
   #apply(t) {
     this.cur = t;
-    const vw = innerWidth, vh = innerHeight;
+    const vw = innerWidth, vh = innerHeight, band = this.#band();
     const w = this.W * t.s, h = this.H * t.s;
     const tx = Math.min(0, Math.max(vw - w, t.sx * vw - t.fx * w));
-    const ty = Math.min(0, Math.max(vh - h, t.sy * vh - t.fy * h));
+    const ty = Math.min(0, Math.max(band - h, t.sy * vh - t.fy * h));
     this.frame.style.transform = `translate(${tx.toFixed(1)}px, ${ty.toFixed(1)}px) scale(${t.s.toFixed(4)})`;
     // Keep the line a constant width on screen however far we are zoomed in.
     const k = 1 / t.s;

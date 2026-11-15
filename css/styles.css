@@ -275,9 +275,11 @@ body:not([data-booting]) .boot { opacity: 0; pointer-events: none; }
   .beat--hero .card { background: none; backdrop-filter: none; padding: 0 6px; }
   .card h1 { font-size: 38px; }
   .stackbig { top: 60px; width: 100%; height: 48vh; bottom: auto; }
-  .crater__clock { top: 112px; bottom: auto; right: 16px; }
+  .crater__clock { top: auto; bottom: calc(44svh + 14px); right: 16px; }
   .crater__chips { top: 62px; }
-  .crater__legend { left: 12px; right: 12px; top: 108px; bottom: auto; max-width: none; }
+  .crater__legend { left: 12px; right: auto; top: auto; bottom: calc(44svh + 10px); max-width: 260px; padding: 7px 10px; font-size: 11.5px; gap: 3px; }
+  .crater__legend i { width: 18px; height: 8px; }
+  .crater:not([data-touched]) .crater__legend { display: none; }
   .crater__clock b { font-size: 30px; }
   .cpin span { font-size: 12px; padding: 5px 8px; }
   .chips { top: 62px; left: 12px; right: 12px; max-width: none; justify-content: flex-start; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
