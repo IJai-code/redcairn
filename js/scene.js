@@ -185,8 +185,8 @@ export class Stage {
     this.pinRoot = pinRoot;
     this.data = data;
     this.t = data.terrain;
-    this.mode = 'globe';
-    this.want = 'globe';
+    this.mode = 'none';
+    this.want = 'none';
     this.pins = [];
     this.modeToken = 0;
     this.onPick = () => {};
@@ -208,6 +208,8 @@ export class Stage {
     this.#buildWalk();
     this.resize();
     window.addEventListener('resize', () => this.resize());
+    // The canvas also lives inside the story card's window; follow whatever box it is in.
+    if (window.ResizeObserver) new ResizeObserver(() => this.resize()).observe(canvas.parentElement);
     this.#bindDrag();
     this.last = performance.now();
     requestAnimationFrame((n) => this.#frame(n));
@@ -923,7 +925,7 @@ export class Stage {
       this.wCam.lookAt(E.x + Math.cos(yaw) * Math.cos(pitch), y + Math.sin(pitch), E.z + Math.sin(yaw) * Math.cos(pitch));
       this.heading = -((yaw / DEG) + 90);       // screen rotation of a north arrow (yaw 0 looks east)
     } else {
-      const c = this.cam, T = this.camT, k = 1 - Math.exp(-(reduce ? 12 : 2.6) * dt);
+      const c = this.cam, T = this.camT, k = 1 - Math.exp(-(reduce ? 12 : this.camRate || 2.6) * dt);
       for (const key of ['x', 'y', 'z', 'dist', 'polar', 'az']) c[key] += (T[key] - c[key]) * k;
       const az = (c.az + this.look.yaw / DEG) * DEG, pol = clamp(c.polar - this.look.pitch / DEG, 10, 85) * DEG;
       this.wCam.position.set(c.x + c.dist * Math.sin(pol) * Math.sin(az), c.y + c.dist * Math.cos(pol), c.z + c.dist * Math.sin(pol) * Math.cos(az));
@@ -963,6 +965,9 @@ export class Stage {
 
   resetLook() { this.look = { yaw: 0, pitch: 0 }; }
 
+  // Thinner haze for the overview from high up; the ground-level haze is tuned for standing on it.
+  setHaze(density = 0.00055) { this.wScene.fog.density = density; }
+
   setLayers(set) {
     this.layers = new Set(set);
     this.ov.slope.visible = set.has('slope');
@@ -989,7 +994,8 @@ export class Stage {
   }
 
   resize() {
-    const W = window.innerWidth, H = window.innerHeight;
+    const box = this.canvas.parentElement, W = box.clientWidth || window.innerWidth, H = box.clientHeight || window.innerHeight;
+    if (!W || !H || (W === this.W && H === this.H)) return;
     this.renderer.setSize(W, H, false);
     this.canvas.style.width = '100%';
     this.canvas.style.height = '100%';

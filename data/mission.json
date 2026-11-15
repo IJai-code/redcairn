@@ -876,12 +876,12 @@
     {
       "source": "usgs-geology",
       "name": "USGS planetary geologic mapping",
-      "role": "The Rock units layer on the planning map (USGS SIM 3292 via Mars Trek) and in the lander window over Gale crater: Mount Sharp (Htu) inside the crater's impact unit (AHi). Htu is the unit under the whole walk."
+      "role": "The Rock units layer on the planning map (USGS SIM 3292 via Mars Trek): Mount Sharp (Htu) inside the crater's impact unit (AHi). Htu is the unit under the whole walk."
     },
     {
       "source": "mount-sharp-route",
       "name": "Curiosity's proposed path up Mount Sharp",
-      "role": "The planning map's 'Curiosity's whole climb' layer and the lander-window line: the route the team planned up Mount Sharp, as Curiosity actually drove it, landing to sol 5,073. Our walk follows its 2025–26 stretch."
+      "role": "The planning map's 'Curiosity's whole climb' layer and the intro, where the line draws itself over Mount Sharp rendered in 3D: the route the team planned up Mount Sharp, as Curiosity actually drove it, landing to sol 5,073. Our walk follows its 2025–26 stretch."
     },
     {
       "source": "worldview",

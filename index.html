@@ -18,26 +18,19 @@
   <link rel="stylesheet" href="css/styles.css">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 </head>
-<body data-stage="globe" data-step="map" data-booting>
+<body data-stage="map" data-step="map" data-booting>
 
   <div class="stage" id="stage">
     <canvas id="gl"></canvas>
     <div class="pins" id="pins"></div>
-    <div class="crater" id="crater"></div>
   </div>
 
   <!-- The planning map: Mars Trek's own tiles, our computed layers, the routes and the cairns. -->
-  <div class="map" id="map"><div class="scale" aria-hidden="true"><span class="scale__bar" id="scale-bar"></span><span id="scale-text"></span></div></div>
+  <div class="map" id="map"><div class="coords" id="coords" hidden></div><div class="scale" aria-hidden="true"><span class="scale__bar" id="scale-bar"></span><span id="scale-text"></span></div></div>
   <aside class="mapui" id="mapui" aria-label="Map layers and data"></aside>
   <!-- The story, told on the map one beat at a time. -->
   <article class="guide" id="guide" aria-live="polite" hidden></article>
   <div class="mapbar"><button type="button" class="mapbar__story" data-a="story">Back to the story</button><button type="button" class="mapbar__layers" data-a="layers">Layers</button></div>
-
-  <!-- The lander window during descent. -->
-  <div class="lander" aria-live="polite"><div class="lander__txt"><p id="lander-a"></p><p id="lander-b"></p></div><button type="button" class="link" data-a="skip">Skip the descent</button></div>
-
-  <!-- The visor boots: data sources check in, the route is chosen. -->
-  <section class="boot" id="boot" hidden aria-label="Visor start-up"></section>
 
   <!-- The helmet: everything after the hatch is seen through this. -->
   <div class="helmet" aria-hidden="true"></div>
@@ -67,7 +60,6 @@
     <div class="say" id="say" aria-live="polite"></div>
     <div class="actions" id="act"></div>
   </div>
-  <section class="end" id="end" hidden></section>
 
   <nav class="sections" id="sections" aria-label="Jump to a part of the walk">
     <button type="button" data-go="intro" class="sections__home">Redcairn</button>
@@ -75,7 +67,6 @@
     <button type="button" data-go="walk"><i>2</i>Walk</button>
     <button type="button" data-go="storm"><i>3</i>Storm</button>
     <button type="button" data-go="home"><i>4</i>Home</button>
-    <button type="button" data-go="landing" class="sections__map">Watch the landing</button>
     <button type="button" class="sections__sound" id="btn-sound" aria-pressed="false">Sound off</button>
     <button type="button" class="sections__about" id="btn-about">Data &amp; sources</button>
   </nav>

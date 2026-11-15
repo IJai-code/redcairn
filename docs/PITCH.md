@@ -13,8 +13,8 @@ The judging guide scores Impact, Creativity, Validity, Relevance and Presentatio
 
 | Criterion | What proves it, on screen |
 |---|---|
-| Impact | The map knows the walk home from every point; when the Sun flares it draws three ways home on the real terrain and costs each in minutes and dose |
-| Creativity | The rover that went first is the guide: its old stops are your cairns, each with one true moment from its mission and its own photo from that spot. Any cairn opens in 3D at true scale |
+| Impact | The map knows the walk home from every point (point anywhere: elevation, slope, minutes home); when the Sun flares it draws three ways home on the real terrain and costs each in minutes and dose |
+| Creativity | The rover that went first is the guide: its old stops are your cairns, each with one true moment from its mission and its own photo from that spot. A 3D window beside the map shows the rover driving each leg on the real ground while its marker moves on the map; any cairn opens in first person |
 | Validity | Slope from a 1 m elevation model that matches the rover's own heights to 0.99 m; routes, time, air and dose computed live; simulated values labelled |
 | Relevance | A real layered map on Mars Trek tiles: optical, topographic, thermal, spectral, geologic, chemical, radiation and ground-truth layers from Viking, Mars Global Surveyor, Mars Odyssey, Mars Express, MRO, Curiosity and Perseverance, plus NASA DONKI space weather; all five listed resources visible |
 | Presentation | One card, one map, one panel. One beat at a time, a story anyone can follow, a rover you come to care about |
@@ -23,12 +23,12 @@ The judging guide scores Impact, Creativity, Validity, Relevance and Presentatio
 
 | Time | Picture | Words (voice or caption) |
 |---|---|---|
-| 0:00 | Intro beat: Curiosity's 14-year line across Gale crater | "We're [team], for the Martian Map challenge. This is REDCAIRN: a survival map for the first walk on Mars." |
+| 0:00 | Intro beat: Curiosity's line drawing itself over Mount Sharp in 3D, and across the map | "We're [team], for the Martian Map challenge. This is REDCAIRN: a survival map for the first walk on Mars." |
 | 0:05 | Plan beat: slope turns the ground green, amber, red; tap Fastest, then Rover-proven | "Mars Trek's own tiles, at walking scale. Where is it safe to step in a spacesuit?" |
-| 0:11 | Cairn 2: the map flies in, Curiosity's photo, the numbers | "The rover that drove here first is your guide. Its stops are your cairns." |
-| 0:17 | See it from the ground: first person, the rover's wheels turning | "Any cairn, from the ground, at true scale." |
+| 0:11 | Next: the rover drives to cairn 2 in the window while the map follows; the cairn rises | "The rover that drove here first is your guide. Its stops are your cairns." |
+| 0:17 | Curiosity's own photo from that spot; cursor readout on the map | "Point anywhere: how steep, how far from home." |
 | 0:22 | Storm beat: three ways home drawn on the map | "When the Sun flares, the map already knows the way home." |
-| 0:27 | Home beat | "It walked this ground alone, so you wouldn't have to." |
+| 0:27 | Home beat: the rover drives on alone in the window | "It walked this ground alone, so you wouldn't have to." |
 
 ## 7-slide version (if we choose slides)
 
@@ -44,14 +44,14 @@ The judging guide scores Impact, Creativity, Validity, Relevance and Presentatio
 
 | Time | Click | Say |
 |---|---|---|
-| 0:00 | Open the site | "That orange line is Curiosity: 38.6 km up Mount Sharp in fourteen years. The last 1.5 km will be the first walk a person takes on Mars. This map answers three questions for that walk." |
+| 0:00 | Open the site | (The line draws itself over Mount Sharp, rendered in Blender.) "That orange line is Curiosity: 38.6 km up Mount Sharp in fourteen years. The last 1.5 km will be the first walk a person takes on Mars. This map answers three questions for that walk." |
 | 0:15 | **Begin** | "Where is it safe to step? Slope for a spacesuit from the 1 m elevation model. Three routes; the rover's is longer, but every metre has been driven." In the panel, tap **Night-time ground temperature** and **Rock units**: "Thermal, geologic, spectral, radiation: eight kinds of data from seven missions." |
-| 0:50 | **Start at the rover**, then **Next** through the cairns | "At each cairn the map flies in and switches on the layer that matters there. One true moment from the rover's mission, its own photo from this spot, the Earth place it's named after in Worldview, and my air, the walk home and dose." |
-| 1:30 | **See it from the ground** at a cairn | "The same stop in 3D at true scale: real ground, real horizon rendered in Blender, our rover. **Follow the rover on**, then **Back to the map**." |
+| 0:50 | **Start at the rover**, then **Follow it** through the cairns | "In the window, the rover drives each leg on the real ground at true scale; on the map its marker moves with it. At each cairn the map switches on the layer that matters there. One true moment from the rover's mission, its own photo from this spot, the Earth place it's named after in Worldview, and my air, the walk home and dose." |
+| 1:30 | Move the cursor over the map, then **See it from the ground** at a cairn | "Anywhere I point: elevation, slope for a suit, minutes home." Then: "The same stop in 3D at true scale: real ground, real horizon rendered in Blender, our rover. **Follow the rover on**, then **Back to the map**." |
 | 2:00 | **Next** to the storm | "Solar storm, simulated at twenty times the September 2017 event. Three ways home, drawn on the real terrain. Shelter sounds right; the best ridge blocks 9%. Six times the dose. Go home." |
-| 2:35 | **Go home** | "It walked this ground alone, so that you would not have to." |
+| 2:35 | **Go home** | The rover drives on alone up its track. "It walked this ground alone, so that you would not have to." |
 
-Shortcuts: `#intro`, `#plan`, `#stop-0` to `#stop-5`, `#storm`, `#home`, `#ground-2` (a cairn in 3D), `#landing`, `#map` (free map). Press Space or Enter for the main button.
+Shortcuts: `#intro`, `#plan`, `#stop-0` to `#stop-5`, `#storm`, `#home`, `#ground-2` (a cairn in 3D), `#map` (free map). Press Space or Enter for the main button.
 
 ## Numbers to know cold
 
@@ -69,13 +69,15 @@ Shortcuts: `#intro`, `#plan`, `#stop-0` to `#stop-5`, `#storm`, `#home`, `#groun
 
 ## Questions judges may ask
 
-**"Is the horizon real?"** In the 3D ground view, yes. Blender builds Gale crater at true scale from the Mars Trek MOLA + HRSC elevation under Viking colour, stands a camera 1.7 m above the dock and renders a 360° panorama. We checked it against the elevation data: the horizon is 10° high to the east, where Mount Sharp is.
+**"Is the horizon real?"** Yes, in the 3D window and the ground view. Blender builds Gale crater at true scale from the Mars Trek MOLA + HRSC elevation under Viking colour, stands a camera 1.7 m above the dock and renders a 360° panorama. We checked it against the elevation data: the horizon is 10° high to the east, where Mount Sharp is.
 
 **"Is the radiation real?"** The everyday rate and terrain shielding were measured by Curiosity. The storm is shaped on the September 2017 event and made 20 times stronger so the drill is visible; the screen says so.
 
 **"What's simulated?"** The suit, you, the walk's time compression, the storm's strength, and small rocks scattered for scale (HiRISE can't see anything under about a metre).
 
-**"How did you use Blender?"** Headless scripts in `tools/`: the colour globe, the crater layers through one camera with Curiosity's track projected into them, the 360° horizon, the site photo, and our rover model split into body and six wheels for the browser.
+**"How did you use Blender?"** Headless scripts in `tools/`: Mount Sharp in 3D through one camera with Curiosity's track projected into it (the intro), the 360° horizon behind the 3D window, the site photo the rover drives on, and our rover model split into body and six wheels so they turn in the browser.
+
+**"Is that Curiosity in the window?"** It is our team's rover model, standing in for Curiosity, and the window says so. The ground, the horizon and the track it follows are real.
 
 **"Would this work elsewhere?"** The engine needs an elevation model and a photo. Jezero, with Perseverance's track and photos, is next.
 

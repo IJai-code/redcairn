@@ -257,4 +257,12 @@ export class MapView {
   }
 
   resize() { this.map.invalidateSize(); }
+
+  // Report the point under the cursor (or a tap), and when the cursor leaves.
+  onPoint(cb) {
+    const f = (e) => cb(e.latlng.lng, e.latlng.lat);
+    this.map.on('mousemove', f);
+    this.map.on('click', f);
+    this.map.on('mouseout', () => cb(null));
+  }
 }

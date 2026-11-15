@@ -4,13 +4,12 @@
 //   stops    the rover dock and five cairns: one moment, the rover's own photo, air, the walk home, dose
 //   storm    a simulated solar storm at the turnaround: three ways home drawn on the map, you choose
 //   home     the three questions answered
-//   ground   from any stop, stand there in 3D at true scale and follow the rover to the next one
-//   landing  an optional descent through what orbit saw, ending on the plan
+//   window   the 3D ground in the story card: the rover drives cairn to cairn while the map follows it
+//   ground   from any stop, stand there in first person at true scale and follow the rover on
 
 import { Terrain, Router, fetchJson, groundMetres } from './terrain.js';
 import * as sim from './sim.js';
 import { Stage } from './scene.js';
-import { Crater } from './crater.js';
 import { MapView } from './map.js';
 import { Sound } from './sound.js';
 
@@ -23,6 +22,8 @@ const day = (iso) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric',
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const wait = (ms) => new Promise((r) => setTimeout(r, reduce ? Math.min(ms, 200) : ms));
 const STORM_HOURS = 2;
+const DEGS = 180 / Math.PI;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const FOLLOW_M = 11;   // how far behind the rover you walk
 
 const LAYERS = [
@@ -227,9 +228,24 @@ function bearing(a, b) {
 function token() { return ++S.token; }
 const live = (t) => t === S.token;
 
-function stage(mode) {
+function stage(mode, render3d = false) {
+  if (mode !== 'map') parkStage();
   document.body.dataset.stage = mode;
-  S.stage.setMode(mode === 'globe' ? 'globe' : mode === 'walk' ? 'walk' : 'none');
+  S.stage.setMode(mode === 'walk' || render3d ? 'walk' : 'none');
+}
+
+// The 3D canvas lives full screen for the ground view, or inside the story card's window on the map.
+function parkStage() {
+  const st = $('stage');
+  if (st.parentElement !== document.body) { document.body.prepend(st); S.stage.resize(); }
+  document.body.removeAttribute('data-window');
+}
+function mountStage() {
+  const w = $('gwin');
+  if (!w) return parkStage();
+  w.prepend($('stage'));
+  document.body.setAttribute('data-window', '');
+  S.stage.resize();
 }
 
 // ---------------------------------------------------------------- the planning map
@@ -242,7 +258,21 @@ function ensureMap() {
   S.map.drawTraverse(S.gale);
   S.map.addStops(stops());
   S.map.onStop = (k) => mapStop(k);
+  S.map.onPoint(pointAt);
   S.mapOn = new Set(['slope']);
+}
+
+// Wherever the cursor is (or a finger taps): where on Mars, and on the walk site, how high, how steep, how far from home.
+function pointAt(lon, lat) {
+  const el = $('coords');
+  if (lon == null) { el.hidden = true; return; }
+  let t = `<b>${Math.abs(lat).toFixed(5)}° ${lat < 0 ? 'S' : 'N'}, ${Math.abs(lon).toFixed(5)}° ${lon < 0 ? 'W' : 'E'}</b>`;
+  if (S.terrain.contains(lon, lat)) {
+    const i = cellOf({ lon, lat }), c = S.terrain.cls[i], h = S.homeField.cost[i];
+    t += `<span>${num(Math.round(S.terrain.z[i]))} m elevation · slope ${Math.floor(S.terrain.slope[i])}°, <i data-cls="${c}">${['safe', 'care', 'too steep'][c]}</i> · ${Number.isFinite(h) ? (h < 40 ? 'at the hatch' : `${mins(h / 60)} walk home`) : 'no safe way home'}</span>`;
+  }
+  el.innerHTML = t;
+  el.hidden = false;
 }
 
 function applyMapLayers() {
@@ -280,9 +310,11 @@ function guide(i, opts = {}) {
   document.body.classList.remove('alarm', 'thud');
   document.body.classList.toggle('alarm', id === 'storm' && !S.choice);
   hud(false);
-  for (const el of [$('end'), $('boot'), $('h-photo'), $('h-jobs')]) el.hidden = true;
+  for (const el of [$('h-photo'), $('h-jobs')]) el.hidden = true;
   say(''); act([]);
-  stage('map');
+  const prev = S.lastBeat;
+  S.lastBeat = id;
+  stage('map', id !== 'intro');
   ensureMap();
   const r = useRoute();
   if (id !== 'storm' && id !== 'home') S.choice = null;
@@ -304,6 +336,7 @@ function guide(i, opts = {}) {
   if (id === 'storm') stormLines();
   card();
   mapPanel();
+  window3d(id, prev);
   try { history.replaceState(null, '', `#${id}`); } catch (e) { /* file:// */ }
 }
 
@@ -324,26 +357,31 @@ function card() {
   const ids = beatIds(), id = ids[S.beat], n = ids.length, last = stops().length - 1, routes = computeRoutes();
   const g = S.gale.rover;
   let kicker = '', title = '', body = '', extra = '', go = '';
+  S.win = '';
   if (id === 'intro') {
     kicker = 'A survival map for the first walk on Mars';
     title = 'Fourteen years. One line.';
     body = `That orange line is Curiosity, climbing Mount Sharp alone since 2012: ${g.distanceKm.toFixed(1)} km so far. The last 1.5 km of it will be the first walk a person takes on Mars. This map answers the three questions for that walk: <b>where is it safe to step, what is worth stopping for, and can I get home?</b>`;
-    go = btn('next', 'Begin') + btn('landing', 'Watch the landing first', true);
+    extra = '';
+    go = btn('next', 'Begin');
+    S.win = winCrater();
   } else if (id === 'plan') {
     kicker = 'Where is it safe to step?';
     title = 'Choose how to follow it.';
     body = `${esc(S.story.objective)} Green ground is safe in a spacesuit, amber needs care, red is too steep (over ${S.limits.noGo}°). The rover’s own track is longer, but every metre of it has been driven, and orbit cannot see rocks smaller than a metre.`;
     extra = `<div class="guide__routes">${ROUTES.map((rr) => { const x = routes[rr.id]; return `<button type="button" class="mroute" data-route="${rr.id}" aria-pressed="${rr.id === S.pick}"><b>${esc(rr.name)}</b><span>${mins(x.tl.end.t)} · ${(x.plan.outD * 2 / 1000).toFixed(1)} km · steepest ${x.plan.maxSlope.toFixed(0)}°</span></button>`; }).join('')}</div>`;
     go = btn('next', 'Start at the rover') + btn('prev', 'Back', true);
+    S.win = win3d('The start of the trail in 3D at true scale: the HiRISE photo on its 1 m elevation model, slope painted on. Drag to look around.');
   } else if (id.startsWith('stop-')) {
     const k = Number(id.slice(5)), wp = stops()[k], s = S.story.stops[wp.id] || {};
     kicker = k ? `Cairn ${k} of ${last} · ${s.title || wp.plain.title}` : `The rover · ${wp.name}`;
     title = esc(s.moment || wp.plain.title);
     body = esc(s.sub || wp.story);
     const earth = wp.earthNamesakes.length ? ` Named after ${wp.earthNamesakes.map((x) => `<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.name)}</a>`).join(' and ')}: see it from orbit in Worldview.` : '';
-    extra = `<figure class="guide__photo"><img src="${esc(wp.pov.imageUrl)}" alt="${esc(wp.plain.see)}" referrerpolicy="no-referrer"><figcaption>Curiosity stood here on ${esc(day(wp.pov.utc))}. This is what it saw.${earth}</figcaption></figure>${numbersAt(k)}`;
-    const nextLabel = k < last ? `Next: cairn ${k + 1}<small>${legM(k)} m on</small>` : 'Turn for home';
-    go = btn('next', nextLabel) + btn('ground', 'See it from the ground', true) + btn('prev', 'Back', true);
+    extra = `<figure class="guide__photo"><a href="${esc(wp.pov.imageUrl)}" target="_blank" rel="noopener"><img src="${esc(wp.pov.imageUrl)}" alt="${esc(wp.plain.see)}" referrerpolicy="no-referrer"></a><figcaption><b>What Curiosity saw from here</b>, ${esc(day(wp.pov.utc))}.${earth}</figcaption></figure>${numbersAt(k)}`;
+    const nextLabel = k < last ? `Follow it to cairn ${k + 1}<small>${legM(k)} m on</small>` : 'Turn for home';
+    go = btn('next', nextLabel) + btn('prev', 'Back', true);
+    S.win = win3d(k ? 'Our rover, standing in for Curiosity, on the real ground at true scale. Drag to look around.' : 'Our rover, standing in for Curiosity, where your walk begins. Drag to look around.', true);
   } else if (id === 'storm') {
     const o = stormOptionsFor(R());
     kicker = 'Simulated drill · solar storm at the turnaround';
@@ -355,12 +393,14 @@ function card() {
         <button type="button" class="mroute mroute--amber" data-a="c-trail"><b>The way you came</b><span>${mins(o.trail.min)} · ${o.trail.dose.toFixed(2)} mSv · the ground you know</span></button>
         <button type="button" class="mroute mroute--violet" data-a="c-shelter"><b>Shelter behind a ridge for ${STORM_HOURS} h</b><span>${o.shelter.dose.toFixed(2)} mSv · the best ridge blocks ${o.shelter.blocked}%</span></button></div>`;
       go = btn('prev', 'Back', true);
+      S.win = win3d('At the turnaround. White: the new line home. Amber: the way you came.');
     } else {
       const x = o[S.choice];
       title = S.verdict;
       body = S.choice === 'shelter' ? `A ridge hides only part of the sky. On Mars, the best shelter is the rover and the habitat, so the fastest safe way home wins.` : S.choice === 'trail' ? `The ground you know is safe, but longer means more time under the storm. The map’s new line was ${Math.round((1 - o.direct.dose / o.trail.dose) * 100)}% less dose.` : `The map knew the way home from every point before the storm began. That is what it is for.`;
       extra = `<dl class="guide__nums"><div><dt>To the hatch</dt><dd>${mins(x.min)}</dd></div><div><dt>Storm dose</dt><dd>${x.dose.toFixed(2)} mSv</dd></div></dl>`;
       go = btn('next', 'Go home') + btn('restorm', 'Choose again', true);
+      S.win = win3d(S.choice === 'shelter' ? 'To the ridge, two hours under the storm, then home.' : 'Home, behind the rover.');
     }
   } else if (id === 'home') {
     const o = S.choice ? stormOptionsFor(R())[S.choice] : null, end = o ? o.tl.end : S.tl.end;
@@ -374,10 +414,13 @@ function card() {
       <div><dt>What was worth stopping for?</dt><dd>${last} cairns, ${jobs} jobs, and rock from both sides of the line where this part of Mars began to dry.</dd></div>
       <div><dt>Did you get home?</dt><dd>Yes, with ${mins(end.o2 - reserve())} of air left after ${mins(end.t)} outside, and ${end.dose.toFixed(2)} mSv: ${((end.dose / career) * 100).toFixed(2)}% of a NASA career limit.</dd></div></dl>`;
     go = btn('again', 'Walk it again') + btn('free', 'Explore every layer', true);
+    S.win = win3d('The rover drives on, up its own track, alone.');
   }
+  parkStage();
   $('guide').innerHTML = `<div class="guide__top"><span>${esc(kicker)}</span><em>${S.beat + 1} / ${n}</em></div>
-    <h2>${title}</h2><p class="guide__body">${body}</p>${extra}<div class="guide__go">${go}</div>`;
+    ${S.win}<h2>${title}</h2><p class="guide__body">${body}</p>${extra}<div class="guide__go">${go}</div>`;
   $('guide').hidden = false;
+  mountStage();
   document.body.removeAttribute('data-free');
   $('guide').scrollTop = 0;
 }
@@ -395,14 +438,167 @@ function chooseOnMap(id) {
   const best = ['direct', 'trail', 'shelter'].reduce((a, b) => (o[a].dose <= o[b].dose ? a : b));
   S.verdict = id === best ? 'Right call: the least radiation of the three.' : `You made it, with ${(o[id].dose / o[best].dose).toFixed(1)}× the dose of the best choice.`;
   document.body.classList.remove('alarm');
+  token();
   stormLines();
   card();
+  window3d('storm', 'storm');
 }
 
 // Leave the story on screen but out of the way, so every layer can be explored by hand.
 function freeMap() {
+  token();
   document.body.setAttribute('data-free', '');
   $('guide').hidden = true;
+  parkStage();
+  S.stage.setMode('none');
+}
+
+// ---------------------------------------------------------------- the window: the 3D ground inside the story card
+function win3d(caption, ground) {
+  return `<div class="guide__window" id="gwin"><span class="guide__wincap">${esc(caption)}</span>${ground ? '<button type="button" class="guide__ground" data-a="ground">See it from the ground</button>' : ''}</div>`;
+}
+
+// The intro: Gale crater rendered in Blender, with Curiosity's fourteen years drawing themselves across it.
+function winCrater() {
+  const v = S.galeView.views.wide, W = v.width, H = v.height;
+  const d = v.track.map(([x, y], i) => `${i ? 'L' : 'M'}${(x * W).toFixed(0)} ${(y * H).toFixed(0)}`).join('');
+  const [wx, wy] = v.places.walk.xy;
+  const water = v.waterMinerals.map((m) => `<circle class="gc__water" cx="${(m.xy[0] * W).toFixed(0)}" cy="${(m.xy[1] * H).toFixed(0)}" r="16"/>`).join('');
+  // Crop to Mount Sharp and the line Curiosity drove up its flank.
+  const z = 0.8, x0 = 0.12, y0 = 0.14;
+  return `<div class="guide__window guide__window--crater"><div class="gc__frame" style="width:${100 / z}%;height:${100 / z}%;left:${(-x0 * 100) / z}%;top:${(-y0 * 100) / z}%"><img src="${esc(v.images.color)}" alt="Gale crater in 3D, rendered in Blender from orbital elevation">
+    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">${water}<path class="gc__line" pathLength="1" d="${d}"/><circle class="gc__walk" cx="${(wx * W).toFixed(0)}" cy="${(wy * H).toFixed(0)}" r="14"/></svg></div>
+    </div><p class="guide__wincap guide__wincap--below">Mount Sharp in 3D, rendered in Blender from MOLA + HRSC elevation (heights ×3). Blue: water minerals seen from orbit. Orange: Curiosity, 2012 to today.</p>`;
+}
+
+function prep3d(r) {
+  S.path = worldPath(r.plan.out);
+  S.stage.setRoute(evaOf(r.plan));
+  S.stage.setHome(S.homeField);
+  S.stage.drawReturn(null);
+  S.stage.setAlternatives(null);
+  S.stage.setPinsVisible(false);
+  S.stage.resetLook();
+  S.stage.rate = 3.2;
+  S.stage.setHaze();
+  if (S.roverD == null) { S.roverD = 4; S.rolled = 0; }
+}
+
+// An orbit camera behind and to one side of the rover: the 2.5D view, close enough to see the wheels turn.
+function chaseCam(p, yaw, o = {}, immediate = false) {
+  const cur = S.stage.cam.az;
+  let az = Math.atan2(-Math.cos(yaw), -Math.sin(yaw)) * DEGS + (o.side ?? 35);
+  az = cur + ((((az - cur) % 360) + 540) % 360) - 180;
+  S.stage.flyWalk({ x: p.x, y: S.stage.heightAt(p.x, p.z) + 1, z: p.z, dist: o.dist ?? 15, polar: o.polar ?? 70, az }, immediate);
+}
+
+// Drive the rover along a path; the map's marker follows it. Resolves false if another beat took over.
+function roll(path, d0, d1, ms, cam, onMain) {
+  const t = S.token, start = performance.now();
+  let prevD = d0, camYaw = null, lastT = start;
+  S.spin = 0;
+  S.stage.camRate = 7;
+  if (S.sound) S.sound.roverMoving(true);
+  return new Promise((done) => {
+    const frame = (now) => {
+      if (!live(t)) return done(false);
+      const f = Math.min(1, (now - start) / ms), e = f < 0.5 ? 2 * f * f : 1 - Math.pow(-2 * f + 2, 2) / 2;
+      const d = d0 + (d1 - d0) * e, p = path.at(d), yaw = path.dir(d);
+      S.rolled += Math.abs(d - prevD); prevD = d;
+      if (onMain) S.roverD = d;
+      S.stage.placeRover(p.x, p.z, yaw, S.rolled);
+      // The camera is locked to the rover (so it holds at any frame rate); only its turning is smoothed, in real time.
+      const dtr = (now - lastT) / 1000; lastT = now;
+      camYaw = camYaw == null ? yaw : camYaw + Math.atan2(Math.sin(yaw - camYaw), Math.cos(yaw - camYaw)) * (1 - Math.exp(-2.2 * dtr));
+      if (cam) cam(p, camYaw, f);
+      S.map.setCrew(lonOfX(p.x), latOfZ(p.z));
+      if (f < 1) requestAnimationFrame(frame); else done(true);
+    };
+    requestAnimationFrame(frame);
+  }).then((ok) => { S.stage.camRate = 2.6; if (S.sound && ok) S.sound.roverMoving(false); return ok; });
+}
+
+// What the window shows on each beat. The rover is in every one of them, always a little ahead of you.
+function window3d(id, prev) {
+  S.spin = 0;
+  if (id === 'intro' || !$('gwin')) return;
+  const r = R(), n = stops().length, last = n - 1;
+  prep3d(r);
+  if (id === 'plan') {
+    setLayers(['slope']);
+    S.stage.setCairns(n);
+    S.stage.markStops(-1, 0);
+    S.roverD = 4; placeRover(4);
+    // Low behind the rover at the start, looking up the trail: slope painted on the real relief ahead.
+    const p = S.path.at(4), ahead = S.path.at(60);
+    chaseCam(p, Math.atan2(ahead.z - p.z, ahead.x - p.x), { side: 14, dist: 20, polar: 74 }, prev !== 'plan');
+    return;
+  }
+  if (id.startsWith('stop-')) {
+    const k = Number(id.slice(5)), s = S.story.stops[stops()[k].id] || {};
+    setLayers((s.layers || []).filter((l) => l === 'track'));
+    const dk = S.plan.out[S.plan.idx[k]].d, park = Math.min(S.path.length, dk + (k ? 9 : 4));
+    S.stage.markStops(k, k);
+    // Settle on a three-quarter view of the cairn with the rover parked just beyond it.
+    const settle = (immediate) => {
+      const p = S.path.at(park), c = k ? S.stage.cairnPoint(k) : p;
+      chaseCam({ x: (p.x + c.x) / 2, z: (p.z + c.z) / 2 }, S.path.dir(park), { side: 58, dist: k ? 17 : 15, polar: 72 }, immediate);
+      S.spin = 1.6;
+    };
+    const fromPrev = prev === `stop-${k - 1}` && S.roverD < park;
+    if (fromPrev) {
+      // The cairn ahead is not there yet: it rises when the rover reaches it.
+      S.stage.setCairns(k - 1);
+      const d0 = S.roverD;
+      roll(S.path, d0, park, clamp((park - d0) * 13, 3200, 7500), (p, yaw) => chaseCam(p, yaw, {}, true), true)
+        .then((ok) => { if (ok) { S.stage.setCairns(k); settle(false); } });
+    } else {
+      S.stage.setCairns(k);
+      S.roverD = park; placeRover(park);
+      settle(true);
+    }
+    return;
+  }
+  if (id === 'storm') {
+    const o = stormOptionsFor(r), wp = stops()[last];
+    S.stage.setCairns(last);
+    S.stage.markStops(last, last);
+    S.stage.setHome(S.stormField);
+    setLayers(['shield']);
+    if (!S.choice) {
+      const dl = S.plan.out[S.plan.idx[last]].d, park = Math.min(S.path.length, dl + 9);
+      S.roverD = park; placeRover(park);
+      S.stage.drawReturn(o.direct.line);
+      S.stage.setAlternatives([o.trail.line]);
+      const p = S.path.at(park), dock = S.stage.worldOf(stops()[0].lon, stops()[0].lat);
+      chaseCam(p, Math.atan2(dock.z - p.z, dock.x - p.x), { side: 16, dist: 34, polar: 72 }, true);
+      S.spin = 0.8;
+    } else {
+      const x = o[S.choice], path = worldPath(x.line);
+      S.stage.drawReturn(x.line);
+      roll(path, 0, path.length, clamp(path.length * 6, 5000, 11000), (p, yaw) => chaseCam(p, yaw, { dist: 22, polar: 68 }, true))
+        .then((ok) => { if (ok) { S.roverD = 4; S.spin = 1.2; } });
+    }
+    S.map.setCrew(wp.lon, wp.lat);
+    return;
+  }
+  if (id === 'home') {
+    // At the hatch, the rover turns away and drives on up its own track, alone. The camera stays; it gets smaller.
+    S.stage.setCairns(n);
+    S.stage.markStops(-1, n);
+    setLayers([]);
+    const track = S.route.roverTrack.map((p) => ({ lon: p[0], lat: p[1] })), dock = stops()[0];
+    let i0 = 0, bd = Infinity;
+    track.forEach((p, i) => { const dd = groundMetres(p, dock); if (dd < bd) { bd = dd; i0 = i; } });
+    const on = worldPath(track.slice(i0).filter((p) => S.terrain.contains(p.lon, p.lat)));
+    const p0 = on.at(0);
+    S.rolled = S.rolled || 0;
+    S.stage.placeRover(p0.x, p0.z, on.dir(0), S.rolled);
+    chaseCam(p0, on.dir(0), { side: 20, dist: 18, polar: 72 }, true);
+    roll(on, 0, on.length, 32000, (p, yaw, f) => chaseCam(p, yaw, { side: 20 + f * 25, dist: 16 + f * 150, polar: 72 - f * 14 }, true))
+      .then(() => { S.map.setCrew(dock.lon, dock.lat); });
+    S.map.setCrew(dock.lon, dock.lat);
+  }
 }
 
 function mapPanel() {
@@ -445,13 +641,14 @@ function groundAt(k) {
   S.stage.setCairns(stops().length);
   S.stage.setPinsVisible(true);
   S.stage.resetLook();
+  S.stage.setHaze();
   S.stage.rate = 3.2;
   miniMap(r.plan);
   const s = S.story.stops[stops()[k].id] || {};
   setLayers((s.layers || []).filter((l) => l !== 'height'));
   const d = S.plan.out[S.plan.idx[k]].d;
   S.youD = Math.max(0, d - (k ? 6 : 0));
-  S.rolled = 0;
+  S.rolled = S.rolled || 0;
   S.roverD = Math.min(S.path.length, d + (k ? 9 : FOLLOW_M + 3));
   placeRover(S.roverD);
   S.stage.markStops(k, k);
@@ -483,70 +680,20 @@ function mapStop(k) {
 }
 
 // Every part can be entered directly (nav, hash links). Each jump clears whatever the last one left behind.
-const HASHES = () => ['intro', 'landing', 'plan', 'walk', 'storm', 'home', 'map', ...beatIds(), ...stops().map((_, k) => `ground-${k}`)];
+const HASHES = () => ['intro', 'plan', 'walk', 'storm', 'home', 'map', ...beatIds(), ...stops().map((_, k) => `ground-${k}`)];
 function jump(id) {
   token();
   S.stage.rate = 3.2;
-  for (const el of [$('end'), $('boot'), $('h-photo'), $('h-jobs')]) el.hidden = true;
+  for (const el of [$('h-photo'), $('h-jobs')]) el.hidden = true;
   document.body.classList.remove('alarm', 'thud');
   if (S.sound) S.sound.roverMoving(false);
   S.stage.resetLook();
   const ids = beatIds();
-  if (id === 'landing' || id === 'descent') return descent();
   if (id.startsWith('ground-')) return groundAt(Number(id.slice(7)));
   if (id === 'map' || id === 'explore') { guide(S.beat || 1); return freeMap(); }
   if (id === 'walk') return guide(ids.indexOf('stop-0'));
   const i = ids.indexOf(id === 'cover' ? 'intro' : id);
   return guide(i >= 0 ? i : 0);
-}
-
-// The lander window. What orbit already knows, in four looks, then the ground.
-async function descent() {
-  const t = token();
-  S.step = 'descent';
-  document.body.dataset.step = 'descent';
-  hud(false);
-  $('end').hidden = true;
-  $('boot').hidden = true;
-  const L = (a, b = '') => { $('lander-a').textContent = a; $('lander-b').textContent = b; };
-  stage('globe');
-  S.stage.focusGlobe({ lon: 137.8, lat: -5.4 }, 1.9);
-  L('Mars orbit · approach', 'Target: Gale crater, 5.4° S 137.8° E');
-  await wait(3600); if (!live(t)) return;
-  stage('crater');
-  S.crater.show('wide', ['color']);
-  L('Gale crater · 154 km wide', `Mount Sharp rises ${(S.galeView.mountain.heightM / 1000).toFixed(1)} km from the floor`);
-  await wait(3400); if (!live(t)) return;
-  S.crater.show('orbit', ['geology', 'water']);
-  L('Seen from orbit: water', 'Blue: minerals that only form in water (CRISM, OMEGA). Pale: Mount Sharp’s own rock (USGS map).');
-  await wait(4400); if (!live(t)) return;
-  S.crater.show('line', ['color', 'track']);
-  L('Curiosity’s 14-year track', `${S.gale.rover.distanceKm.toFixed(1)} km, to sol ${num(S.gale.rover.latestSol)}. We land at its white end.`);
-  await wait(5400); if (!live(t)) return;
-  // Down onto the real ground, at true scale, beside the rover.
-  const dock = stops()[0], w = S.stage.worldOf(dock.lon, dock.lat);
-  S.stage.setPinsVisible(false);
-  S.stage.setCairns(0);
-  S.stage.rate = 0.9;
-  const w1 = S.stage.worldOf(stops()[1].lon, stops()[1].lat), yaw = Math.atan2(w1.z - w.z, w1.x - w.x);
-  S.stage.setEye(w.x - 9, w.z + 4, yaw, -0.62, 180, true);
-  stage('walk');
-  setLayers([]);
-  L('Final descent', 'Altitude 180 m');
-  await wait(500); if (!live(t)) return;
-  S.stage.setEye(w.x - 9, w.z + 4, yaw, -0.1, 0);
-  const t0 = performance.now();
-  while (performance.now() - t0 < 4600) {
-    if (!live(t)) return;
-    $('lander-b').textContent = `Altitude ${num(Math.max(0, Math.round(180 * Math.exp(-((performance.now() - t0) / 1000) * 1.1))))} m`;
-    await wait(100);
-  }
-  L('Touchdown', 'Sol 1, Gale crater');
-  document.body.classList.add('thud');
-  if (S.sound) S.sound.thud();
-  await wait(1500);
-  document.body.classList.remove('thud');
-  if (live(t)) guide(1);
 }
 
 function setGoal(goal, ask = '') { $('h-goal').textContent = goal; $('h-ask').textContent = ask; }
@@ -662,8 +809,7 @@ function aboutHTML() {
     ...MAP_LAYERS.flatMap(([kind, items]) => items.map(([, name, from]) => [`Map layer: ${name}`, kind, `${from}${['hirise', 'ctx', 'mola', 'thermal', 'geology'].some((x) => items.find((i) => i[1] === name && i[0] === x)) ? ', tiles from Mars Trek' : ''}`])),
     ['Space weather', 'Heliophysics', `NASA DONKI (Space Weather Database of Notifications, Knowledge, Information), ${S.conditions.spaceWeather ? `${S.conditions.spaceWeather.sepCount} solar particle events, ${S.conditions.spaceWeather.from} to ${S.conditions.spaceWeather.to}` : 'not loaded'}`],
     ['Earth namesakes at the cairns', 'Optical, Earth', 'NASA Worldview satellite imagery'],
-    ['Mars from orbit', 'Optical, true colour', 'Viking orbiters · MDIM 2.1 mosaic, via Mars Trek, stitched in Blender'],
-    ['Gale crater in the lander window', 'Topographic + optical', 'Mars Global Surveyor MOLA and Mars Express HRSC elevation, Viking colour, via Mars Trek; rendered in Blender'],
+    ['Gale crater in 3D, in the intro', 'Topographic + optical', 'Mars Global Surveyor MOLA and Mars Express HRSC elevation, Viking colour, via Mars Trek; rendered in Blender'],
     ['Rock units', 'Geologic', 'USGS SIM 3292 Geologic Map of Mars'],
     ['Water minerals from orbit', 'Spectral', 'MRO CRISM and Mars Express OMEGA, via Mars Trek'],
     ['Curiosity’s 14-year track', 'Ground truth', `Curiosity traverse and odometry, to sol ${num(S.gale.rover.latestSol)}`],
@@ -673,14 +819,15 @@ function aboutHTML() {
     ['Photo at each cairn', 'Optical, from the ground', 'Curiosity navigation cameras, from that spot'],
     ['Storm drill', 'Radiation, space weather', 'Curiosity RAD, September 2017 solar event, scaled ×20, labelled simulated'],
     ['Weather in the visor', 'Atmospheric', `Curiosity REMS, sol ${num(S.conditions.weather.sol)}`],
-    ['The rover', '3D model', 'Our team’s rover model, decimated in Blender; wheels turn with distance, the body tilts to the real ground'],
+    ['The rover in the 3D window', '3D model', 'Our team’s rover model, standing in for Curiosity; decimated in Blender; wheels turn with distance, the body tilts to the real ground'],
+    ['Coordinates under the cursor', 'Topographic + computed', 'Latitude and longitude; on the walk site, HiRISE 1 m elevation, slope and REDCAIRN walk-home time'],
   ];
   return `
     <section><h3>The challenge</h3><p>NASA Space Apps 2026, <b>Interplanetary Survival Guide: Martian Map</b>: a layered, hyper-local map a Mars astronaut could use to plan and walk a Marswalk safely, doing science on the way. REDCAIRN is that map, built on Mars Trek’s own tiles: it walks you cairn by cairn along the line the Curiosity rover drove first, answers where it is safe to step, what is worth stopping for and whether you can get home, and lets you stand at any cairn in 3D, at true scale, with the same data on your helmet visor. An independent student project, not affiliated with or endorsed by NASA.</p></section>
     <section><h3>The five resources we were given</h3><ul>${m.anchorResources.map((a) => `<li><b><a href="${esc(src(a.source).url)}" target="_blank" rel="noopener">${esc(a.name)}</a></b> ${esc(a.role)}</li>`).join('')}</ul></section>
     <section><h3>Every layer, its data, its mission</h3><div class="tablewrap"><table><thead><tr><th>What you see</th><th>Data</th><th>Source</th></tr></thead><tbody>${rows.map((r) => `<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td><td>${esc(r[2])}</td></tr>`).join('')}</tbody></table></div></section>
     <section><h3>Real and simulated</h3><p><b>Real:</b> the ground and its height at true scale, the slopes, the routes’ terrain, the horizon, the rover track and photos, the rock findings, the water minerals, the geologic units, the normal radiation rate and the measured effect of terrain on it. Our elevation model matches the rover’s own elevations to ${esc(S.route.summary.demVsRoverRmsResidualM)} m along the route.</p><p><b>Simulated:</b> the suit (air, pace), you, the time compression of the walk, the storm’s strength (×20) and its ${STORM_HOURS} h length for the shelter option, and the rocks smaller than a metre scattered for scale (HiRISE can’t resolve them). The crater view stretches heights ×3; the walk is true scale.</p></section>
-    <section><h3>How it is built</h3><p>Scripts fetch public mission data. Blender, run headless from scripts, stitches the globe, renders Gale crater layer by layer through one camera, renders the 360° horizon from the dock, builds the site photo, and turns the rover model into a light web model with separate wheels. Your browser computes slope, sky shelter, three routes, the walk-home time for ${num(S.terrain.size)} patches of ground and the suit timeline. No server, no build step.</p></section>
+    <section><h3>How it is built</h3><p>Scripts fetch public mission data. Blender, run headless from scripts, renders Gale crater in 3D through one camera with Curiosity’s track projected into it, renders the 360° horizon from the dock, builds the site photo, and turns the rover model into a light web model with separate wheels. Your browser computes slope, sky shelter, three routes, the walk-home time for ${num(S.terrain.size)} patches of ground and the suit timeline. No server, no build step.</p></section>
     <section><h3>All sources</h3><div class="tablewrap"><table><tbody>${m.sources.map((s) => `<tr><td><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)}</a></td><td>${esc(s.org)}</td><td>${esc(s.use)}</td></tr>`).join('')}</tbody></table></div></section>
     <section><h3>How AI was used</h3><p>${esc(m.aiDisclosure)}</p></section>`;
 }
@@ -702,6 +849,7 @@ async function boot() {
 
   S.stage = new Stage($('gl'), $('pins'), { terrain: S.terrain, route, mission });
   S.stage.setHome(S.homeField);
+  S.stage.onFrame = (dt) => { if (S.spin && S.stage.camMode === 'orbit' && document.body.hasAttribute('data-window')) S.stage.camT.az += S.spin * dt; };
   S.stage.onStop = (k) => {
     if (S.step !== 'explore') return; // unused: cairns are opened from the map
     const wp = stops()[k], p = S.stage.worldOf(wp.lon, wp.lat);
@@ -709,7 +857,6 @@ async function boot() {
     $('h-photo').innerHTML = `<img src="${esc(wp.pov.imageUrl)}" alt="${esc(wp.plain.see)}" referrerpolicy="no-referrer"><figcaption>${k ? `Cairn ${k}` : 'The dock'}: Curiosity stood here on ${esc(day(wp.pov.utc))}.</figcaption>`;
     $('h-photo').hidden = false;
   };
-  S.crater = new Crater($('crater'), galeView, gale, stops());
   await S.stage.loadRover(roverMeta);
   buildCompass();
   requestAnimationFrame(compassLoop);
@@ -721,8 +868,6 @@ async function boot() {
       const id = a.dataset.a;
       if (id === 'next') return guide(S.beat + 1);
       if (id === 'prev') return guide(S.beat - 1);
-      if (id === 'landing' || id === 'begin') return descent();
-      if (id === 'skip') return guide(1);
       if (id === 'ground') return groundAt(Number(beatIds()[S.beat].slice(5)));
       if (id === 'tomap') return mapStop(S.k);
       if (id === 'go') { $('h-photo').hidden = true; $('h-jobs').hidden = true; return leg(S.k); }
@@ -739,7 +884,7 @@ async function boot() {
     if (r) {
       S.pick = r.dataset.route;
       for (const b of document.querySelectorAll('[data-route]')) b.setAttribute('aria-pressed', String(b.dataset.route === S.pick));
-      if (S.map && document.body.dataset.stage === 'map') { useRoute(); drawMapRoute(); mapPanel(); if (!$('guide').hidden) card(); }
+      if (S.map && document.body.dataset.stage === 'map') { useRoute(); drawMapRoute(); mapPanel(); if (!$('guide').hidden) { card(); window3d(beatIds()[S.beat], beatIds()[S.beat]); } }
       return;
     }
     const v = t.closest('[data-view]');
@@ -768,7 +913,7 @@ async function boot() {
     $('btn-sound').setAttribute('aria-pressed', String(on));
     $('btn-sound').textContent = on ? 'Sound on' : 'Sound off';
   });
-  const SCENE = { map: 'off', descent: 'lander', walk: 'outside' };
+  const SCENE = { map: 'off', walk: 'outside' };
   new MutationObserver(() => S.sound.scene(SCENE[document.body.dataset.step] || 'off')).observe(document.body, { attributes: true, attributeFilter: ['data-step'] });
   document.addEventListener('keydown', (e) => {
     if ($('about').open || e.target.closest('input')) return;

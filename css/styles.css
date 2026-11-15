@@ -450,3 +450,41 @@ body[data-layers] .mapbar__layers { border-color: var(--ember); }
   /* On a phone the map card already holds the photo, the jobs and the story: the ground view keeps only the line. */
   body[data-step="walk"] .hud__photo, body[data-step="walk"] .hud__jobs, body[data-step="walk"] .say small { display: none !important; }
 }
+
+/* ---------- the window: the 3D ground inside the story card ---------- */
+.guide__window { position: relative; margin: 14px 0 4px; aspect-ratio: 16 / 9; overflow: hidden; background: #1c1612; }
+.guide__window > .stage { position: absolute; inset: 0; z-index: 0; }
+.guide__window .pins { display: none; }
+.guide__window #gl { cursor: grab; touch-action: pan-y; }
+.guide__wincap { position: absolute; z-index: 2; left: 0; right: 0; bottom: 0; padding: 18px 10px 7px; font-size: 11.5px; line-height: 1.4; color: rgba(244, 237, 225, 0.85); background: linear-gradient(rgba(11, 9, 7, 0), rgba(11, 9, 7, 0.82)); pointer-events: none; }
+.guide__ground { position: absolute; z-index: 2; top: 8px; right: 8px; padding: 6px 11px; border: 1px solid rgba(244, 237, 225, 0.45); background: rgba(11, 9, 7, 0.62); color: var(--ink); font: 500 12.5px var(--mono); }
+.guide__ground:hover { background: rgba(11, 9, 7, 0.85); border-color: var(--ink); }
+body.alarm .guide__window::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: radial-gradient(transparent 40%, rgba(255, 80, 50, 0.35)); animation: alarm 1.2s 3; }
+.gc__frame { position: absolute; }
+.gc__frame img, .gc__frame svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.guide__wincap--below { position: static; padding: 6px 0 0; background: none; color: var(--faint); }
+.gc__line { fill: none; stroke: var(--ember); stroke-width: 2.5; vector-effect: non-scaling-stroke; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw 6s 0.5s ease-in-out forwards; }
+.gc__walk { fill: #fff; stroke: var(--ember); stroke-width: 3; vector-effect: non-scaling-stroke; opacity: 0; animation: rise 0.6s 6.2s forwards; }
+.gc__water { fill: #4fb3ff; fill-opacity: 0.85; stroke: #fff; stroke-width: 1; vector-effect: non-scaling-stroke; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+.guide__window + h2 { margin-top: 12px; }
+/* Curiosity's own photo: a thumbnail beside its caption, full size on click. */
+.guide__photo { display: grid; grid-template-columns: 112px 1fr; gap: 12px; align-items: center; }
+.guide__photo img { aspect-ratio: 4 / 3; }
+.guide__photo figcaption { margin-top: 0; }
+.guide__photo figcaption b { display: block; font-weight: 500; color: var(--ink); }
+
+/* ---------- where the cursor is ---------- */
+.coords { position: absolute; z-index: 600; left: 14px; bottom: 50px; display: grid; gap: 1px; padding: 5px 9px; background: rgba(11, 9, 7, 0.78); font-size: 12px; color: var(--soft); pointer-events: none; font-variant-numeric: tabular-nums; }
+.coords[hidden] { display: none; }
+.coords b { font-weight: 500; color: var(--ink); }
+.coords i { font-style: normal; color: var(--go); }
+.coords i[data-cls="1"] { color: var(--care); }
+.coords i[data-cls="2"] { color: var(--stop); }
+body[data-stage="map"]:not([data-free]) .coords { left: 460px; }
+@media (max-width: 1100px) and (min-width: 761px) { body[data-stage="map"]:not([data-free]) .coords { left: 460px; } }
+@media (max-width: 760px) {
+  body[data-stage="map"]:not([data-free]) .coords { left: 12px; bottom: calc(52svh + 34px); }
+  .coords { font-size: 11px; }
+  .guide__photo { grid-template-columns: 92px 1fr; }
+}
