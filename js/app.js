@@ -8,6 +8,7 @@ import { Terrain, Router, fetchJson } from './terrain.js';
 import * as sim from './sim.js';
 import { Stage } from './scene.js';
 import { buildStack, sparkline } from './stack.js';
+import { Crater } from './crater.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -20,7 +21,7 @@ const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const ORDER = ['viking1', 'pathfinder', 'spirit', 'opportunity', 'phoenix', 'insight', 'ingenuity', 'curiosity'];
 const ACTS = [
   { name: 'Remember', go: 'viking1' },
-  { name: 'Read the mountain', go: 'strata' },
+  { name: 'Read the mountain', go: 'crater' },
   { name: 'Walk it', go: 'walk' },
 ];
 
@@ -166,10 +167,34 @@ function bridgeHTML() {
     ${sourcesLine(['trek', 'gale-guide', 'trek-ezmars'])}`;
 }
 
+function craterHTML() {
+  const m = S.galeView.mountain;
+  return `
+    <p class="eyebrow">Act II · Read the mountain</p>
+    <h2>Gale crater, and the mountain inside it.</h2>
+    <p class="lede">Gale is a crater 154 kilometres across, made by an impact more than three billion years ago. In the middle stands Mount Sharp. From the lowest point of the floor to the summit it rises ${num(m.heightM)} metres: higher than Mont Blanc stands above the sea.</p>
+    <p>A mountain inside a crater is strange. The best explanation is that the crater slowly filled with layer upon layer of sediment, and then the wind carved most of it away again, leaving this.</p>
+    <p class="fine">Rendered in Blender from the Mars Trek elevation model (MOLA and HRSC, about 200 m per pixel) under Viking’s true-colour mosaic. Heights are stretched three times so the mountain reads from this far away.</p>
+    ${sourcesLine(['trek', 'gale-guide'])}`;
+}
+
+function lineHTML() {
+  const r = S.gale.rover, wps = stops();
+  const month = (iso) => new Date(iso).toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+  const share = Math.round((r.climbM / S.galeView.mountain.heightM) * 100);
+  return `
+    <p class="eyebrow">Fourteen years, one line</p>
+    <h2>That thin line is Curiosity.</h2>
+    <p class="lede">Since August 2012 it has driven ${r.distanceKm.toFixed(1)} kilometres and climbed ${num(r.climbM)} metres, a short drive at a time. That is ${share}% of the way up this mountain.</p>
+    <p>Every bend is a decision people on Earth made a day ahead, from photographs like the ones in this guide, along the route the team calls Curiosity’s proposed path up Mount Sharp. The white stretch is your walk: ground the rover crossed between ${month(wps[0].pov.utc)} and ${month(wps[wps.length - 1].pov.utc)}.</p>
+    <p class="fine">Track and odometry from the Curiosity team’s traverse data, current to sol ${num(r.latestSol)}. A sol is a Martian day.</p>
+    ${sourcesLine(['mount-sharp-route', 'msl-traverse', 'msl-waypoints'])}`;
+}
+
 function strataIntroHTML() {
   const d = S.strata;
   return `
-    <p class="eyebrow">Act II · Read the mountain</p>
+    <p class="eyebrow">Read the mountain</p>
     <h2>${esc(d.title)}</h2>
     <p class="lede">${esc(d.intro)}</p>
     <p class="fine">${esc(d.scaleNote)}</p>`;
@@ -210,7 +235,7 @@ function walkIntroHTML() {
       <div><dt>${mins(S.plan.tl.end.t)}</dt><dd>outside, on 8 hours of air</dd></div>
     </dl>
     <div class="note"><b>${esc(q.title)}</b>${esc(q.text)}<small>${esc(q.factCheck)}</small></div>
-    <p class="fine">Right now at the site: high ${w.airMaxC}°C, low ${w.airMinC}°C, sky ${esc(String(w.sky).toLowerCase())}. From the rover’s own weather station, Mars day ${w.sol}.</p>
+    <p class="fine">The rover’s latest published weather report from this area, Mars day ${num(w.sol)} (${esc(new Date(w.earthDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }))}): high ${w.airMaxC}°C, low ${w.airMinC}°C, air pressure ${num(w.pressurePa)} pascals (less than 1% of Earth’s), sky ${esc(String(w.sky).toLowerCase())}.</p>
     <p class="fine">The height is stretched twice so the ridges are easy to read. Drag the ground to look around.</p>
     ${sourcesLine(q.sources)}`;
 }
@@ -379,6 +404,9 @@ function buildBeats() {
   });
   B.push({ id: 'bridge', act: 1, stage: 'globe', html: bridgeHTML(), enter: gl(ghost('curiosity'), 1.8) });
 
+  B.push({ id: 'crater', act: 2, stage: 'crater', html: craterHTML(), enter: () => S.crater.show('wide') });
+  B.push({ id: 'line', act: 2, stage: 'crater', html: lineHTML(), enter: () => S.crater.show('line') });
+
   const layers = S.strata.layers;
   B.push({ id: 'strata', act: 2, stage: 'stack', html: strataIntroHTML(), enter: () => {
     S.stack.highlight(-1); S.stack.explode(0);
@@ -440,7 +468,9 @@ function aboutHTML() {
       <h3>Every layer, and where it comes from</h3>
       <div class="tablewrap"><table><thead><tr><th>Layer</th><th>Kind of data</th><th>Mission or source</th></tr></thead><tbody>
         <tr><td>Ground photograph (always on)</td><td>Optical</td><td>Mars Reconnaissance Orbiter · HiRISE, 25 cm, via Mars Trek</td></tr>
-        <tr><td>The globe</td><td>Topographic</td><td>Mars Global Surveyor · MOLA and Mars Express · HRSC, via Mars Trek</td></tr>
+        <tr><td>The globe</td><td>Optical, true colour</td><td>Viking orbiters · MDIM 2.1 colour mosaic, via Mars Trek, stitched in Blender</td></tr>
+        <tr><td>Gale crater and Mount Sharp in 3D</td><td>Topographic + optical</td><td>Mars Global Surveyor · MOLA and Mars Express · HRSC elevation, Viking colour, via Mars Trek; rendered in Blender</td></tr>
+        <tr><td>Curiosity’s whole track and odometry</td><td>Ground truth</td><td>Curiosity team traverse and waypoint data, current to sol ${num(S.gale.rover.latestSol)}</td></tr>
         <tr><td>Water minerals on the globe</td><td>Spectral</td><td>MRO · CRISM and Mars Express · OMEGA, via Mars Trek</td></tr>
         ${LAYERS.map((l) => `<tr><td>${esc(l.name)}</td><td>${esc(l.kind)}</td><td>${esc(l.from)}</td></tr>`).join('')}
         <tr><td>Weather at the site</td><td>Atmospheric</td><td>Curiosity · REMS</td></tr>
@@ -460,7 +490,7 @@ function aboutHTML() {
     </section>
     <section>
       <h3>How it is built</h3>
-      <p>Small scripts in the project fetch public mission data and bake it into files. Your browser then works out slope, shelter, walking time and the way home for ${S.terrain.size.toLocaleString('en-US')} patches of ground, with no server, and draws it with Three.js. The globe is Mars Trek’s own tiles. No build step.</p>
+      <p>Small scripts in the project fetch public mission data and bake it into files. Blender, run headless from scripts in the repo, stitches the globe, renders Gale crater from real elevation and projects Curiosity’s track into that picture, and builds the orbital photograph of the walk site. Your browser then works out slope, shelter, walking time and the way home for ${S.terrain.size.toLocaleString('en-US')} patches of ground, with no server, and draws it with Three.js. No build step.</p>
     </section>
     <section>
       <h3>All sources</h3>
@@ -495,10 +525,14 @@ function toggleStone(id) {
 
 // ---------- boot ----------
 async function boot() {
-  const [mission, route, conditions, story, strata] = await Promise.all([
+  const [mission, route, conditions, story, strata, gale, galeView] = await Promise.all([
     fetchJson('data/mission.json'), fetchJson('data/route.json'), fetchJson('data/conditions.json'), fetchJson('data/story.json'), fetchJson('data/strata.json'),
+    fetchJson('data/gale.json'), fetchJson('data/gale-view.json'),
   ]);
-  Object.assign(S, { mission, route, conditions, story, strata });
+  Object.assign(S, { mission, route, conditions, story, strata, gale, galeView });
+  // Curiosity is still driving: its count comes from the team's own odometry file, not from us.
+  const cur = story.ghosts.find((g) => g.id === 'curiosity');
+  if (cur) cur.worked = gale.rover.latestSol;
   try { S.stones = new Set(JSON.parse(localStorage.getItem('redcairn.stones') || '[]')); } catch (e) { S.stones = new Set(); }
   S.limits = { caution: mission.suit.slopeLimitsDeg.caution, noGo: mission.suit.slopeLimitsDeg.noGo };
   S.terrain = await Terrain.load('data/terrain.json', S.limits);
@@ -513,6 +547,7 @@ async function boot() {
   S.stage.addDots(conditions.hydrousMinerals.points, 'curiosity', 'Water-formed minerals seen from orbit');
   S.stage.onStop = (k) => scrollToBeat(`stop-${k}`);
 
+  S.crater = new Crater($('crater'), galeView, gale, stops());
   S.stack = buildStack($('stack-svg'), S.strata.layers, 's');
   S.mini = buildStack($('mini-svg'), S.strata.layers, 'm');
   S.mini.highlight(3);

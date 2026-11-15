@@ -12,3 +12,5 @@ node_modules/
 !art/redcairn.blend
 *.f3d
 *.step
+# Tile caches: re-downloaded by the build scripts
+art/globe/

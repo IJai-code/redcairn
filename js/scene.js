@@ -15,27 +15,15 @@ function sph(lon, lat, r = 1) {
   return new THREE.Vector3(-r * Math.cos(phi) * Math.sin(th), r * Math.cos(th), r * Math.sin(phi) * Math.sin(th));
 }
 
-async function globeTexture() {
-  const c = document.createElement('canvas');
-  c.width = 2048; c.height = 1024;
-  const g = c.getContext('2d');
-  g.fillStyle = '#3a2418'; g.fillRect(0, 0, 2048, 1024);
-  const jobs = [];
-  for (let y = 0; y < 4; y++) {
-    for (let x = 0; x < 8; x++) {
-      jobs.push(new Promise((res) => {
-        const im = new Image();
-        im.onload = () => { g.drawImage(im, x * 256, y * 256, 256, 256); res(); };
-        im.onerror = res;
-        im.src = `assets/img/mars/mola-${y}-${x}.jpg`;
-      }));
-    }
-  }
-  await Promise.all(jobs);
-  const t = new THREE.CanvasTexture(c);
-  t.colorSpace = THREE.SRGBColorSpace;
-  t.anisotropy = 4;
-  return t;
+// Viking's true-colour mosaic of Mars, stitched from Mars Trek tiles by tools/blender_globe.py.
+function globeTexture() {
+  return new Promise((res) => {
+    new THREE.TextureLoader().load('assets/img/mars-viking.jpg', (t) => {
+      t.colorSpace = THREE.SRGBColorSpace;
+      t.anisotropy = 8;
+      res(t);
+    }, undefined, () => res(null));
+  });
 }
 
 function paintCanvas(w, h, fn) {
@@ -88,7 +76,7 @@ export class Stage {
     this.globeMat = mat;
     this.globe.add(new THREE.Mesh(new THREE.SphereGeometry(1, 96, 64), mat));
     s.add(this.globe);
-    globeTexture().then((t) => { mat.map = t; mat.needsUpdate = true; });
+    globeTexture().then((t) => { if (t) { mat.map = t; mat.needsUpdate = true; } });
 
     // A thin rim of dusty haze.
     const haze = new THREE.Mesh(new THREE.SphereGeometry(1.045, 64, 48), new THREE.ShaderMaterial({
@@ -498,7 +486,8 @@ export class Stage {
       else v.copy(p.local);
       const facing = p.kind === 'globe' ? v.z > 1 / this.gCam.position.z + 0.04 : true;
       v.project(cam);
-      const out = !facing || v.z > 1 || Math.abs(v.x) > 1.1 || Math.abs(v.y) > 1.1;
+      const sy = (-v.y * 0.5 + 0.5) * this.H;
+      const out = !facing || v.z > 1 || Math.abs(v.x) > 1.1 || Math.abs(v.y) > 1.1 || sy < 72;   // never under the top bar
       p.el.style.display = out ? 'none' : '';
       if (!out) p.el.style.transform = `translate(${((v.x * 0.5 + 0.5) * this.W).toFixed(1)}px, ${((-v.y * 0.5 + 0.5) * this.H).toFixed(1)}px)`;
     }
