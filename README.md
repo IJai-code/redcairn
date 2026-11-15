@@ -4,7 +4,7 @@
 
 Curiosity has been alone on Mount Sharp since 2012. Its real track ends at its latest stop, sol 5,073. REDCAIRN sends the first person on Mars to walk the last 2.7 km of its tracks, find it, and come home alive. The survival map (slope for a suit, air, radiation, the way home from every point, a solar storm) is how you get there.
 
-Live: <https://redcairn.netlify.app>
+Live: <https://ijai-code.github.io/redcairn/>
 
 > Built for the 2026 NASA International Space Apps Challenge, *Interplanetary Survival Guide: Martian Map*. An independent student project, not affiliated with or endorsed by NASA or any space agency.
 

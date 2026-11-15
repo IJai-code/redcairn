@@ -384,10 +384,13 @@ const EARTH_IMG = 'https://assets.science.nasa.gov/dynamicimage/assets/science/p
 const solNow = () => (Date.now() - Date.UTC(2012, 7, 5, 13, 50)) / 88775244;
 const solText = () => { const v = solNow(); return `sol ${num(Math.floor(v))}.${String(Math.floor((v % 1) * 1e5)).padStart(5, '0')}`; };
 // The shared cairn (netlify/functions/stones.mjs): one count for everyone who walks this map.
+const CAIRN_API = /netlify\.app$/.test(location.hostname);   // the shared count needs the Netlify function
 async function cairnGet() {
+  if (!CAIRN_API) return;
   try { const r = await fetch('/api/stones', { cache: 'no-store', signal: AbortSignal.timeout(3500) }); if (!r.ok) return; const j = await r.json(); if (typeof j.count === 'number') S.cairn = j; } catch (e) { /* offline or local: the cairn is just yours */ }
 }
 async function cairnAdd() {
+  if (!CAIRN_API) return null;
   try { const r = await fetch('/api/stones', { method: 'POST' }); if (!r.ok) return null; const j = await r.json(); if (typeof j.count === 'number') S.cairn = j; return j; } catch (e) { return null; }
 }
 const ordinal = (n) => { const s = ['th', 'st', 'nd', 'rd'], v = n % 100; return `${num(n)}${s[(v - 20) % 10] || s[v] || s[0]}`; };

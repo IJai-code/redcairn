@@ -16,11 +16,11 @@ The opening film is most of the video. Let it play, then show the map doing its 
 | 0:14–0:18 | Plate 5, you at the hatch, then the map with the slope layer | **VO:** "Fourteen years later, you land. This map gets you to it: slope, air, radiation, the way home." |
 | 0:18–0:24 | Walk to the rover in the 3D window (`#stop-5` → Follow its tracks); plate 6, "You found it." | **Radio (EVA-2):** "There it is. Fourteen years, and it's still working." |
 | 0:24–0:28 | The storm: three ways home on the map | **VO:** "When the Sun flares, the map already knows the way home." |
-| 0:28–0:30 | Home card | Caption: "It walked this ground alone, so you wouldn't have to." End card: **REDCAIRN · redcairn.netlify.app** |
+| 0:28–0:30 | Home card | Caption: "It walked this ground alone, so you wouldn't have to." End card: **REDCAIRN · ijai-code.github.io/redcairn** |
 
 ## How to record (Mac)
 
-1. Open **https://redcairn.netlify.app** in Chrome. Press **Cmd+Ctrl+F** for full screen. Turn **Sound on** (top right) if you want the radio and motors.
+1. Open **https://ijai-code.github.io/redcairn/** in Chrome. Press **Cmd+Ctrl+F** for full screen. Turn **Sound on** (top right) if you want the radio and motors.
 2. Close other tabs and set the window to 1920×1080 if you can (System Settings → Displays).
 3. Press **Cmd+Shift+5**, choose **Record Entire Screen** (or a 1920×1080 selection), Options → Microphone: None. Record each shot as its own clip; it is easier to edit.
 4. For each shot, paste the link from the table, wait 3 seconds for the map tiles to load, then do the action.
@@ -58,7 +58,7 @@ On screen, Curiosity's line is marked **real** (its first post from Mars, 6 Augu
 ## Submission checklist (before 23:59 tonight)
 
 - [ ] Video ≤ 30 s, uploaded (Unlisted), link copied
-- [ ] Project link: https://redcairn.netlify.app · code: https://github.com/IJai-code/redcairn
+- [ ] Project link: https://ijai-code.github.io/redcairn/ · code: https://github.com/IJai-code/redcairn
 - [ ] Description: the one sentence from `docs/PITCH.md`, the five resources and how each is used (also in the app's **Architecture & data** panel)
 - [ ] Data attribution and AI use: copy from the app's **System architecture & data attribution** panel
 - [ ] No NASA logos anywhere (video end card included)

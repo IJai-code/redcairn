@@ -1,6 +1,6 @@
 # REDCAIRN: pitch and demo
 
-Live: https://redcairn.netlify.app · Code: https://github.com/IJai-code/redcairn
+Live: https://ijai-code.github.io/redcairn/ · Code: https://github.com/IJai-code/redcairn
 Challenge: Interplanetary Survival Guide: Martian Map (NASA Space Apps 2026)
 
 ## The one sentence
