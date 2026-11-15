@@ -339,6 +339,7 @@ export class Stage {
     this.#buildOverlays();
     this.#buildRoute();
     this.#buildMarkers();
+    this.#buildAir();
     this.cam = { x: 0, y: 0, z: 0, dist: 1150, polar: 55, az: 14 };
     this.camT = { ...this.cam };
     this.eyeT = null;
@@ -404,6 +405,87 @@ export class Stage {
       const c = averageColour(tex.image, 0.455, 0.49);
       if (c) { this.haze.copy(c); this.wScene.fog.color.copy(c); }
     });
+  }
+
+  // The air: motes of dust drifting on the wind around the viewer, and puffs kicked up by the rover's wheels.
+  // Nothing here is interface; it only makes the air feel like air.
+  #buildAir() {
+    const c = document.createElement('canvas');
+    c.width = c.height = 64;
+    const x = c.getContext('2d'), gr = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+    gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.45, 'rgba(255,255,255,0.35)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+    x.fillStyle = gr; x.fillRect(0, 0, 64, 64);
+    const sprite = new THREE.CanvasTexture(c);
+
+    // Motes: a fixed cloud that wraps around the camera, so there is always dust near you and never any far away.
+    const N = reduce ? 0 : 520, R = 26;
+    const mp = new Float32Array(N * 3), rand = rng(9091);
+    for (let i = 0; i < N; i++) { mp[i * 3] = (rand() - 0.5) * 2 * R; mp[i * 3 + 1] = rand() * 9 - 2; mp[i * 3 + 2] = (rand() - 0.5) * 2 * R; }
+    const mg = new THREE.BufferGeometry();
+    mg.setAttribute('position', new THREE.BufferAttribute(mp.slice(), 3));
+    this.motes = { N, R, base: mp, pts: new THREE.Points(mg, new THREE.PointsMaterial({
+      map: sprite, color: 0xe9c9a4, size: 0.16, sizeAttenuation: true, transparent: true, opacity: 0.4, depthWrite: false, fog: true,
+    })) };
+    this.motes.pts.frustumCulled = false;
+    this.wScene.add(this.motes.pts);
+
+    // Wheel dust: a pool of soft puffs that rise, widen and fade.
+    const M = reduce ? 0 : 90;
+    const pg = new THREE.BufferGeometry();
+    pg.setAttribute('position', new THREE.BufferAttribute(new Float32Array(M * 3), 3));
+    pg.setAttribute('aSize', new THREE.BufferAttribute(new Float32Array(M), 1));
+    pg.setAttribute('aAlpha', new THREE.BufferAttribute(new Float32Array(M), 1));
+    const pm = new THREE.ShaderMaterial({
+      transparent: true, depthWrite: false, fog: false,
+      uniforms: { map: { value: sprite }, tint: { value: new THREE.Color(0xc9a07c) }, scale: { value: 600 } },
+      vertexShader: `attribute float aSize; attribute float aAlpha; varying float vA; uniform float scale;
+        void main(){ vA = aAlpha; vec4 mv = modelViewMatrix * vec4(position, 1.0); gl_PointSize = aSize * scale / max(0.5, -mv.z); gl_Position = projectionMatrix * mv; }`,
+      fragmentShader: `uniform sampler2D map; uniform vec3 tint; varying float vA;
+        void main(){ float a = texture2D(map, gl_PointCoord).a * vA; if (a < 0.003) discard; gl_FragColor = vec4(tint, a); }`,
+    });
+    this.puffs = { M, i: 0, life: new Float32Array(M), vel: new Float32Array(M * 3), age: new Float32Array(M), geo: pg, pts: new THREE.Points(pg, pm), last: 0 };
+    this.puffs.pts.frustumCulled = false;
+    this.puffs.pts.renderOrder = 3;
+    this.wScene.add(this.puffs.pts);
+  }
+
+  #emitPuff(x, y, z, vx, vz) {
+    const P = this.puffs, k = P.i++ % P.M;
+    const a = P.geo.attributes.position.array;
+    a[k * 3] = x; a[k * 3 + 1] = y; a[k * 3 + 2] = z;
+    P.vel[k * 3] = vx + (Math.random() - 0.5) * 0.25; P.vel[k * 3 + 1] = 0.22 + Math.random() * 0.25; P.vel[k * 3 + 2] = vz + (Math.random() - 0.5) * 0.25;
+    P.age[k] = 0; P.life[k] = 2.2 + Math.random() * 1.4;
+  }
+
+  #tickAir(dt, now) {
+    const M = this.motes, P = this.puffs;
+    if (M && M.N) {
+      const cp = this.wCam.position, a = M.pts.geometry.attributes.position.array, t = now * 0.001, R = M.R, w = 2 * R;
+      // The wind carries everything east-north-east, slowly, with a little swirl.
+      for (let i = 0; i < M.N; i++) {
+        const bx = M.base[i * 3] + t * 0.55 + Math.sin(t * 0.7 + i) * 0.35, bz = M.base[i * 3 + 2] + t * 0.3 + Math.cos(t * 0.5 + i * 1.7) * 0.35;
+        a[i * 3] = cp.x + ((((bx - cp.x) % w) + w + R) % w) - R;
+        a[i * 3 + 2] = cp.z + ((((bz - cp.z) % w) + w + R) % w) - R;
+        a[i * 3 + 1] = this.heightAt(a[i * 3], a[i * 3 + 2]) + 0.15 + ((M.base[i * 3 + 1] + 2 + Math.sin(t * 0.4 + i * 2.3) * 0.5 + 11) % 9);
+      }
+      M.pts.geometry.attributes.position.needsUpdate = true;
+      M.pts.visible = this.camMode === 'eye';
+    }
+    if (P && P.M) {
+      const pa = P.geo.attributes.position.array, sz = P.geo.attributes.aSize.array, al = P.geo.attributes.aAlpha.array;
+      for (let k = 0; k < P.M; k++) {
+        if (P.life[k] <= 0) { al[k] = 0; continue; }
+        P.age[k] += dt;
+        const f = P.age[k] / P.life[k];
+        if (f >= 1) { P.life[k] = 0; al[k] = 0; continue; }
+        pa[k * 3] += P.vel[k * 3] * dt; pa[k * 3 + 1] += P.vel[k * 3 + 1] * dt; pa[k * 3 + 2] += P.vel[k * 3 + 2] * dt;
+        P.vel[k * 3 + 1] *= 1 - 0.6 * dt;
+        sz[k] = 0.5 + f * 1.9;
+        al[k] = 0.3 * (1 - f) * Math.min(1, f * 8);
+      }
+      P.geo.attributes.position.needsUpdate = P.geo.attributes.aSize.needsUpdate = P.geo.attributes.aAlpha.needsUpdate = true;
+      P.pts.material.uniforms.scale.value = this.H * 0.6 / Math.tan((this.wCam.fov * DEG) / 2) * 0.5 / 1.0;
+    }
   }
 
   // Rocks: the HiRISE photo can't show anything smaller than a metre, so scatter the cobbles a walker would see.
@@ -683,6 +765,19 @@ export class Stage {
     this.rover.quaternion.setFromRotationMatrix(m);
     this.rover.position.set(x, (hF + hB + hR + hL) / 4, z);
     for (const w of this.wheels) w.rotation.z = -rolled / this.roverR;
+    // When it is rolling, the rear wheels throw a little dust.
+    if (this.puffs && this.puffs.M) {
+      const moved = Math.abs(rolled - (this.puffs.last || 0));
+      this.puffs.last = rolled;
+      if (moved > 0.02 && moved < 4 && Math.random() < 0.35) {
+        const dir = Math.sign(rolled - (this.puffs.prev ?? rolled)) || 1;
+        for (const side of [-1, 1]) {
+          const px = x - fx * 1.7 * dir - fz * side * 1.05, pz = z - fz * 1.7 * dir + fx * side * 1.05;
+          this.#emitPuff(px, this.heightAt(px, pz) + 0.12, pz, -fx * 0.5 * dir + 0.12, -fz * 0.5 * dir + 0.06);
+        }
+      }
+      this.puffs.prev = rolled;
+    }
     this.roverTilt = Math.round(Math.acos(clamp(up.y, -1, 1)) / DEG);
   }
 
@@ -716,7 +811,12 @@ export class Stage {
       dy = Math.atan2(Math.sin(dy), Math.cos(dy));
       E.yaw += dy * k;
       const yaw = E.yaw + this.look.yaw, pitch = clamp(E.pitch + this.look.pitch, -1.2, 0.9);
-      const y = this.heightAt(E.x, E.z) + EYE + E.lift;
+      // A walker's slight rise and fall, only while the ground is actually moving under them.
+      const sp = this.bobPrev ? Math.hypot(E.x - this.bobPrev.x, E.z - this.bobPrev.z) / Math.max(dt, 0.001) : 0;
+      this.bobPrev = { x: E.x, z: E.z };
+      this.bobAmt = (this.bobAmt || 0) + ((reduce || E.lift > 0.5 ? 0 : Math.min(1, sp / 1.4)) - (this.bobAmt || 0)) * Math.min(1, dt * 4);
+      this.bobT = (this.bobT || 0) + dt * 6.5 * this.bobAmt;
+      const y = this.heightAt(E.x, E.z) + EYE + E.lift + Math.sin(this.bobT) * 0.022 * this.bobAmt;
       this.wCam.position.set(E.x, y, E.z);
       this.wCam.lookAt(E.x + Math.cos(yaw) * Math.cos(pitch), y + Math.sin(pitch), E.z + Math.sin(yaw) * Math.cos(pitch));
       this.heading = -((yaw / DEG) + 90);       // screen rotation of a north arrow (yaw 0 looks east)
@@ -728,6 +828,7 @@ export class Stage {
       this.wCam.lookAt(c.x, c.y, c.z);
       this.heading = c.az + this.look.yaw / DEG;
     }
+    this.#tickAir(dt, now);
     // Keep the sky around the eye and the sun's shadow box around what we look at.
     this.sky.position.copy(this.wCam.position);
     const focus = this.rover && this.camMode === 'eye' ? this.rover.position : (this.camMode === 'eye' ? this.wCam.position : new THREE.Vector3(this.cam.x, this.cam.y, this.cam.z));

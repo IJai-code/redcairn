@@ -171,7 +171,7 @@ body[data-level="stop"] .hud, body.alarm .hud { --hud: var(--stop); }
 .hud__scrub { position: absolute; left: 50%; top: 66px; transform: translateX(-50%); width: min(360px, 60vw); display: none; gap: 2px; font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--hud-dim); text-align: center; }
 body[data-step="explore"] .hud__scrub { display: grid; }
 .hud__scrub input { width: 100%; accent-color: var(--ember); }
-.hud__note { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); font-size: 10px; color: var(--faint); white-space: nowrap; }
+.hud__note { animation: noteOut 1.6s 9s forwards; position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); font-size: 10px; color: var(--faint); white-space: nowrap; }
 body[data-step="explore"] .hud__compass, body[data-step="explore"] .hud__met { display: none; }
 
 /* ---------- words ---------- */
@@ -226,6 +226,7 @@ body:not([data-booting]) .loading { opacity: 0; pointer-events: none; }
 .tablewrap { overflow-x: auto; }
 
 @keyframes rise { from { opacity: 0; transform: translateY(10px); } }
+@keyframes noteOut { to { opacity: 0; } }
 @keyframes thud { 15% { transform: translateY(9px); } 35% { transform: translateY(-4px); } 60% { transform: translateY(2px); } }
 @keyframes alarm { 50% { opacity: 0.35; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
