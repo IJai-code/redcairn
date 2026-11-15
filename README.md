@@ -1,39 +1,42 @@
-# REDCAIRN: your first walk on Mars
+# REDCAIRN: a survival map for the first walk on Mars
 
-A layered survival map for the first walk on Mars: plan a Marswalk in Gale crater on real Mars Trek data, then walk it through your helmet behind the rover that crossed it first. About three minutes.
+A layered survival map for the first walk on Mars. It walks you, cairn by cairn, along the line Curiosity drove up Mount Sharp, on Mars Trek's own tiles, and answers three questions: where is it safe to step, what is worth stopping for, and can I get home? At any cairn you can stand on the ground in 3D, at true scale. About three minutes.
 
 Live: <https://redcairn.netlify.app>
 
 > Built for the 2026 NASA International Space Apps Challenge, *Interplanetary Survival Guide: Martian Map*. An independent student project, not affiliated with or endorsed by NASA or any space agency.
 
-On Earth, hikers stack stones into cairns to mark the safe way for whoever comes next. On Mars, a rover already did that: every place Curiosity stopped is a cairn. REDCAIRN turns those stops, and the orbital data above them, into the map an astronaut carries: where it is safe to step, what is worth stopping for, and how to get home.
+On Earth, hikers stack stones into cairns to mark the safe way for whoever comes next. On Mars, a rover already did that: every place Curiosity stopped is a cairn. REDCAIRN turns those stops, and the orbital data above them, into the map an astronaut carries.
 
-## How it plays
+## How it plays: map first, walk second
 
-Five steps, about three minutes, then a free map. The numbered bar across the top jumps to any step.
+The map is the product. A story card on the left tells the walk one beat at a time and moves the map with it; the panel on the right holds every layer and today's conditions. Ten beats, about three minutes, then the map is yours. The bar across the top jumps to Plan, Walk, Storm or Home.
 
-| Step | What happens | Built from |
+| Beat | On the map | Built from |
 |---|---|---|
-| **1 · Land** | Through the lander window: Mars in true colour, then Gale crater in 3D; the lander overlays what orbit saw (water minerals, rock units) and Curiosity's 14-year track; touchdown on the real ground | Viking colour; MOLA + HRSC elevation; CRISM + OMEGA; USGS SIM 3292; Curiosity odometry to sol 5,073. Crater rendered in Blender, one camera per layer |
-| **2 · Plan** | The habitat display: a real layered map on Mars Trek's own tiles. Pick one of three routes through the same five cairns (rover-proven, fastest, gentlest) and switch layers grouped by kind of data: optical, topographic, thermal, spectral, geologic, chemical, radiation, ground truth. Tap a cairn for Curiosity's photo from that spot and its Earth namesake in Worldview. Live weather, space weather and Perseverance's newest picture | Mars Trek tiles (HiRISE, CTX, THEMIS, MOLA/HRSC, USGS); 1 m HiRISE elevation; routes computed in the browser; REMS; NASA DONKI |
-| **3 · Walk** | Suit up: the visor checks in each data source. Then first person, at true scale, under the real horizon, behind the team's rover (wheels turning, body tilting to the terrain). The visor shows air, walk-home time, dose, slope underfoot, weather, the next cairn and a mini-map. At each cairn: a question, its answer, and Curiosity's photo from that exact spot | HiRISE photo on the 1 m elevation model; 360° horizon rendered in Blender; rover converted in Blender; Curiosity Navcam |
-| **4 · Storm** | A simulated solar particle event. The visor redraws the way home; choose the new line, the way you came, or shelter behind a ridge, each costed on the real terrain | Curiosity RAD (Sept 2017 event ×20); 16-direction sky-shielding scan |
-| **5 · Home** | The three questions answered with your numbers; the rover drives on up the mountain, alone; Perseverance's newest picture, live | Perseverance raw images |
-| **Map** | Every layer, free, with the storm drill drawn on the map | |
+| **Intro** | Curiosity's whole 14-year line across Gale crater, and the three questions | Mars Trek tiles (CTX, HiRISE); Curiosity traverse to sol 5,073 |
+| **Plan** | Slope for a spacesuit (green safe, amber care, red over 20°) and three routes to the same five cairns: rover-proven, fastest, gentlest, each timed and costed | HiRISE 1 m elevation via Mars Trek; routes computed in the browser |
+| **The dock + five cairns** | The map flies to each stop and switches on the layer that matters there. One true moment from the rover's mission, Curiosity's own photo from that spot, its Earth namesake in Worldview, and your air, walk home, dose and time out | Curiosity Navcam and mission blog; NASA Worldview; suit timeline (simulated) |
+| **Storm** | A simulated solar storm at the turnaround. The map draws three ways home on the real terrain (the new line, the way you came, shelter behind a ridge) over the terrain-shielding layer; you choose, and see the dose | Curiosity RAD (Sept 2017 event ×20); 16-direction sky-shielding scan |
+| **Home** | The three questions answered with your numbers | |
+| **See it from the ground** | At any stop: first person at true scale, under the real horizon, beside the team's rover (wheels turning, body tilting to the ground), with the same data on a helmet visor. Follow the rover to the next cairn, or go back to the map | HiRISE photo on the 1 m elevation model; 360° horizon and rover prepared in Blender |
+| **Watch the landing** (optional) | Through the lander window: Mars in true colour, Gale crater in 3D with water minerals, rock units and Curiosity's track, touchdown, then the plan | Viking colour; MOLA + HRSC; CRISM + OMEGA; USGS SIM 3292. Rendered in Blender |
+
+The right-hand panel groups every layer by kind of data (optical, topographic, thermal, spectral, geologic, chemical, radiation, ground truth, computed) with its mission, and shows today's REMS weather, the RAD radiation rate, NASA DONKI space weather, and Perseverance's newest raw image under "Next walk: Jezero crater". On a phone the story card sits at the bottom and the panel opens from a Layers button.
 
 ## Why it looks like this
 
-Nothing on screen is a web page. The cover is one sentence. The descent is a lander window. After the hatch there is only the world and what a helmet visor would draw over it: a compass, four numbers, the route projected ahead, and one line of text at a time, like subtitles. The rover is the emotional thread: it drove this ground alone a year before you, its stops are your cairns, and at the end it drives on without you.
+One story card, one map, one panel. The card says one thing per beat: a moment from the rover's mission, in the team's own words where we have them. The rover is the emotional thread: it drove this ground alone a year before you, its stops are your cairns, and it is still out there, climbing.
 
 ## The five resources we were given, and where each one shows up
 
 | Resource | In REDCAIRN |
 |---|---|
-| [Mars Trek](https://trek.nasa.gov/mars/) | Every map pixel and every height: the colour globe, the 3D crater, the water minerals, the walk's photo and 1 m elevation model |
-| [USGS planetary geologic mapping](https://astrogeology-usgs.hub.arcgis.com/pages/interactive-maps-mars) | The **Rock units (USGS)** layer on the 3D crater: Mount Sharp (Htu) inside the crater's impact unit (AHi) |
-| [Curiosity's proposed path up Mount Sharp](https://science.nasa.gov/resource/curiositys-proposed-path-up-mount-sharp/) | The 38.6 km route that plan became, drawn over the mountain; the walk follows it through the sulfate unit |
-| [Worldview](https://worldview.earthdata.nasa.gov/) | Each stop named after a place on Earth links to that place in Worldview |
-| [Perseverance raw images](https://mars.nasa.gov/mars2020/multimedia/raw-images/) | The last picture in the story: Perseverance's newest frame, fetched live |
+| [Mars Trek](https://trek.nasa.gov/mars/) | The map is Mars Trek's own tiles (HiRISE, CTX, THEMIS, MOLA/HRSC, USGS geology); every height in the app (the walk's 1 m elevation model, the crater, the horizon) comes from Mars Trek services |
+| [USGS planetary geologic mapping](https://astrogeology-usgs.hub.arcgis.com/pages/interactive-maps-mars) | The **Rock units** layer on the map and in the lander window: Mount Sharp (Htu) inside the crater's impact unit (AHi) |
+| [Curiosity's proposed path up Mount Sharp](https://science.nasa.gov/resource/curiositys-proposed-path-up-mount-sharp/) | The intro beat and the "Curiosity's whole climb" layer: the 38.6 km route that plan became; our walk is its 2025–26 stretch |
+| [Worldview](https://worldview.earthdata.nasa.gov/) | Each cairn named after a place on Earth links to that place in Worldview |
+| [Perseverance raw images](https://mars.nasa.gov/mars2020/multimedia/raw-images/) | "Next walk: Jezero crater": Perseverance's newest raw image, fetched live; the engine needs only an elevation model and a rover's photos |
 
 ## What is real and what is simulated
 

@@ -854,7 +854,7 @@
       "title": "DONKI: Space Weather Database Of Notifications, Knowledge, Information",
       "url": "https://kauai.ccmc.gsfc.nasa.gov/DONKI/",
       "org": "NASA Community Coordinated Modeling Center",
-      "use": "Real solar energetic particle events, shown with the conditions and in the visor."
+      "use": "Real solar energetic particle events, shown with today's conditions on the map."
     }
   ],
   "aiDisclosure": "AI coding assistants were used to accelerate scaffolding, data retrieval scripts, code generation and review. All positions, elevations, imagery and mission findings come from the public sources listed. Suit telemetry and space-weather scenarios are simulated and labelled as such.",
@@ -886,7 +886,7 @@
     {
       "source": "worldview",
       "name": "Worldview",
-      "role": "Each cairn named after a place on Earth (Altadena, Valle de la Luna, Nevado Sajama, the Atacama) links to that place in Worldview, on the planning map and in the helmet view."
+      "role": "Each cairn named after a place on Earth (Altadena, Valle de la Luna, Nevado Sajama, the Atacama) links to that place in Worldview, on the map and in the 3D ground view."
     },
     {
       "source": "m2020-raw",

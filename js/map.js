@@ -69,13 +69,39 @@ export class MapView {
     text.textContent = nice >= 1000 ? `${nice / 1000} km` : `${nice} m`;
   }
 
+  // Room the floating panels take, so flights centre things in the open part of the map.
+  #padding() {
+    // Leave room for the story card (left) and, on wide screens, the data panel (right).
+    const w = this.el.clientWidth, h = this.el.clientHeight, free = document.body.hasAttribute('data-free');
+    if (w <= 760) return { paddingTopLeft: [16, 60], paddingBottomRight: [16, free ? 30 : Math.round(h * 0.52)] };
+    return { paddingTopLeft: [free ? 30 : 460, 70], paddingBottomRight: [w > 1100 ? 400 : 30, 30] };
+  }
+
+  // Fly to a point, showing about `spanM` metres around it.
+  focus(lon, lat, spanM = 140, animate = true) {
+    const dLat = spanM / 2 / 59000, dLon = dLat / Math.cos((lat * Math.PI) / 180);
+    this.map.flyToBounds([[lat - dLat, lon - dLon], [lat + dLat, lon + dLon]], { animate, duration: 1.3, ...this.#padding() });
+  }
+
+  // Fly to fit a set of {lon, lat} points.
+  fit(points, animate = true) {
+    const b = L.latLngBounds(points.map((p) => [p.lat, p.lon]));
+    this.map.flyToBounds(b.pad(0.08), { animate, duration: 1.3, ...this.#padding() });
+  }
+
+  // Extra lines for a decision: [{ pts, color, dash, label }]
+  drawChoices(lines) {
+    const g = (this.choiceGroup = this.choiceGroup || L.layerGroup().addTo(this.map)).clearLayers();
+    for (const l of lines || []) {
+      const ll = l.pts.map((p) => [p.lat, p.lon]);
+      L.polyline(ll, { pane: 'ret', color: '#1c1612', weight: 8, opacity: 0.6, interactive: false }).addTo(g);
+      L.polyline(ll, { pane: 'ret', color: l.color, weight: 4, dashArray: l.dash || null, interactive: false }).addTo(g);
+    }
+  }
+
   setView(name, animate = true) {
     const b = this.mission.views[name].bounds;
-    const wide = this.el.clientWidth > 700;
-    this.map.flyToBounds([[b.south, b.west], [b.north, b.east]], {
-      animate, duration: 1.4,
-      paddingTopLeft: [20, 60], paddingBottomRight: [wide ? 400 : 20, wide ? 30 : Math.round(this.el.clientHeight * 0.48)],
-    });
+    this.map.flyToBounds([[b.south, b.west], [b.north, b.east]], { animate, duration: 1.4, ...this.#padding() });
     this.view = name;
     this.onView(name);
   }

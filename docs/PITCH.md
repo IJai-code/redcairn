@@ -5,7 +5,7 @@ Challenge: Interplanetary Survival Guide: Martian Map (NASA Space Apps 2026)
 
 ## The one sentence
 
-Land on Mars, suit up, and walk the first Marswalk through your own helmet, on the real ground of Gale crater, behind the rover that drove it first.
+A survival map for the first walk on Mars: it walks you, cairn by cairn, along the line Curiosity drove up Mount Sharp, on Mars Trek's own tiles, and answers where it is safe to step, what is worth stopping for, and whether you can get home.
 
 ## What judges need to get in 3 minutes
 
@@ -13,46 +13,45 @@ The judging guide scores Impact, Creativity, Validity, Relevance and Presentatio
 
 | Criterion | What proves it, on screen |
 |---|---|
-| Impact | The visor knows the walk home from every point and redraws it in an instant when the Sun flares |
-| Creativity | The map is inside the helmet. You land, suit up, and follow the rover that went first; its old stops are your cairns |
-| Validity | True-scale ground from a 1 m elevation model that matches the rover's own heights to 0.99 m; routes, slope, time, air and dose computed live; simulated values labelled |
+| Impact | The map knows the walk home from every point; when the Sun flares it draws three ways home on the real terrain and costs each in minutes and dose |
+| Creativity | The rover that went first is the guide: its old stops are your cairns, each with one true moment from its mission and its own photo from that spot. Any cairn opens in 3D at true scale |
+| Validity | Slope from a 1 m elevation model that matches the rover's own heights to 0.99 m; routes, time, air and dose computed live; simulated values labelled |
 | Relevance | A real layered map on Mars Trek tiles: optical, topographic, thermal, spectral, geologic, chemical, radiation and ground-truth layers from Viking, Mars Global Surveyor, Mars Odyssey, Mars Express, MRO, Curiosity and Perseverance, plus NASA DONKI space weather; all five listed resources visible |
-| Presentation | One line of text at a time, like subtitles; a story everyone can follow; a rover you come to care about |
+| Presentation | One card, one map, one panel. One beat at a time, a story anyone can follow, a rover you come to care about |
 
 ## 30-second video (the demo we submit)
 
 | Time | Picture | Words (voice or caption) |
 |---|---|---|
-| 0:00 | Cover, then the lander window over Mars | "We're [team], for the Martian Map challenge. This is REDCAIRN." |
-| 0:04 | Gale crater: water minerals, then Curiosity's line drawing itself | "Six missions' data, layered on the real ground of Gale crater." |
-| 0:10 | Touchdown, the visor booting line by line | "You land. Your helmet loads the map." |
-| 0:15 | First person behind the rover, wheels turning; Curiosity's photo at a cairn | "The rover that drove here alone leads you. Its old stops are your cairns." |
-| 0:22 | Visor turns red, the white line home | "When the Sun flares, the visor redraws the way home." |
-| 0:27 | The rover drives on alone | "It walked this ground alone, so you wouldn't have to." |
+| 0:00 | Intro beat: Curiosity's 14-year line across Gale crater | "We're [team], for the Martian Map challenge. This is REDCAIRN: a survival map for the first walk on Mars." |
+| 0:05 | Plan beat: slope turns the ground green, amber, red; tap Fastest, then Rover-proven | "Mars Trek's own tiles, at walking scale. Where is it safe to step in a spacesuit?" |
+| 0:11 | Cairn 2: the map flies in, Curiosity's photo, the numbers | "The rover that drove here first is your guide. Its stops are your cairns." |
+| 0:17 | See it from the ground: first person, the rover's wheels turning | "Any cairn, from the ground, at true scale." |
+| 0:22 | Storm beat: three ways home drawn on the map | "When the Sun flares, the map already knows the way home." |
+| 0:27 | Home beat | "It walked this ground alone, so you wouldn't have to." |
 
 ## 7-slide version (if we choose slides)
 
-1. **REDCAIRN: your first walk on Mars.** Team, members, challenge. Screenshot: first person behind the rover.
-2. **The problem.** Mars Trek and USGS maps are regional; a Marswalk is 1.5 km on foot. Astronauts need slope, air, radiation and the way home at walking scale, while they walk.
-3. **The idea.** Put the map inside the helmet. A rover drove this ground first; its stops become the cairns you follow.
-4. **Descent and suit-up.** The lander window (orbit layers) and the visor boot (each data source checking in).
-5. **The walk.** True-scale ground, the real horizon, the visor HUD, Curiosity's photo at each cairn.
+1. **REDCAIRN: a survival map for the first walk on Mars.** Team, members, challenge. Screenshot: a cairn beat (map, photo, numbers).
+2. **The problem.** Mars Trek and USGS maps are regional; a Marswalk is 1.5 km on foot. An astronaut needs slope, air, radiation and the way home at walking scale.
+3. **The idea.** A rover drove this ground first. Its stops become the cairns you follow; the map tells the walk one beat at a time.
+4. **The layers.** Optical, topographic, thermal, spectral, geologic, chemical, radiation, ground truth, from seven missions, on Mars Trek tiles.
+5. **The cairns.** One true moment per stop, Curiosity's photo from that spot, the Earth namesake in Worldview, and air, walk home and dose. Inset: the 3D ground view.
 6. **The storm.** 18 min on the new line vs 32 min the way you came vs 2 h behind a ridge: 0.16 vs 0.29 vs 1.08 mSv.
-7. **The data.** List missions and data types (no logos): Viking (optical), MGS MOLA and Mars Express HRSC (topographic), MRO CRISM and Mars Express OMEGA (spectral), USGS (geologic), MRO HiRISE (optical, topographic), Curiosity (RAD radiation, REMS weather, rock chemistry, photos, track), Perseverance (live photo). Built with Blender and the browser. AI helped write code; data and figures are from the sources.
+7. **The data.** List missions and data types (no logos): Viking (optical), MGS MOLA and Mars Express HRSC (topographic), Mars Odyssey THEMIS (thermal), MRO CRISM and Mars Express OMEGA (spectral), USGS (geologic), MRO HiRISE and CTX (optical, topographic), Curiosity (RAD radiation, REMS weather, rock chemistry, photos, track), NASA DONKI (space weather), Perseverance (live photo). Built with Blender and the browser. AI helped write code; data and figures are from the sources.
 
 ## The 3-minute live run
 
 | Time | Click | Say |
 |---|---|---|
-| 0:00 | Open the site | "A survival map for the first walk on Mars. Three questions: where is it safe to step, what's worth stopping for, can I get home." |
-| 0:10 | **Begin the mission** (or **1 Land**) | "Gale crater, rendered in Blender from real elevation. Orbit found the water minerals; that's why we're here. That orange line is Curiosity: 38.6 km in fourteen years." |
-| 0:35 | **2 Plan** opens on its own | "This is the habitat display: Mars Trek's own tiles, at walking scale. Slope for a spacesuit. Three routes: the rover's is longer, but every metre has been driven." Tap **Night-time ground temperature**, **Rock units**, **The crater**. "Thermal, geologic, spectral, topographic, radiation: eight kinds of data from seven missions." Tap cairn **2**: "Curiosity's photo from this exact spot, and the Earth place it's named after, in Worldview." |
-| 1:20 | **Suit up**, **Open the hatch** | "The visor checks in every data source, including NASA's real space-weather log. True scale, real ground, real horizon. And that's our rover; it crossed this ground first." |
-| 1:40 | **Follow the rover** | "Air, the walk home, dose, slope under your boots. At each cairn, a question and what the rover saw." |
-| 2:05 | **4 Storm** | "Solar storm, simulated at twenty times the September 2017 event. Shelter sounds right; the best ridge blocks 9%. Six times the dose. The visor already drew the answer: go home." |
-| 2:35 | **5 Home** | "It walked this ground alone, so that you would not have to." |
+| 0:00 | Open the site | "That orange line is Curiosity: 38.6 km up Mount Sharp in fourteen years. The last 1.5 km will be the first walk a person takes on Mars. This map answers three questions for that walk." |
+| 0:15 | **Begin** | "Where is it safe to step? Slope for a spacesuit from the 1 m elevation model. Three routes; the rover's is longer, but every metre has been driven." In the panel, tap **Night-time ground temperature** and **Rock units**: "Thermal, geologic, spectral, radiation: eight kinds of data from seven missions." |
+| 0:50 | **Start at the rover**, then **Next** through the cairns | "At each cairn the map flies in and switches on the layer that matters there. One true moment from the rover's mission, its own photo from this spot, the Earth place it's named after in Worldview, and my air, the walk home and dose." |
+| 1:30 | **See it from the ground** at a cairn | "The same stop in 3D at true scale: real ground, real horizon rendered in Blender, our rover. **Follow the rover on**, then **Back to the map**." |
+| 2:00 | **Next** to the storm | "Solar storm, simulated at twenty times the September 2017 event. Three ways home, drawn on the real terrain. Shelter sounds right; the best ridge blocks 9%. Six times the dose. Go home." |
+| 2:35 | **Go home** | "It walked this ground alone, so that you would not have to." |
 
-Shortcuts: `#plan`, `#walk`, `#storm`, `#home`, `#explore` (the full map). Press Space or Enter for the main button.
+Shortcuts: `#intro`, `#plan`, `#stop-0` to `#stop-5`, `#storm`, `#home`, `#ground-2` (a cairn in 3D), `#landing`, `#map` (free map). Press Space or Enter for the main button.
 
 ## Numbers to know cold
 
@@ -70,7 +69,7 @@ Shortcuts: `#plan`, `#walk`, `#storm`, `#home`, `#explore` (the full map). Press
 
 ## Questions judges may ask
 
-**"Is the horizon real?"** Yes. Blender builds Gale crater at true scale from the Mars Trek MOLA + HRSC elevation under Viking colour, stands a camera 1.7 m above the dock and renders a 360° panorama. We checked it against the elevation data: the horizon is 10° high to the east, where Mount Sharp is.
+**"Is the horizon real?"** In the 3D ground view, yes. Blender builds Gale crater at true scale from the Mars Trek MOLA + HRSC elevation under Viking colour, stands a camera 1.7 m above the dock and renders a 360° panorama. We checked it against the elevation data: the horizon is 10° high to the east, where Mount Sharp is.
 
 **"Is the radiation real?"** The everyday rate and terrain shielding were measured by Curiosity. The storm is shaped on the September 2017 event and made 20 times stronger so the drill is visible; the screen says so.
 

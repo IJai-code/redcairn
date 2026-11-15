@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="description" content="REDCAIRN: a layered survival map for the first walk on Mars. Plan a Marswalk in Gale crater on real Mars Trek data, then walk it through your helmet behind the rover that crossed it first. NASA Space Apps 2026, Interplanetary Survival Guide: Martian Map.">
+  <meta name="description" content="REDCAIRN: a layered survival map for the first walk on Mars. Plan a Marswalk in Gale crater on real Mars Trek data, cairn by cairn along the line the Curiosity rover drove first, and see any stop from the ground in 3D. NASA Space Apps 2026, Interplanetary Survival Guide: Martian Map.">
   <meta name="theme-color" content="#0b0907">
   <meta property="og:title" content="REDCAIRN: your first walk on Mars">
-  <meta property="og:description" content="Land, suit up, and follow the rover that went first. Six missions' data, seen through your helmet.">
+  <meta property="og:description" content="A layered survival map for the first walk on Mars, on the real ground of Gale crater, along the line the Curiosity rover drove first.">
   <meta property="og:image" content="https://redcairn.netlify.app/assets/img/gale-wide-color.jpg">
   <meta name="twitter:card" content="summary_large_image">
   <title>REDCAIRN · your first walk on Mars</title>
@@ -18,7 +18,7 @@
   <link rel="stylesheet" href="css/styles.css">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 </head>
-<body data-stage="globe" data-step="cover" data-booting>
+<body data-stage="globe" data-step="map" data-booting>
 
   <div class="stage" id="stage">
     <canvas id="gl"></canvas>
@@ -28,25 +28,10 @@
 
   <!-- The planning map: Mars Trek's own tiles, our computed layers, the routes and the cairns. -->
   <div class="map" id="map"><div class="scale" aria-hidden="true"><span class="scale__bar" id="scale-bar"></span><span id="scale-text"></span></div></div>
-  <aside class="mapui" id="mapui" aria-label="Map layers and plan"></aside>
-
-  <!-- Cover: what this is, the three questions it answers, and two honest ways in. -->
-  <section class="cover" aria-labelledby="cover-title">
-    <p class="cover__mark">Redcairn</p>
-    <h1 id="cover-title">A survival map for the first walk on Mars.</h1>
-    <p class="cover__lede">Walk 1.5 km of real Martian ground in Gale crater, behind the rover that crossed it first, and answer the three questions every astronaut must.</p>
-    <ol class="cover__qs">
-      <li><b>Where is it safe to step?</b><span>Slope, mapped for a spacesuit</span></li>
-      <li><b>What is worth stopping for?</b><span>Rock that records where Mars’ water went</span></li>
-      <li><b>Can I get home?</b><span>Minutes, air and radiation, always on your visor</span></li>
-    </ol>
-    <div class="cover__go">
-      <button type="button" class="act" data-a="begin">Begin the mission<small>3 minutes · you are the astronaut</small></button>
-      <button type="button" class="act act--alt" data-a="explore">Skip to the map<small>every layer, free to explore</small></button>
-    </div>
-    <p class="cover__sound">Best with sound: turn it on at the top right.</p>
-    <p class="cover__meta">NASA Space Apps 2026 · Interplanetary Survival Guide: Martian Map · data from Viking, Mars Global Surveyor, Mars Odyssey, Mars Express, MRO, Curiosity and Perseverance</p>
-  </section>
+  <aside class="mapui" id="mapui" aria-label="Map layers and data"></aside>
+  <!-- The story, told on the map one beat at a time. -->
+  <article class="guide" id="guide" aria-live="polite" hidden></article>
+  <div class="mapbar"><button type="button" class="mapbar__story" data-a="story">Back to the story</button><button type="button" class="mapbar__layers" data-a="layers">Layers</button></div>
 
   <!-- The lander window during descent. -->
   <div class="lander" aria-live="polite"><div class="lander__txt"><p id="lander-a"></p><p id="lander-b"></p></div><button type="button" class="link" data-a="skip">Skip the descent</button></div>
@@ -84,14 +69,13 @@
   </div>
   <section class="end" id="end" hidden></section>
 
-  <nav class="sections" id="sections" aria-label="Jump to a part of the mission">
-    <button type="button" data-go="cover" class="sections__home">Redcairn</button>
-    <button type="button" data-go="descent"><i>1</i>Land</button>
-    <button type="button" data-go="plan"><i>2</i>Plan</button>
-    <button type="button" data-go="walk"><i>3</i>Walk</button>
-    <button type="button" data-go="storm"><i>4</i>Storm</button>
-    <button type="button" data-go="home"><i>5</i>Home</button>
-    <button type="button" data-go="explore" class="sections__map">Map</button>
+  <nav class="sections" id="sections" aria-label="Jump to a part of the walk">
+    <button type="button" data-go="intro" class="sections__home">Redcairn</button>
+    <button type="button" data-go="plan"><i>1</i>Plan</button>
+    <button type="button" data-go="walk"><i>2</i>Walk</button>
+    <button type="button" data-go="storm"><i>3</i>Storm</button>
+    <button type="button" data-go="home"><i>4</i>Home</button>
+    <button type="button" data-go="landing" class="sections__map">Watch the landing</button>
     <button type="button" class="sections__sound" id="btn-sound" aria-pressed="false">Sound off</button>
     <button type="button" class="sections__about" id="btn-about">Data &amp; sources</button>
   </nav>

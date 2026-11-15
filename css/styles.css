@@ -224,12 +224,10 @@ body.alarm .act--alt { box-shadow: inset 0 0 0 1px var(--stop); }
 .sections button:hover { color: var(--ink); }
 .sections .sections__home { font: italic 400 19px var(--serif); color: var(--ink); margin-right: auto; padding-left: 0; }
 .sections .sections__map { margin-left: 10px; }
-body[data-step="cover"] [data-go="cover"], body[data-step="descent"] [data-go="descent"], body[data-step="plan"] [data-go="plan"],
-body[data-step="suit"] [data-go="walk"], body[data-step="walk"] [data-go="walk"], body[data-step="storm"] [data-go="storm"],
-body[data-step="home"] [data-go="home"], body[data-step="explore"] [data-go="explore"] { color: var(--ink); border-bottom-color: var(--ember); }
-body[data-step="cover"] .sections__home { border-bottom-color: transparent !important; }
+body[data-step="descent"] [data-go="landing"], body[data-step="map"][data-beat="plan"] [data-go="plan"],
+body[data-step="map"][data-beat^="stop-"] [data-go="walk"], body[data-step="walk"] [data-go="walk"], body[data-step="map"][data-beat="storm"] [data-go="storm"],
+body[data-step="map"][data-beat="home"] [data-go="home"] { color: var(--ink); border-bottom-color: var(--ember); }
 .sections .sections__about { margin-left: 6px; color: var(--faint); text-decoration: underline; text-decoration-color: rgba(244, 237, 225, 0.25); text-underline-offset: 4px; }
-body[data-hud]:not([data-step="explore"]) 
 .loading { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; background: var(--night); font: italic 400 22px var(--serif); color: var(--soft); transition: opacity 0.8s; }
 body:not([data-booting]) .loading { opacity: 0; pointer-events: none; }
 
@@ -372,3 +370,83 @@ body[data-step="walk"] .stop:not([data-next]), body[data-step="storm"] .stop:not
 .sections .sections__sound[aria-pressed="true"] { color: var(--go); }
 .cover__sound { font-size: 12.5px; color: var(--faint); }
 @media (max-width: 760px) { .radio { top: 50px; font-size: 12px; } }
+
+/* ---------- the story card: the guide on the map ---------- */
+.guide { position: fixed; z-index: 12; top: 54px; left: 14px; width: min(430px, calc(100vw - 28px)); max-height: calc(100svh - 68px); overflow-y: auto; padding: 22px 24px 20px; background: rgba(13, 10, 8, 0.9); border-left: 2px solid var(--ember); color: var(--ink); scrollbar-width: thin; animation: rise 0.6s ease-out; }
+.guide[hidden] { display: none; }
+body:not([data-stage="map"]) .guide { display: none; }
+.guide__top { display: flex; justify-content: space-between; gap: 12px; font: 500 12px var(--mono); letter-spacing: 0.04em; color: var(--ember); }
+.guide__top em { font-style: normal; color: var(--faint); flex: none; }
+.guide h2 { font: 400 clamp(28px, 2.5vw, 36px)/1.08 var(--serif); margin-top: 10px; text-wrap: balance; }
+.guide__body { margin-top: 12px; font-size: 14.5px; line-height: 1.6; color: var(--soft); text-wrap: pretty; }
+.guide__body b { color: var(--ink); font-weight: 600; }
+.guide__photo { margin-top: 16px; }
+.guide__photo img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; background: #1c1612; }
+.guide__photo figcaption { margin-top: 6px; font-size: 12px; line-height: 1.45; color: var(--faint); }
+.guide__photo a { color: #ffd9c2; }
+.guide__nums { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(244, 237, 225, 0.12); }
+.guide__nums dt { font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--faint); }
+.guide__nums dd { font: 400 21px/1.15 var(--serif); margin-top: 2px; }
+.guide__routes { display: grid; gap: 4px; margin-top: 16px; }
+.guide__routes .mroute { margin: 0; }
+.mroute--white { border-left: 3px solid #fff; }
+.mroute--amber { border-left: 3px solid #ffc23a; }
+.mroute--violet { border-left: 3px solid #b28cff; }
+.guide__answers { display: grid; gap: 12px; margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(244, 237, 225, 0.12); }
+.guide__answers dt { font: italic 400 18px var(--serif); }
+.guide__answers dd { font-size: 13.5px; line-height: 1.5; color: var(--soft); margin-top: 2px; }
+.guide__go { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+.guide__go .act { min-height: 42px; padding: 9px 20px; }
+.guide__go .act small { display: block; }
+body.alarm .guide { border-left-color: var(--stop); }
+body.alarm .guide__top { color: var(--stop); animation: alarm 1.2s 3; }
+.mapui__head p:not(.mapui__kicker) { margin-top: 4px; }
+.mapbar { position: fixed; z-index: 13; left: 14px; bottom: 26px; display: none; gap: 8px; }
+.mapbar button { padding: 9px 16px; border: 1px solid rgba(244, 237, 225, 0.3); background: rgba(13, 10, 8, 0.88); color: var(--ink); font: 500 13px var(--mono); }
+body[data-stage="map"][data-free] .mapbar { display: flex; }
+.mapbar__layers { display: none; }
+body[data-stage="map"]:not([data-free]) .leaflet-top.leaflet-left { left: 452px; }
+body[data-stage="map"]:not([data-free]) .scale { left: 460px; }
+body[data-stage="map"] .dock { display: none; }
+@media (max-width: 760px) {
+  .guide { top: auto; left: 0; right: 0; bottom: 0; width: auto; max-height: 52svh; padding: 16px 16px 14px; border-left: 0; border-top: 2px solid var(--ember); }
+  body.alarm .guide { border-top-color: var(--stop); }
+  .guide h2 { font-size: 25px; margin-top: 6px; }
+  .guide__body { font-size: 13.5px; margin-top: 8px; }
+  .guide__photo img { aspect-ratio: 2 / 1; }
+  .guide__nums { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .guide__nums dd { font-size: 18px; }
+  .guide__go .act { flex: 1 1 auto; justify-items: center; text-align: center; }
+  /* On a phone the data panel is one tap away, not on top of the story. */
+  .mapui { display: none; }
+  body[data-layers] .mapui { display: block; z-index: 14; max-height: 70svh; }
+  body[data-stage="map"] .mapbar { display: flex; left: auto; right: 12px; top: 48px; bottom: auto; }
+  body[data-stage="map"]:not([data-free]) .mapbar__story { display: none; }
+  .mapbar__layers { display: block; }
+  body[data-stage="map"]:not([data-free]) .leaflet-top.leaflet-left { left: 0; }
+  body[data-stage="map"]:not([data-free]) .scale { left: 14px; bottom: calc(52svh + 10px); }
+  body[data-free] .scale { bottom: 26px; }
+  .sections__map { display: none; }
+}
+/* Between phone and wide desktop the data panel waits behind a Layers button, so it never covers the story. */
+@media (min-width: 761px) and (max-width: 1100px) {
+  .mapui { display: none; }
+  body[data-layers] .mapui { display: block; z-index: 14; }
+  body[data-stage="map"] .mapbar { display: flex; left: auto; right: 14px; top: 54px; bottom: auto; }
+  body[data-stage="map"]:not([data-free]) .mapbar__story { display: none; }
+  .mapbar__layers { display: block; }
+  body[data-layers] .mapbar { right: 398px; }
+}
+body[data-layers] .mapbar__layers { border-color: var(--ember); }
+/* Keep the map's own credit line clear of the panels. */
+@media (min-width: 761px) { .mapui { bottom: 30px; } }
+@media (max-width: 760px) {
+  body[data-layers] .mapui { background: #0d0a08; }
+  body[data-layers] .guide { display: none; }
+  body[data-stage="map"]:not([data-free]):not([data-layers]) .leaflet-bottom.leaflet-right { bottom: 52svh; }
+  .leaflet-control-attribution { font-size: 9px; max-width: 100vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+}
+@media (max-width: 760px) {
+  /* On a phone the map card already holds the photo, the jobs and the story: the ground view keeps only the line. */
+  body[data-step="walk"] .hud__photo, body[data-step="walk"] .hud__jobs, body[data-step="walk"] .say small { display: none !important; }
+}
