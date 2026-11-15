@@ -350,4 +350,5 @@ def main():
     print("mountain", view["mountain"])
 
 
-main()
+if __name__ == "__main__":
+    main()

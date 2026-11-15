@@ -1,0 +1,96 @@
+{
+ "schema": "redcairn.rover/1",
+ "generatedBy": "tools/blender_rover.py",
+ "source": "Team rover model (rover_v8_ultra_detailed.stl), decimated in Blender",
+ "unitsPerMetre": 1000,
+ "axes": "+X forward, +Y left, +Z up (Blender); the web app maps to three.js Y-up",
+ "wheelRadiusM": 0.252,
+ "lengthM": 3.737,
+ "bin": "assets/models/rover.bin",
+ "parts": [
+  {
+   "name": "body",
+   "count": 74826,
+   "positions": 0,
+   "normals": 448956,
+   "colour": "#e9e4da",
+   "origin": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  {
+   "name": "wheel0",
+   "count": 7890,
+   "positions": 673436,
+   "normals": 720776,
+   "colour": "#8d8a84",
+   "origin": [
+    0.9,
+    -1.05,
+    0.262
+   ]
+  },
+  {
+   "name": "wheel1",
+   "count": 7890,
+   "positions": 744448,
+   "normals": 791788,
+   "colour": "#8d8a84",
+   "origin": [
+    0.9,
+    1.05,
+    0.262
+   ]
+  },
+  {
+   "name": "wheel2",
+   "count": 7890,
+   "positions": 815460,
+   "normals": 862800,
+   "colour": "#8d8a84",
+   "origin": [
+    -0.05,
+    -1.05,
+    0.262
+   ]
+  },
+  {
+   "name": "wheel3",
+   "count": 7890,
+   "positions": 886472,
+   "normals": 933812,
+   "colour": "#8d8a84",
+   "origin": [
+    -0.05,
+    1.05,
+    0.262
+   ]
+  },
+  {
+   "name": "wheel4",
+   "count": 7890,
+   "positions": 957484,
+   "normals": 1004824,
+   "colour": "#8d8a84",
+   "origin": [
+    -0.85,
+    -1.05,
+    0.262
+   ]
+  },
+  {
+   "name": "wheel5",
+   "count": 7890,
+   "positions": 1028496,
+   "normals": 1075836,
+   "colour": "#8d8a84",
+   "origin": [
+    -0.85,
+    1.05,
+    0.262
+   ]
+  }
+ ]
+}

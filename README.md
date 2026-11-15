@@ -1,6 +1,6 @@
 # REDCAIRN: your first walk on Mars
 
-A Marswalk guide for the first astronauts on Mars, layered from six missions' data on the real ground of Gale crater. You play it as the astronaut, in about three minutes.
+Land on Mars, suit up, and walk the first Marswalk through your own helmet, on the real ground of Gale crater, behind the rover that drove it first. About three minutes.
 
 Live: <https://redcairn.netlify.app>
 
@@ -10,17 +10,20 @@ On Earth, hikers stack stones into cairns to mark the safe way for whoever comes
 
 ## How it plays
 
-| Phase | The device | What you do | Built from |
-|---|---|---|---|
-| **1 · Brief** | Habitat display | See Mars in true colour, then Gale crater in 3D. Switch layers like Mars Trek: true colour, height, USGS rock units, water minerals from orbit, Curiosity's track drawing itself over 14 years | Viking colour; MOLA + HRSC elevation and relief; USGS SIM 3292; CRISM + OMEGA; Curiosity odometry to sol 5,073. Crater rendered in Blender, one camera per layer |
-| **2 · Plan** | Habitat display | Pick one of three routes through the same five stops: rover-proven, fastest or gentlest. Each shows its true time, distance and steepest slope | Routes computed in the browser on 146,034 cells of the HiRISE 1 m elevation model; suit pace simulated |
-| **3 · Marswalk** | Helmet HUD | At each stop you see Curiosity's real photo from that spot, with air, walk-home time, dose, slope underfoot, bearing to the next cairn and a mini-map. Science tasks cost suit time | Curiosity Navcam images, HiRISE photo and elevation, Curiosity's science findings |
-| **Storm** | Helmet HUD + map | A simulated solar particle event. Choose: a new line home, the way you came, or shelter behind a ridge. The cost of each is computed on the real terrain | Curiosity RAD (Sept 2017 event, ×20 for the drill), 16-direction sky-shielding scan |
-| **4 · Debrief** | | Tasks done, time outside, dose against NASA's career limit, your storm call. Then explore every layer and scrub the walk freely | Perseverance's newest frame, fetched live |
+You are the astronaut. Everything after the cover is seen through your own eyes, and after the hatch, through your helmet.
+
+| Moment | What happens | Built from |
+|---|---|---|
+| **Descent** | Through the lander window: Mars, then Gale crater in 3D; the lander computer overlays what orbit saw (water minerals, rock units) and Curiosity's 14-year track; touchdown on the real ground | Viking colour; MOLA + HRSC elevation; CRISM + OMEGA; USGS SIM 3292; Curiosity odometry to sol 5,073. Crater rendered in Blender, one camera per layer |
+| **Suit up** | The visor boots. Each data source checks in (terrain, slope limits, radiation, weather, minerals, cairns) and you pick a route: rover-proven, fastest or gentlest | Routes computed in the browser on the HiRISE 1 m elevation model |
+| **Outside** | First person, at true scale, on the real ground under the real horizon. The team's rover, wheels turning and body tilting with the terrain, leads you cairn to cairn; the visor draws the route, compass, air, walk-home time, dose and slope underfoot. At each cairn, Curiosity's own photo from that spot | HiRISE 33 cm photo on the 1 m elevation model; 360° horizon rendered in Blender from MOLA + HRSC; rover model converted in Blender; Curiosity Navcam |
+| **Storm** | A simulated solar particle event. The visor draws a new line home and you choose: the new line, the way you came, or shelter behind a ridge, each costed on the real terrain | Curiosity RAD (Sept 2017 event ×20); 16-direction sky-shielding scan |
+| **Home** | The helmet comes off. The rover drives on up the mountain, alone. Your time outside, air left, dose, and Perseverance's newest picture, live | Perseverance raw images |
+| **Explore** | Every layer, free: slope, shelter, way home, rock, height, rover tracks; slide along the walk; tap a cairn | |
 
 ## Why it looks like this
 
-The challenge suggests looking at how NASA mapped other worlds. On the Moon, Apollo crews carried a **cuff checklist** on the wrist (spiral-bound, typewritten tasks and times) and planned with printed **traverse maps** of numbered stations. REDCAIRN is that kit rebuilt for Mars: every panel is a checklist page, the 3D map wears a printed map's collar (ticks, coordinates, a north arrow that turns with the camera), layers are ticked on a legend, and in the helmet the tasks sit on the checklist at your wrist while the visor glows with live numbers. International orange, typewriter and condensed type; no logos or agency branding.
+Nothing on screen is a web page. The cover is one sentence. The descent is a lander window. After the hatch there is only the world and what a helmet visor would draw over it: a compass, four numbers, the route projected ahead, and one line of text at a time, like subtitles. The rover is the emotional thread: it drove this ground alone a year before you, its stops are your cairns, and at the end it drives on without you.
 
 ## The five resources we were given, and where each one shows up
 
@@ -36,7 +39,7 @@ The challenge suggests looking at how NASA mapped other worlds. On the Moon, Apo
 
 **Real:** the ground, its height and slope, the route (the rover's own track), the photographs, the rock findings, the weather report, the normal radiation rate and the measured effect of terrain on it, the water-mineral detections, the geologic units, and every date and figure about the machines. The 1 m elevation model agrees with the rover's own elevations to 0.99 m RMS along the route.
 
-**Simulated, and labelled in the app:** the suit (air, battery, pace), the walker, the solar storm (made 20 times stronger than the September 2017 event so the drill is easy to follow), and the "how wet" line on the rock layers. Heights are stretched ×2 on the walk and ×3 on the crater, and the app says so.
+**Simulated, and labelled in the app:** the suit (air, battery, pace), you, the time compression of the walk, the solar storm (made 20 times stronger than the September 2017 event so the drill is easy to follow, and 2 h long for the shelter option), and the rocks smaller than a metre scattered for scale, since HiRISE cannot resolve them. The walk is at true scale; the crater view in the lander window stretches heights ×3.
 
 ## Run locally
 
@@ -65,6 +68,8 @@ B=/Applications/Blender.app/Contents/MacOS/Blender
 $B -b --python tools/blender_globe.py                    # Viking colour globe -> assets/img/mars-viking.jpg
 $B -b --python tools/blender_gale.py                     # Gale crater layers + projected track -> assets/img/gale-wide-*.jpg, data/gale-view.json
 $B -b --python tools/blender_scene.py -- --ortho-only    # tinted site photo -> assets/img/site-ortho.jpg
+$B -b --python tools/blender_horizon.py                  # 360° true-scale horizon from the dock -> assets/img/horizon.jpg
+$B -b --python tools/blender_rover.py -- path/to/rover.stl   # team rover -> assets/models/rover.bin, data/rover.json (six spinning wheels)
 $B -b --python tools/blender_scene.py -- --rover path/to/rover.blend   # site and stop models, hero render
 ```
 
@@ -73,8 +78,8 @@ $B -b --python tools/blender_scene.py -- --rover path/to/rover.blend   # site an
 ```
 index.html            the page
 css/styles.css        styles
-js/app.js             the mission: brief, route planning, helmet HUD, storm, debrief
-js/scene.js           three.js stage: the globe and the walk diorama
+js/app.js             the mission: descent, visor boot, the walk behind the rover, storm, home, explore
+js/scene.js           three.js: the globe, and the true-scale world (ground, horizon, rocks, rover, cameras)
 js/crater.js          the Blender-rendered crater, its layers and the drawn track
 js/terrain.js         slope, sky shielding and least-time routing on the 2 m grid
 js/sim.js             suit timeline and dose

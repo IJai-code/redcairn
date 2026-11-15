@@ -14,3 +14,4 @@ node_modules/
 *.step
 # Tile caches: re-downloaded by the build scripts
 art/globe/
+tools/__pycache__/
