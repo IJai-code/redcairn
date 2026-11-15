@@ -33,6 +33,14 @@
   <article class="guide" id="guide" aria-live="polite" hidden></article>
   <div class="mapbar"><button type="button" class="mapbar__story" data-a="story">Back to the story</button><button type="button" class="mapbar__layers" data-a="layers">Layers</button></div>
 
+  <!-- The opening: illustrated plates, one true line each. Drawn by Blender from the real ground. -->
+  <section class="film" id="film" hidden aria-label="Opening">
+    <div class="film__plates" id="film-plates"></div>
+    <p class="film__line" id="film-line" aria-live="polite"></p>
+    <p class="film__credit">Every picture is drawn by Blender from NASA elevation data of the real ground. No AI images.</p>
+    <div class="film__go"><button type="button" class="link" data-a="filmskip">Skip</button></div>
+  </section>
+
   <!-- The helmet: everything after the hatch is seen through this. -->
   <div class="helmet" aria-hidden="true"></div>
   <section class="hud" aria-label="Helmet display">

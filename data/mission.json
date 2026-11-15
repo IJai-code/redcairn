@@ -16,8 +16,8 @@
     },
     "bounds": {
       "west": 137.377,
-      "south": -4.8165,
-      "east": 137.386,
+      "south": -4.8285,
+      "east": 137.3915,
       "north": -4.798
     },
     "crs": "IAU Mars 2000 geographic (EPSG:104905), planetocentric latitude, east-positive longitude",
@@ -181,7 +181,7 @@
           "label": "Layered sulfate unit",
           "color": "#f4a261",
           "routeFromM": 1284.4,
-          "routeToM": 1515.9,
+          "routeToM": 2709.4,
           "summary": "Layered sulfate-bearing bedrock above the boxwork terrain. The same unit was last sampled about 160 m lower on the mountain.",
           "sources": [
             "blog-4845",
@@ -222,7 +222,7 @@
       "lon": 137.3835414,
       "lat": -4.79984723,
       "elevM": -3647.18,
-      "routeDistM": 0,
+      "routeDistM": 0.0,
       "rover": {
         "sol": 4560,
         "rmc": "116_1944",
@@ -525,7 +525,7 @@
       "lon": 137.3817063,
       "lat": -4.8142672,
       "elevM": -3570.45,
-      "routeDistM": 1515.9,
+      "routeDistM": 1512.1,
       "rover": {
         "sol": 4868,
         "rmc": "122_0",
@@ -585,6 +585,64 @@
         "why": "This salty, layered rock formed as Mars lost its water. You have now walked from the wet chapter of the story to the dry one. Time to turn for home.",
         "layer": "slope",
         "teach": "Look back down the map: the whole walk is green. The rover already proved this ground."
+      }
+    },
+    {
+      "id": "CURIOSITY",
+      "name": "Curiosity",
+      "type": "rover",
+      "lon": 137.388886,
+      "lat": -4.826023,
+      "elevM": -3472.09,
+      "routeDistM": 2709.4,
+      "rover": {
+        "sol": 5073,
+        "rmc": "125_2490",
+        "tiltDeg": 12.45
+      },
+      "plannedStayMin": 20,
+      "science": {
+        "priority": 1,
+        "unit": "layered-sulfate",
+        "headline": "Where Curiosity is now",
+        "why": "The rover's most recent stop on this stretch of Mount Sharp, sol 5073 (13 November 2026), from its own published localisation.",
+        "targets": [],
+        "tasks": [
+          "Reach the rover",
+          "Photograph its wheels",
+          "Turn for home"
+        ],
+        "sources": [
+          "msl-waypoints"
+        ]
+      },
+      "pov": {
+        "imageUrl": "https://mars.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/05073/opgs/edr/ncam/NLB_847853302EDR_F1252490NCAM00354M_.JPG",
+        "camera": "Left Navigation Camera",
+        "sol": 5073,
+        "utc": "2026-11-13T16:01:24Z",
+        "takenAtRmc": "125_2490",
+        "caption": "The ground around the rover at its latest stop.",
+        "credit": "NASA/JPL-Caltech"
+      },
+      "model": {
+        "src": "",
+        "status": "none",
+        "alt": ""
+      },
+      "story": "Curiosity, at its latest stop. You are the first person to reach it.",
+      "earthNamesakes": [],
+      "plain": {
+        "title": "Curiosity",
+        "see": "The rover itself: six wheels, worn and torn, and a mast that has looked at this mountain for fourteen years.",
+        "do": [
+          "Reach the rover",
+          "Photograph its wheels",
+          "Turn for home"
+        ],
+        "why": "It has been alone here since 2012.",
+        "layer": "slope",
+        "teach": "The way home is already on the map."
       }
     }
   ],
@@ -916,15 +974,16 @@
     }
   ],
   "liveFeeds": {
-    "perseveranceLatest": "https://mars.nasa.gov/rss/api/?feed=raw_images&category=mars2020&feedtype=json&num=1&page=0&order=sol+desc&search=NAVCAM_LEFT&extended=sample_type::full"
+    "perseveranceLatest": "https://mars.nasa.gov/rss/api/?feed=raw_images&category=mars2020&feedtype=json&num=1&page=0&order=sol+desc&search=NAVCAM_LEFT&extended=sample_type::full",
+    "curiosityLatest": "https://mars.nasa.gov/api/v1/raw_image_items/?order=sol%20desc,date_taken%20desc&per_page=1&page=0&condition_1=msl:mission&search=NAV_LEFT_B"
   },
   "views": {
     "walk": {
       "label": "The walk",
       "bounds": {
         "west": 137.377,
-        "south": -4.8165,
-        "east": 137.386,
+        "south": -4.8285,
+        "east": 137.3915,
         "north": -4.798
       }
     },

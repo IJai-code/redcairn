@@ -48,12 +48,12 @@
   },
   "stops": {
     "DOCK": {
-      "title": "The rover that brought you",
+      "title": "The hatch",
       "line": "Check your suit and radio. Every step from here is on ground a rover already crossed.",
       "q": "Where do I start, and can I trust this ground?",
       "a": "Right here, beside the rover that brought you. Every step ahead is on ground Curiosity has already crossed.",
-      "moment": "This rover drove here alone, a year before you.",
-      "sub": "The rock under your boots is called Altadena. The team named it for their own neighbourhood beside the lab, which burned in the Eaton Fire months before. Your walk starts at a place named for home."
+      "moment": "Its tracks start at your door.",
+      "sub": "Curiosity crossed this rock in June 2025 and kept climbing. The team named it Altadena, for their own neighbourhood beside the lab, which burned in the Eaton Fire that January. The rover is 2.7 km up the slope. Follow its tracks."
     },
     "WP1": {
       "title": "The steep part",
@@ -100,15 +100,24 @@
       "sub": "The rover crossed this line in a single drive. You can stand with a boot on each side: water underground behind you, a planet drying out ahead. Take rock from both."
     },
     "WP5": {
-      "title": "The turnaround",
+      "title": "The last cairn",
       "line": "Rock cracked like dried mud. Look back: every white line is five more minutes from home.",
       "layers": [
         "home"
       ],
-      "q": "Can I get home from here?",
+      "q": "How far is it now?",
       "a": "Yes. Look back: the whole walk is green, and every white line is five more minutes from the rover. Collect, then turn.",
-      "moment": "The turnaround. Look back: the whole walk is in view.",
-      "sub": "The rover drilled this salty rock twice. It formed as Mars lost its water. You have walked from the wet chapter of the story into the dry one. Time to go home."
+      "moment": "Its last stop among the cairns. It is 1.2 km above you now.",
+      "sub": "The rover drilled this salty rock twice. It formed as Mars lost its water. Above you, its tracks keep climbing toward where it is today."
+    },
+    "CURIOSITY": {
+      "title": "Curiosity",
+      "moment": "You found it.",
+      "sub": "Sol 5,073. It has been alone on this mountain for fourteen years, and you are the first person to stand beside it. Its wheels are torn. Its mast is still turned up the slope.",
+      "layers": [
+        "track"
+      ],
+      "q": "Can we both get home?"
     }
   },
   "radio": {
@@ -132,7 +141,7 @@
     "stop-0": [
       {
         "who": "Habitat",
-        "text": "Habitat to EVA-1, EVA-2: you are clear. Follow the rover.",
+        "text": "Habitat to EVA-1, EVA-2: you are clear. Follow its tracks.",
         "audio": "assets/audio/03-habitat-clear.m4a"
       }
     ],
@@ -160,7 +169,7 @@
     "storm": [
       {
         "who": "Habitat",
-        "text": "Habitat to EVA-1: solar particle event inbound. Bring EVA-2 home.",
+        "text": "Habitat to EVA-1: solar particle event inbound. Leave the rover. Bring EVA-2 home.",
         "audio": "assets/audio/07-habitat-storm.m4a"
       },
       {
@@ -182,7 +191,19 @@
         "text": "Both suits at the hatch. Welcome home, {name}.",
         "audio": "assets/audio/10-habitat-home.m4a"
       }
+    ],
+    "stop-6": [
+      {
+        "who": "EVA-2",
+        "text": "There it is. Fourteen years, and it's still working.",
+        "audio": "assets/audio/11-eva2-found.m4a"
+      },
+      {
+        "who": "Habitat",
+        "text": "Habitat to EVA-1: we see you on its camera. You're standing next to it.",
+        "audio": "assets/audio/12-habitat-camera.m4a"
+      }
     ]
   },
-  "objective": "Today: bring back rock from both sides of the line where this part of Mars began to dry, and be home with air to spare."
+  "objective": "Today: walk the last 2.7 km of Curiosity’s tracks, reach the rover itself, and be home with air to spare."
 }

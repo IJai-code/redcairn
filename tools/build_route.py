@@ -43,6 +43,7 @@ ANCHORS = [
     ("WP3", 4841),
     ("WP4", 4848),
     ("WP5", 4868),
+    ("CURIOSITY", 5073),   # where the rover is now: the end of the walk
 ]
 
 RESAMPLE_M = 5.0        # spacing of the published EVA polyline

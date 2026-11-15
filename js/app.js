@@ -337,6 +337,10 @@ function guide(i, opts = {}) {
   const prev = S.lastBeat;
   S.lastBeat = id;
   if (prev !== id) radio(id);
+  if (id === `stop-${roverK()}` && prev === `stop-${roverK() - 1}` && !S.metOnce) {
+    S.metOnce = true;
+    setTimeout(() => { if (S.lastBeat === id) playFilm([['p6', 'You found it. Fourteen years alone, and you are the first person to stand beside it.']], () => {}, 5200); }, 9500);
+  }
   stage('map', id !== 'intro');
   ensureMap();
   const r = useRoute();
@@ -397,58 +401,63 @@ function card() {
   S.win = '';
   if (id === 'intro') {
     kicker = 'A survival map for the first walk on Mars';
-    title = 'Fourteen years. One line.';
+    title = 'It has been alone up there since 2012.';
     if (S.cairn && S.cairn.count > 0) {
       const c = S.cairn.count, me = S.stoneLaid || stoneCount() > 0;
       extra = `<p class="guide__walkers"><b>${num(c)}</b> ${c === 1 ? 'person has' : 'people have'} walked this map${me ? ', you among them' : ' before you'}. Each left a stone on the last cairn.</p>`;
     }
-    body = `That orange line is Curiosity, climbing Mount Sharp alone since 2012: ${g.distanceKm.toFixed(1)} km so far. The last 1.5 km of it will be the first walk a person takes on Mars. This map answers the three questions for that walk: <b>where is it safe to step, what is worth stopping for, and can I get home?</b>`;
+    body = `That orange line is Curiosity: ${g.distanceKm.toFixed(1)} km up Mount Sharp in fourteen years, and it is still climbing. Your first walk on Mars is to follow the last ${(stops()[roverK()].routeDistM / 1000).toFixed(1)} km of its tracks, find it, and come home. This map answers the three questions on the way: <b>where is it safe to step, what is worth stopping for, and can I get home?</b>`;
     extra += `<label class="guide__name"><span>Your name, for the habitat radio</span><input id="callsign" type="text" maxlength="24" autocomplete="off" placeholder="EVA-1" value="${esc(S.name || '')}"></label>`;
-    go = btn('next', 'Begin');
+    go = btn('next', 'Begin') + btn('opening', 'Watch the opening again', true);
     S.win = winCrater();
   } else if (id === 'plan') {
     kicker = 'Where is it safe to step?';
     title = 'Choose how to follow it.';
     body = `${esc(S.story.objective)} Green ground is safe in a spacesuit, amber needs care, red is too steep (over ${S.limits.noGo}°). The rover’s own track is longer, but every metre of it has been driven, and orbit cannot see rocks smaller than a metre.`;
     extra = `<div class="guide__routes">${ROUTES.map((rr) => { const x = routes[rr.id]; return `<button type="button" class="mroute" data-route="${rr.id}" aria-pressed="${rr.id === S.pick}"><b>${esc(rr.name)}</b><span>${mins(x.tl.end.t)} · ${(x.plan.outD * 2 / 1000).toFixed(1)} km · steepest ${x.plan.maxSlope.toFixed(0)}°</span></button>`; }).join('')}</div>`;
-    go = btn('next', 'Start at the rover') + btn('prev', 'Back', true);
-    S.win = win3d('The start of the trail in 3D at true scale: the HiRISE photo on its 1 m elevation model, slope painted on. Drag to look around.');
+    go = btn('next', 'Start at the hatch') + btn('prev', 'Back', true);
+    S.win = win3d('Your view from the hatch, at true scale: the HiRISE photo on its 1 m elevation model, slope painted on. Drag to look around.');
   } else if (id.startsWith('stop-')) {
     const k = Number(id.slice(5)), wp = stops()[k], s = S.story.stops[wp.id] || {};
-    kicker = k ? `Cairn ${k} of ${last} · ${s.title || wp.plain.title}` : `The rover · ${wp.name}`;
+    const isRover = k === roverK(), lastC = lastCairnK();
+    kicker = isRover ? `Curiosity · sol ${num(wp.rover.sol)} · where it is now` : k ? `Cairn ${k} of ${nCairns()} · ${s.title || wp.plain.title}` : `The hatch · ${wp.name}`;
     title = esc(s.moment || wp.plain.title);
     body = esc(s.sub || wp.story);
     const earth = wp.earthNamesakes.length ? ` Named after ${wp.earthNamesakes.map((x) => `<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.name)}</a>`).join(' and ')}: see it from orbit in Worldview.` : '';
-    extra = `<figure class="guide__photo"><a href="${esc(wp.pov.imageUrl)}" target="_blank" rel="noopener"><img src="${esc(wp.pov.imageUrl)}" alt="${esc(wp.plain.see)}" referrerpolicy="no-referrer"></a><figcaption><b>What Curiosity saw from here</b>${esc(camName(wp.pov.camera))}, sol ${num(wp.pov.sol)}, ${esc(day(wp.pov.utc))}.${earth}</figcaption></figure>${numbersAt(k)}`;
-    if (k === last) {
+    extra = `<figure class="guide__photo"${isRover ? ' id="cur-live"' : ''}><a href="${esc(wp.pov.imageUrl)}" target="_blank" rel="noopener"><img src="${esc(wp.pov.imageUrl)}" alt="${esc(wp.plain.see)}" referrerpolicy="no-referrer"></a><figcaption><b>${isRover ? 'What it saw most recently' : 'What Curiosity saw from here'}</b>${esc(camName(wp.pov.camera))}, sol ${num(wp.pov.sol)}, ${esc(day(wp.pov.utc))}.${earth}</figcaption></figure>${numbersAt(k)}`;
+    if (isRover) {
       extra += `<figure class="guide__photo"><a href="${EARTH_IMG}" target="_blank" rel="noopener"><img src="${EARTH_IMG}?w=600" alt="Earth as a bright point in the Martian evening sky, with the Moon below it"></a><figcaption><b>Look up after sunset</b>The brightest point in the sky is Earth, with the Moon just below. Curiosity took this from Gale crater: Mastcam, sol 529, 31 January 2014. NASA/JPL-Caltech/MSSS/TAMU.</figcaption></figure>`;
+    }
+    if (k === lastC) {
       const n = S.cairn ? S.cairn.count : 0;
       extra += S.stoneLaid
         ? `<p class="guide__stone">${S.myStone ? `Yours is the <b>${ordinal(S.myStone)}</b> stone on this cairn.` : 'Your stone is on this cairn.'} Whoever walks this map next will find it.</p>`
         : n ? `<p class="guide__stone guide__stone--others">This cairn holds <b>${num(n)}</b> ${n === 1 ? 'stone' : 'stones'}, one from each person who walked this map before you.</p>` : '';
     }
-    const nextLabel = k < last ? `Follow it to cairn ${k + 1}<small>${legM(k)} m on</small>` : 'Turn for home';
-    go = btn('next', nextLabel) + (k === last && !S.stoneLaid ? btn('stone', 'Add a stone to the cairn<small>for whoever walks here next</small>', true) : '') + btn('prev', 'Back', true);
-    S.win = win3d(k === last && S.cairn && S.cairn.count ? 'Every stone around this cairn was left by a real person who walked this map. Drag to look around.' : k ? 'Our rover, standing in for Curiosity, on the real ground at true scale. Drag to look around.' : 'Our rover, standing in for Curiosity, where your walk begins. Drag to look around.', true);
+    const nextLabel = isRover ? 'Turn for home' : k === lastC ? `Follow its tracks to the rover<small>${num(legM(k))} m on</small>` : `Follow its tracks to cairn ${k + 1}<small>${legM(k)} m on</small>`;
+    go = btn('next', nextLabel) + (isRover && !S.touched ? btn('touch', 'Put your hand on its wheel', true) : '') + (k === lastC && !S.stoneLaid ? btn('stone', 'Add a stone to the cairn<small>for whoever walks here next</small>', true) : '') + btn('prev', 'Back', true);
+    S.win = win3d(isRover ? (S.touched ? 'Its wheels have been punctured and torn by Mount Sharp’s rock since 2013. It kept driving. (Our rover model stands in for Curiosity.)' : 'Curiosity, at its real latest position, on the real ground. Our rover model stands in for it. Drag to look around.')
+      : k === lastC && S.cairn && S.cairn.count ? 'Every stone around this cairn was left by a real person who walked this map. Drag to look around.'
+      : 'Your view, walking its tracks at true scale. Its wheel tracks run on ahead. Drag to look around.', true);
   } else if (id === 'storm') {
     const o = stormOptionsFor(R());
-    kicker = 'Simulated drill · solar storm at the turnaround';
+    kicker = 'Simulated drill · solar storm at the rover';
     if (!S.choice) {
       title = 'The Sun just flared. How do you get home?';
-      body = `You and EVA-2 are at the far end of the walk. Radiation is twenty times normal, shaped on the storm Curiosity measured in September 2017. The map has drawn three ways back on the real terrain. Purple shows where hills hide part of the sky.`;
+      body = `You and EVA-2 are beside Curiosity, ${(stops()[roverK()].routeDistM / 1000).toFixed(1)} km from the hatch. Radiation is twenty times normal, shaped on the storm Curiosity measured in September 2017. The map has drawn three ways back on the real terrain. Purple shows where hills hide part of the sky.`;
       extra = `<div class="guide__routes">
         <button type="button" class="mroute mroute--white" data-a="c-direct"><b>Take the new line</b><span>${mins(o.direct.min)} · ${o.direct.dose.toFixed(2)} mSv · leans on what cover the hills give</span></button>
         <button type="button" class="mroute mroute--amber" data-a="c-trail"><b>The way you came</b><span>${mins(o.trail.min)} · ${o.trail.dose.toFixed(2)} mSv · the ground you know</span></button>
         <button type="button" class="mroute mroute--violet" data-a="c-shelter"><b>Shelter behind a ridge for ${STORM_HOURS} h</b><span>${o.shelter.dose.toFixed(2)} mSv · the best ridge blocks ${o.shelter.blocked}%</span></button></div>`;
       go = btn('prev', 'Back', true);
-      S.win = win3d('At the turnaround. White: the new line home. Amber: the way you came.');
+      S.win = win3d('Beside the rover, looking home. White: the new line. Amber: the way you came.');
     } else {
       const x = o[S.choice];
       title = S.verdict;
       body = S.choice === 'shelter' ? `A ridge hides only part of the sky. On Mars, the best shelter is the rover and the habitat, so the fastest safe way home wins.` : S.choice === 'trail' ? `The ground you know is safe, but longer means more time under the storm. The map’s new line was ${Math.round((1 - o.direct.dose / o.trail.dose) * 100)}% less dose.` : `The map knew the way home from every point before the storm began. That is what it is for.`;
       extra = `<dl class="guide__nums"><div><dt>To the hatch</dt><dd>${mins(x.min)}</dd></div><div><dt>Storm dose</dt><dd>${x.dose.toFixed(2)} mSv</dd></div></dl>`;
       go = btn('next', 'Go home') + btn('restorm', 'Choose again', true);
-      S.win = win3d(S.choice === 'shelter' ? 'To the ridge, two hours under the storm, then home.' : 'Home, behind the rover.');
+      S.win = win3d(S.choice === 'shelter' ? 'To the ridge, two hours under the storm, then home. The rover stays behind.' : 'Home, on the line you chose. The rover stays behind.');
     }
   } else if (id === 'home') {
     const o = S.choice ? stormOptionsFor(R())[S.choice] : null, end = o ? o.tl.end : S.tl.end;
@@ -457,20 +466,21 @@ function card() {
     kicker = 'Back at the hatch';
     title = 'It walked this ground alone, so that you would not have to.';
     const mine = S.myStone ? ` Your stone is the ${ordinal(S.myStone)} on the last cairn.` : '';
-    body = `Curiosity is still out there, ${vars().roverAheadM} m past your turnaround, climbing.${mine} On 5 August 2013, alone in this crater, it played “Happy Birthday” to itself by shaking its sample lab (SAM) at the right pitches. It has done that once.`;
+    body = `You walked ${(stops()[roverK()].routeDistM / 1000).toFixed(1)} km to a machine that has been alone for fourteen years, and came home. It is still up there, where you left it.${mine} On 5 August 2013, alone in this crater, it played “Happy Birthday” to itself by shaking its sample lab (SAM) at the right pitches. It has done that once.`;
     extra = `<p class="guide__sol"><span>Curiosity, today</span><b id="sol-now">${solText()}</b><em>Its prime mission was one Mars year: 669 sols.</em></p>`;
     extra += `<dl class="guide__answers">
       <div><dt>Where was it safe to step?</dt><dd>Everywhere on the route: the steepest ground was ${S.plan.maxSlope.toFixed(0)}°, under the suit’s ${S.limits.noGo}° limit.</dd></div>
-      <div><dt>What was worth stopping for?</dt><dd>${last} cairns, ${jobs} jobs, and rock from both sides of the line where this part of Mars began to dry.</dd></div>
+      <div><dt>What was worth stopping for?</dt><dd>${nCairns()} cairns, ${jobs} jobs, rock from both sides of the line where this part of Mars began to dry, and the rover itself.</dd></div>
       <div><dt>Did you get home?</dt><dd>Yes, both of you, with ${mins(end.o2 - reserve())} of air left after ${mins(end.t)} outside, and ${end.dose.toFixed(2)} mSv: ${((end.dose / career) * 100).toFixed(2)}% of a NASA career limit.</dd></div></dl>`;
     go = btn('again', 'Walk it again') + btn('free', 'Explore every layer', true);
-    S.win = win3d('The rover drives on, up its own track, alone.');
+    S.win = win3d('From the hatch, looking up the mountain. It is up there.');
   }
   parkStage();
   $('guide').innerHTML = `<div class="guide__top"><span>${esc(kicker)}</span><em>${S.beat + 1} / ${n}</em></div>
     ${S.win}<h2>${title}</h2><p class="guide__body">${body}</p>${extra}<div class="guide__go">${go}</div>`;
   $('guide').hidden = false;
   mountStage();
+  fillCuriosity();
   clearInterval(S.solT);
   if ($('sol-now')) S.solT = setInterval(() => { const e = $('sol-now'); if (e) e.textContent = solText(); else clearInterval(S.solT); }, 250);
   const cs = $('callsign');
@@ -574,91 +584,116 @@ function roll(path, d0, d1, ms, cam, onMain) {
   }).then((ok) => { S.stage.camRate = 2.6; if (S.sound && ok) S.sound.roverMoving(false); return ok; });
 }
 
-// What the window shows on each beat. The rover is in every one of them, always a little ahead of you.
+// Walk in first person along a path (eye height, true scale); the map's marker follows you.
+// The camera is set directly every frame so it holds at any frame rate; only turning is smoothed, in real time.
+function walkTo(path, d0, d1, ms, lookAt) {
+  const t = S.token, start = performance.now();
+  let yawS = null, lastT = start;
+  S.spin = 0;
+  return new Promise((done) => {
+    const frame = (now) => {
+      if (!live(t)) return done(false);
+      const f = Math.min(1, (now - start) / ms), e = f < 0.5 ? 2 * f * f : 1 - Math.pow(-2 * f + 2, 2) / 2;
+      const d = d0 + (d1 - d0) * e, p = path.at(d);
+      let yaw = path.dir(d);
+      if (lookAt && f > 0.75) { const q = lookAt(); const w = (f - 0.75) / 0.25; const ty = Math.atan2(q.z - p.z, q.x - p.x); yaw = yaw + Math.atan2(Math.sin(ty - yaw), Math.cos(ty - yaw)) * w; }
+      const dtr = (now - lastT) / 1000; lastT = now;
+      yawS = yawS == null ? yaw : yawS + Math.atan2(Math.sin(yaw - yawS), Math.cos(yaw - yawS)) * (1 - Math.exp(-3 * dtr));
+      S.stage.setEye(p.x, p.z, yawS, -0.06 + Math.sin(now / 230) * 0.008, 0, true);
+      S.map.setCrew(lonOfX(p.x), latOfZ(p.z));
+      if (f < 1) requestAnimationFrame(frame); else done(true);
+    };
+    requestAnimationFrame(frame);
+  });
+}
+
+// Curiosity waits at its real latest position, at the end of the route, facing on up the slope.
+function parkCuriosity() {
+  const d = S.path.length, p = S.path.at(d);
+  S.stage.placeRover(p.x, p.z, S.path.dir(d - 4), S.rolled || 0);
+  return p;
+}
+const eyeAt = (d) => S.path.at(Math.max(0, Math.min(S.path.length, d)));
+const lookYaw = (from, to) => Math.atan2(to.z - from.z, to.x - from.x);
+
+// What the window shows on each beat: always the real ground at true scale, through your own eyes.
 function window3d(id, prev) {
   S.spin = 0;
   if (id === 'intro' || !$('gwin')) return;
-  const r = R(), n = stops().length, last = n - 1;
+  const r = R(), n = stops().length, rk = roverK();
   prep3d(r);
+  const rover = parkCuriosity();
   if (id === 'plan') {
     setLayers(['slope']);
-    S.stage.setCairns(n);
+    S.stage.setCairns(0);
     S.stage.markStops(-1, 0);
-    S.roverD = 4; placeRover(4);
-    // Low behind the rover at the start, looking up the trail: slope painted on the real relief ahead.
-    const p = S.path.at(4), ahead = S.path.at(60);
-    chaseCam(p, Math.atan2(ahead.z - p.z, ahead.x - p.x), { side: 14, dist: 20, polar: 74 }, prev !== 'plan');
+    const me = eyeAt(0), ahead = eyeAt(70);
+    S.stage.setEye(me.x, me.z, lookYaw(me, ahead), -0.1, 0, true);
     return;
   }
   if (id.startsWith('stop-')) {
     const k = Number(id.slice(5)), s = S.story.stops[stops()[k].id] || {};
     setLayers((s.layers || []).filter((l) => l === 'track'));
-    const dk = S.plan.out[S.plan.idx[k]].d, park = Math.min(S.path.length, dk + (k ? 9 : 4));
     S.stage.markStops(k, k);
-    // Settle on a three-quarter view of the cairn with the rover parked just beyond it.
-    const settle = (immediate) => {
-      const p = S.path.at(park), c = k ? S.stage.cairnPoint(k) : p;
-      // At the turnaround the cairn is the subject: close in on it and everyone's stones around it.
-      if (k === n - 1) chaseCam(c, S.path.dir(park), { side: 70, dist: 8.5, polar: 64 }, immediate);
-      else chaseCam({ x: (p.x + c.x) / 2, z: (p.z + c.z) / 2 }, S.path.dir(park), { side: 58, dist: k ? 17 : 15, polar: 72 }, immediate);
-      S.spin = 1.6;
+    const dk = S.plan.out[S.plan.idx[k]].d, stand = k === rk ? S.path.length - 7 : Math.max(0, dk - 5);
+    const target = () => (k === rk ? rover : k ? S.stage.cairnPoint(k) : eyeAt(60));
+    if (k === lastCairnK()) S.stage.setCommunal(k, Math.max(0, (S.cairn ? S.cairn.count : 0) - (S.stoneLaid ? 1 : 0)));
+    const settle = () => {
+      const me = eyeAt(stand), q = target();
+      S.stage.setEye(me.x, me.z, lookYaw(me, q), k === rk ? -0.12 : -0.2, 0, true);
     };
-    // Stones this browser added on earlier visits are still on the last cairn.
-    if (k === n - 1) S.stage.setCommunal(k, Math.max(0, (S.cairn ? S.cairn.count : 0) - (S.stoneLaid ? 1 : 0)));
-    const fromPrev = prev === `stop-${k - 1}` && S.roverD < park;
-    if (fromPrev) {
-      // The cairn ahead is not there yet: it rises when the rover reaches it.
+    const prevK = prev && prev.startsWith('stop-') ? Number(prev.slice(5)) : -1;
+    if (prevK === k - 1 && k > 0) {
+      // Walk the leg. The cairn ahead is not there yet: it rises as you arrive.
       S.stage.setCairns(k - 1);
-      const d0 = S.roverD;
-      roll(S.path, d0, park, clamp((park - d0) * 13, 3200, 7500), (p, yaw) => chaseCam(p, yaw, {}, true), true)
-        .then((ok) => { if (ok) { S.stage.setCairns(k); settle(false); } });
+      const from = prevK === 0 ? 0 : Math.max(0, S.plan.out[S.plan.idx[prevK]].d - 5);
+      walkTo(S.path, from, stand, clamp((stand - from) * 9, 3500, k === rk ? 9000 : 7000), target)
+        .then((ok) => { if (ok) { S.stage.setCairns(k); if (k === rk) S.stage.setCairns(rk - 1); } });
     } else {
-      S.stage.setCairns(k);
-      S.roverD = park; placeRover(park);
-      settle(true);
+      S.stage.setCairns(k === rk ? rk - 1 : k);
+      settle();
     }
+    if (k === rk && S.touched) touchWheel(true);
     return;
   }
   if (id === 'storm') {
-    const o = stormOptionsFor(r), wp = stops()[last];
-    S.stage.setCairns(last);
-    S.stage.markStops(last, last);
+    const o = stormOptionsFor(r), wp = stops()[rk];
+    S.stage.setCairns(rk - 1);
+    S.stage.markStops(rk, rk);
     S.stage.setHome(S.stormField);
     setLayers(['shield']);
     if (!S.choice) {
-      const dl = S.plan.out[S.plan.idx[last]].d, park = Math.min(S.path.length, dl + 9);
-      S.roverD = park; placeRover(park);
       S.stage.drawReturn(o.direct.line);
       S.stage.setAlternatives([o.trail.line]);
-      const p = S.path.at(park), dock = S.stage.worldOf(stops()[0].lon, stops()[0].lat);
-      chaseCam(p, Math.atan2(dock.z - p.z, dock.x - p.x), { side: 16, dist: 34, polar: 72 }, true);
-      S.spin = 0.8;
+      const me = eyeAt(S.path.length - 6), dock = S.stage.worldOf(stops()[0].lon, stops()[0].lat);
+      S.stage.setEye(me.x, me.z, lookYaw(me, dock), -0.14, 0, true);
     } else {
       const x = o[S.choice], path = worldPath(x.line);
       S.stage.drawReturn(x.line);
-      roll(path, 0, path.length, clamp(path.length * 6, 5000, 11000), (p, yaw) => chaseCam(p, yaw, { dist: 22, polar: 68 }, true))
-        .then((ok) => { if (ok) { S.roverD = 4; S.spin = 1.2; } });
+      walkTo(path, 0, path.length, clamp(path.length * 4, 6000, 12000));
     }
     S.map.setCrew(wp.lon, wp.lat);
     return;
   }
   if (id === 'home') {
-    // At the hatch, the rover turns away and drives on up its own track, alone. The camera stays; it gets smaller.
-    S.stage.setCairns(n);
+    // Home at the hatch, looking back up the mountain toward where it waits.
+    S.stage.setCairns(rk - 1);
     S.stage.markStops(-1, n);
-    setLayers([]);
-    const track = S.route.roverTrack.map((p) => ({ lon: p[0], lat: p[1] })), dock = stops()[0];
-    let i0 = 0, bd = Infinity;
-    track.forEach((p, i) => { const dd = groundMetres(p, dock); if (dd < bd) { bd = dd; i0 = i; } });
-    const on = worldPath(track.slice(i0).filter((p) => S.terrain.contains(p.lon, p.lat)));
-    const p0 = on.at(0);
-    S.rolled = S.rolled || 0;
-    S.stage.placeRover(p0.x, p0.z, on.dir(0), S.rolled);
-    chaseCam(p0, on.dir(0), { side: 20, dist: 18, polar: 72 }, true);
-    roll(on, 0, on.length, 32000, (p, yaw, f) => chaseCam(p, yaw, { side: 20 + f * 25, dist: 16 + f * 150, polar: 72 - f * 14 }, true))
-      .then(() => { S.map.setCrew(dock.lon, dock.lat); });
-    S.map.setCrew(dock.lon, dock.lat);
+    setLayers(['track']);
+    const me = eyeAt(0);
+    S.stage.setEye(me.x, me.z, lookYaw(me, rover), 0.02, 0, true);
+    S.map.setCrew(stops()[0].lon, stops()[0].lat);
   }
+}
+
+// Kneel at its front wheel: the torn aluminium, close enough to touch.
+function touchWheel(immediate) {
+  const d = S.path.length, p = S.path.at(d), yaw = S.path.dir(d - 4);
+  const fx = Math.cos(yaw), fz = Math.sin(yaw);
+  // Stand ahead and to the left of the front-left wheel, looking back at it, a little down.
+  const ex = p.x + fx * 3.0 - fz * 1.6, ez = p.z + fz * 3.0 + fx * 1.6;
+  const wx = p.x + fx * 1.0 - fz * 1.0, wz = p.z + fz * 1.0 + fx * 1.0;
+  S.stage.setEye(ex, ez, Math.atan2(wz - ez, wx - ex), -0.42, -0.55, !!immediate);
 }
 
 function mapPanel() {
@@ -717,7 +752,7 @@ function groundAt(k) {
   const d = S.plan.out[S.plan.idx[k]].d;
   S.youD = Math.max(0, d - (k ? 6 : 0));
   S.rolled = S.rolled || 0;
-  S.roverD = Math.min(S.path.length, d + (k ? 9 : FOLLOW_M + 3));
+  S.roverD = S.path.length;   // Curiosity waits at its real latest position
   placeRover(S.roverD);
   S.stage.markStops(k, k);
   const me = S.path.at(S.youD), look = k ? S.stage.cairnPoint(k) : S.path.at(S.roverD);
@@ -734,6 +769,17 @@ function m2020(cb) {
   if (S.m2020) return cb(S.m2020);
   fetchJson(S.mission.liveFeeds.perseveranceLatest).then((d) => { const im = d.images && d.images[0]; if (im) { S.m2020 = im; cb(im); } }).catch(() => {});
 }
+// Curiosity's own newest image, fetched live from the raw-image gallery when you reach it.
+function fillCuriosity() {
+  const el = $('cur-live');
+  if (!el || !S.mission.liveFeeds.curiosityLatest) return;
+  const put = (im) => {
+    if (!$('cur-live') || !im) return;
+    $('cur-live').innerHTML = `<a href="${esc(im.https_url)}" target="_blank" rel="noopener"><img src="${esc(im.https_url)}" alt="Curiosity's newest raw image" referrerpolicy="no-referrer"></a><figcaption><b>What it saw most recently, live</b>${esc(camName(im.instrument === 'NAV_LEFT_B' ? 'Navigation' : im.instrument))}, sol ${num(im.sol)}, ${esc(day(im.date_taken))}. NASA/JPL-Caltech, raw images gallery.</figcaption>`;
+  };
+  if (S.mslLatest) return put(S.mslLatest);
+  fetchJson(S.mission.liveFeeds.curiosityLatest).then((d) => { S.mslLatest = d.items && d.items[0]; put(S.mslLatest); }).catch(() => {});
+}
 function fillLive(el, short) {
   if (!el) return;
   m2020((im) => {
@@ -745,6 +791,51 @@ function fillLive(el, short) {
 function mapStop(k) {
   const i = beatIds().indexOf(`stop-${k}`);
   if (i >= 0) guide(i);
+}
+
+// ---------------------------------------------------------------- the opening film
+// Five plates, one true line each. Every picture is a Blender render of the real ground (tools/blender_plates.py).
+const FILM = [
+  ['p1', 'In August 2012, a rover landed alone in Gale crater, and began to climb.'],
+  ['p2', 'On its first birthday, it played itself “Happy Birthday”. Once.'],
+  ['p3', 'Sharp rock tore its wheels. It kept climbing.'],
+  ['p4', 'One evening, it photographed Earth: a single point of light.'],
+  ['p5', 'Fourteen years later, you land at the foot of its tracks.'],
+  ['p5', 'It is still up there. Go and find it.'],
+];
+function playFilm(shots, done, ms = 4300) {
+  const run = (S.filmRun = (S.filmRun || 0) + 1), el = $('film'), box = $('film-plates');
+  S.filmDone = () => { if (run !== S.filmRun) return; S.filmRun++; el.classList.remove('is-on'); setTimeout(() => { el.hidden = true; box.innerHTML = ''; }, 700); clearTimeout(S.filmT); done(); };
+  box.innerHTML = '';
+  el.hidden = false;
+  void el.offsetWidth;
+  el.classList.add('is-on');
+  let i = 0, shown = null;
+  const step = () => {
+    if (run !== S.filmRun) return;
+    if (i >= shots.length) return S.filmDone();
+    const [id, line] = shots[i++];
+    if (shown !== id) {
+      const img = new Image();
+      img.src = `assets/img/plates/${id}.jpg`;
+      img.alt = '';
+      img.className = 'film__plate';
+      box.appendChild(img);
+      requestAnimationFrame(() => img.classList.add('is-in'));
+      [...box.children].slice(0, -2).forEach((x) => x.remove());
+      shown = id;
+    }
+    const L = $('film-line');
+    L.classList.remove('is-in'); void L.offsetWidth;
+    L.textContent = line;
+    L.classList.add('is-in');
+    clearTimeout(S.filmT);
+    S.filmT = setTimeout(step, ms + line.length * 18);
+  };
+  S.filmNext = step;
+  // warm the cache so plates never pop in
+  shots.forEach(([id]) => { const im = new Image(); im.src = `assets/img/plates/${id}.jpg`; });
+  step();
 }
 
 // Every part can be entered directly (nav, hash links). Each jump clears whatever the last one left behind.
@@ -765,7 +856,9 @@ function jump(id) {
 }
 
 function setGoal(goal, ask = '') { $('h-goal').textContent = goal; $('h-ask').textContent = ask; }
-const nCairns = () => stops().length - 1;
+const nCairns = () => stops().filter((w) => w.type !== 'rover').length - 1;
+const roverK = () => stops().length - 1;      // the last stop is Curiosity itself
+const lastCairnK = () => stops().length - 2;
 
 function legM(k) { return Math.round((S.plan.out[S.plan.idx[k + 1]].d - S.plan.out[S.plan.idx[k]].d) / 10) * 10; }
 
@@ -784,7 +877,7 @@ async function leg(k) {
   const t0 = S.marks.dep[k].t, t1 = S.marks.arr[k + 1].t;
   const dur = Math.max(4200, Math.min(9000, (d1 - d0) * 15));
   S.nextBearing = bearing(stops()[k], stops()[k + 1]);
-  setGoal(`Walking to cairn ${k + 1} of ${nCairns()}`, (S.story.stops[stops()[k + 1].id] || {}).q || '');
+  setGoal(k + 1 === roverK() ? 'Walking to Curiosity' : `Walking to cairn ${k + 1} of ${nCairns()}`, (S.story.stops[stops()[k + 1].id] || {}).q || '');
   S.stage.markStops(-1, k + 1);
   act([]);
   say('');
@@ -798,7 +891,7 @@ async function leg(k) {
       const f = Math.min(1, (now - start) / dur);
       const e = f < 0.5 ? 2 * f * f : 1 - Math.pow(-2 * f + 2, 2) / 2;
       const you = y0 + (y1 - y0) * e;
-      const rov = Math.min(S.path.length, Math.max(rStart, you + FOLLOW_M + 3 + (d1 + 9 - (y1 + FOLLOW_M + 3)) * e));
+      const rov = S.path.length;   // Curiosity waits at its real latest position
       S.rolled += rov - S.roverD;
       S.roverD = rov;
       placeRover(rov);
@@ -821,7 +914,7 @@ function arrive(k) {
   S.stage.markStops(k, k);
   readout(sim.stateAt(S.tl, S.marks.dep[k].t));
   setLayers(s.layers || []);
-  const c = S.stage.cairnPoint(k), me = S.path.at(S.youD);
+  const c = k === roverK() ? S.path.at(S.path.length) : S.stage.cairnPoint(k), me = S.path.at(S.youD);
   S.stage.setEye(me.x, me.z, Math.atan2(c.z - me.z, c.x - me.x), -0.16, 0);
   const earth = wp.earthNamesakes.length ? `<span class="hud__earth">Named after Earth: ${wp.earthNamesakes.map((n) => `<a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.name)} in Worldview</a>`).join(' · ')}</span>` : '';
   $('h-photo').innerHTML = `<img src="${esc(wp.pov.imageUrl)}" alt="${esc(wp.plain.see)}" referrerpolicy="no-referrer"><figcaption>Curiosity stood here on ${esc(day(wp.pov.utc))}. This is what it saw. ${earth}</figcaption>`;
@@ -829,9 +922,9 @@ function arrive(k) {
   $('h-jobs').innerHTML = wp.plain.do.map((j) => `<li>${esc(j)}</li>`).join('');
   $('h-jobs').hidden = false;
   const lay = LAYERS.find((l) => (s.layers || [])[0] === l.id);
-  setGoal(k ? `Cairn ${k} of ${nCairns()} · ${s.title || wp.plain.title}` : 'The rover dock', s.q || '');
+  setGoal(k === roverK() ? 'Curiosity · where it is now' : k ? `Cairn ${k} of ${nCairns()} · ${s.title || wp.plain.title}` : 'The hatch', s.q || '');
   say(esc(s.moment || s.q || s.title || wp.plain.title), `${esc(s.sub || s.a || s.line || '')}${lay ? ` <span class="say__layer">Visor layer on: ${esc(lay.name)}.</span>` : ''}`);
-  act([k < last ? { id: 'go', label: k ? 'Follow the rover on' : 'Follow the rover', note: `to cairn ${k + 1} · ${legM(k)} m` }
+  act([k < last ? { id: 'go', label: 'Follow its tracks', note: k + 1 === roverK() ? `to the rover · ${legM(k)} m` : `to cairn ${k + 1} · ${legM(k)} m` }
     : { id: 'turn', label: 'Turn for home', note: 'the storm drill, on the map' }, { id: 'tomap', label: 'Back to the map' }]);
 }
 
@@ -943,18 +1036,22 @@ async function boot() {
 
   document.addEventListener('click', (e) => {
     const t = e.target;
+    if (t.closest('#film') && !t.closest('[data-a]')) { clearTimeout(S.filmT); return S.filmNext && S.filmNext(); }
     const a = t.closest('[data-a]');
     if (a) {
       const id = a.dataset.a;
+      if (id === 'filmskip') return S.filmDone && S.filmDone();
+      if (id === 'opening') return playFilm(FILM, () => guide(0));
       if (id === 'next') return guide(S.beat + 1);
+      if (id === 'touch') { S.touched = true; card(); touchWheel(false); if (S.sound) S.sound.thud(); return; }
       if (id === 'stone') {
         S.stoneLaid = true;
         try { localStorage.setItem('redcairn.stones', String(stoneCount() + 1)); } catch (e) { /* private mode */ }
-        cairnAdd().then((j) => { if (j) { S.myStone = j.yours || j.already || null; if (beatIds()[S.beat] === `stop-${stops().length - 1}`) card(); } });
-        const k = stops().length - 1, c = S.stage.cairnPoint(k), p = S.path.at(S.roverD);
+        cairnAdd().then((j) => { if (j) { S.myStone = j.yours || j.already || null; if (beatIds()[S.beat] === `stop-${lastCairnK()}`) card(); } });
+        const k = lastCairnK(), c = S.stage.cairnPoint(k);
         S.stage.addStone(k);
         S.spin = 0;
-        chaseCam(c, Math.atan2(c.z - p.z, c.x - p.x), { side: 150, dist: 6.5, polar: 66 });
+        { const me = eyeAt(S.plan.out[S.plan.idx[k]].d - 1); S.stage.setEye(me.x, me.z, lookYaw(me, c), -0.45, -0.3); }
         return card();
       }
       if (id === 'prev') return guide(S.beat - 1);
@@ -964,7 +1061,7 @@ async function boot() {
       if (id === 'turn') return guide(beatIds().indexOf('storm'));
       if (id.startsWith('c-')) return chooseOnMap(id.slice(2));
       if (id === 'restorm') { S.choice = null; return guide(S.beat); }
-      if (id === 'again') { S.choice = null; S.stoneLaid = false; return guide(beatIds().indexOf('stop-0')); }
+      if (id === 'again') { S.choice = null; S.stoneLaid = false; S.touched = false; return guide(beatIds().indexOf('stop-0')); }
       if (id === 'free' || id === 'explore') return freeMap();
       if (id === 'story') return guide(S.beat || 0, { keepLayers: true });
       if (id === 'layers') return document.body.toggleAttribute('data-layers');
@@ -1009,6 +1106,8 @@ async function boot() {
   new MutationObserver(() => S.sound.scene(SCENE[document.body.dataset.step] || 'off')).observe(document.body, { attributes: true, attributeFilter: ['data-step'] });
   document.addEventListener('keydown', (e) => {
     if ($('about').open || e.target.closest('input')) return; // typing a name, or the slider
+    if (!$('film').hidden && (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowRight')) { e.preventDefault(); clearTimeout(S.filmT); return S.filmNext && S.filmNext(); }
+    if (!$('film').hidden && e.key === 'Escape') return S.filmDone && S.filmDone();
     if (e.key === ' ' || e.key === 'Enter') {
       const b = [...document.querySelectorAll('#guide .act, #act .act')].find((x) => x.offsetParent);
       if (b) { e.preventDefault(); b.click(); }
@@ -1018,7 +1117,8 @@ async function boot() {
   document.body.removeAttribute('data-booting');
   addEventListener('hashchange', () => { const h = location.hash.slice(1); if (HASHES().includes(h)) jump(h); });
   const start = location.hash.slice(1);
-  jump(HASHES().includes(start) ? start : 'intro');
+  if (HASHES().includes(start)) jump(start);
+  else { jump('intro'); playFilm(FILM, () => guide(0)); }
 }
 
 boot().catch((err) => {

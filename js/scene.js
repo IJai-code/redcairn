@@ -749,7 +749,7 @@ export class Stage {
       const at = this.cairnPoint(k);
       g.position.copy(at);
       g.rotation.y = rand() * 6.28;
-      g.scale.setScalar(k ? 1 : 0.001);   // the dock has the rover, not a cairn
+      g.scale.setScalar(k && wp.type !== 'rover' ? 1 : 0.001);   // no cairn at the hatch or at the rover itself
       this.wScene.add(g);
       this.cairns.push({ g, mat, rise: 1, flag, beam });
 
@@ -829,7 +829,8 @@ export class Stage {
 
   // Raise or hide cairns: before the rover has stopped somewhere, there is nothing there.
   setCairns(visibleUpTo) {
-    this.cairns.forEach((c, k) => { c.target = k > 0 && k <= visibleUpTo ? 1 : 0; });
+    const wps = this.data.mission.waypoints;
+    this.cairns.forEach((c, k) => { c.target = k > 0 && k <= visibleUpTo && wps[k].type !== 'rover' ? 1 : 0; });
   }
 
   markStops(here, reached) {

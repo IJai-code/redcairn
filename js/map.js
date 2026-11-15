@@ -230,9 +230,11 @@ export class MapView {
       const pin = document.createElement('div');
       pin.className = 'pin';
       if (wp.science.priority === 1) pin.dataset.key = '';
-      pin.textContent = k ? String(k) : 'R';
+      const rover = wp.type === 'rover';
+      pin.textContent = rover ? 'C' : k ? String(k) : 'H';
+      if (rover) pin.dataset.rover = '';
       const icon = L.divIcon({ className: 'wp-icon', html: pin, iconSize: [44, 44], iconAnchor: [22, 22] });
-      const label = k ? `Cairn ${k}: ${wp.plain.title}` : `The rover dock: ${wp.name}`;
+      const label = rover ? `Curiosity, where it is now (sol ${wp.rover.sol})` : k ? `Cairn ${k}: ${wp.plain.title}` : `The hatch: ${wp.name}`;
       const marker = L.marker([wp.lat, wp.lon], { icon, title: label, alt: label, keyboard: true, zIndexOffset: 500 }).addTo(this.map);
       marker.on('click', () => this.onStop(k));
       marker.on('keypress', (e) => { if (e.originalEvent.key === 'Enter') this.onStop(k); });

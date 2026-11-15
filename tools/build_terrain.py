@@ -264,6 +264,8 @@ def main():
     print("terrain.bin %dx%d cells, %d bytes" % (cols, rows, len(out)))
 
     for wp in mission["waypoints"]:
+        if not wp.get("model", {}).get("src"):
+            continue
         cx = int(round((wp["lon"] - b["west"]) / (b["east"] - b["west"]) * w - 0.5))
         cy = int(round((b["north"] - wp["lat"]) / (b["north"] - b["south"]) * h - 0.5))
         path = os.path.join(ROOT, "art", "blocks", os.path.basename(wp["model"]["src"]))  # raw block; Blender writes the final model
