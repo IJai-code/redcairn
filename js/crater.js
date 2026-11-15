@@ -11,11 +11,15 @@ function dateOfSol(sol) {
   return new Date(LANDED + sol * SOL_DAYS * 86400000);
 }
 
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
 export class Crater {
   constructor(root, view, gale, walk) {
     this.root = root;
+    this.view = view;
     this.v = view.views.wide;
     this.gale = gale;
+    this.on = new Set(['color']);
     this.W = this.v.width;
     this.H = this.v.height;
     this.state = null;
@@ -25,14 +29,26 @@ export class Crater {
 
     root.innerHTML = `
       <div class="crater__frame">
-        <img src="${this.v.image}" alt="" width="${this.W}" height="${this.H}" decoding="async">
+        ${Object.entries(this.v.images).map(([k, src]) => `<img data-layer="${k}" src="${src}" alt="" width="${this.W}" height="${this.H}" decoding="async" ${k === 'color' ? '' : 'loading="lazy"'}>`).join('')}
         <svg viewBox="0 0 ${this.W} ${this.H}" width="${this.W}" height="${this.H}" aria-hidden="true">
           <path class="crater__under"/><path class="crater__line"/><path class="crater__walk"/>
           <circle class="crater__head" r="6"/>
         </svg>
       </div>
       <div class="crater__pins"></div>
+      <div class="chips crater__chips" role="group" aria-label="Crater map layers"></div>
+      <div class="legend crater__legend" hidden></div>
       <div class="crater__clock" aria-hidden="true"><b>—</b><span>—</span></div>`;
+    this.chips = root.querySelector('.crater__chips');
+    this.legend = root.querySelector('.crater__legend');
+    this.chips.addEventListener('click', (e) => {
+      const b = e.target.closest('button');
+      if (!b) return;
+      const id = b.dataset.layer, L = this.layers.find((l) => l.id === id);
+      if (L.base) { for (const l of this.layers) if (l.base) this.on.delete(l.id); this.on.add(id); }
+      else if (this.on.has(id)) this.on.delete(id); else this.on.add(id);
+      this.#layers();
+    });
     this.frame = root.querySelector('.crater__frame');
     this.svg = root.querySelector('svg');
     this.under = root.querySelector('.crater__under');
@@ -90,7 +106,49 @@ export class Crater {
       return { ...p, el, xy: P[p.id].xy };
     });
 
+    // Water-made minerals detected from orbit (CRISM on MRO, OMEGA on Mars Express).
+    for (const m of this.v.waterMinerals) {
+      const el = document.createElement('div');
+      el.className = 'cpin cpin--r cpin--water';
+      el.innerHTML = `<i></i><span>${m.instruments.join(' + ')}</span>`;
+      pinRoot.appendChild(el);
+      this.pins.push({ id: 'water', show: ['wide', 'orbit', 'line'], side: 'r', layer: 'water', el, xy: m.xy });
+    }
+
+    const units = view.geologicUnits;
+    const h = view.mountain;
+    this.layers = [
+      { id: 'color', base: true, name: 'True colour', kind: 'Optical · Viking orbiters' },
+      { id: 'height', base: true, name: 'Height', kind: 'Topographic · MOLA + HRSC',
+        legend: [['linear-gradient(90deg,#3b3bd0,#2fb0c8,#47c25a,#d8d23a,#d9772f)', `Low to high: floor ${num(h.floorElevM)} m, summit +${num(h.summitElevM)} m`]] },
+      { id: 'geology', base: true, name: 'Rock units (USGS)', kind: 'Geologic · USGS SIM 3292',
+        legend: [[units[0].color, `${units[0].unit} · Mount Sharp’s own rock, about 3 to 3.7 billion years old`],
+                 [units[1].color, `${units[1].unit} · the crater and the ground around it`]] },
+      { id: 'water', name: 'Water minerals from orbit', kind: 'Spectral · CRISM + OMEGA', legend: [['#6fb7e0', 'Minerals that only form in water']] },
+      { id: 'track', name: 'Curiosity’s track', kind: 'Ground truth · rover odometry', legend: [['#ff9a6b', `Curiosity’s ${gale.rover.distanceKm.toFixed(1)} km, August 2012 to today`]] },
+    ];
+    this.#layers();
+
     addEventListener('resize', () => { if (this.state) this.#apply(this.#target(this.state)); });
+  }
+
+  // Show the chosen layers: one base picture (colour, height or rock units) plus the water dots and the track.
+  #layers() {
+    const base = this.layers.find((l) => l.base && this.on.has(l.id)) || this.layers[0];
+    for (const img of this.frame.querySelectorAll('img')) img.style.opacity = img.dataset.layer === 'color' || img.dataset.layer === base.id ? 1 : 0;
+    this.svg.style.opacity = this.on.has('track') ? 1 : 0;
+    if (this.on.has('track') && this.state && this.state !== 'line' && this.drawn < 1) this.#draw(1);
+    this.root.toggleAttribute('data-water', this.on.has('water'));
+    this.chips.innerHTML = this.layers.map((l) => `<button type="button" data-layer="${l.id}" aria-pressed="${l.base ? l === base : this.on.has(l.id)}" title="${esc(l.kind)}">${esc(l.name)}</button>`).join('');
+    const shown = this.layers.filter((l) => l.legend && (this.on.has(l.id)));
+    this.legend.hidden = !shown.length;
+    this.legend.innerHTML = shown.map((l) => `<b title="${esc(l.kind)}">${esc(l.name)}</b>${l.legend.map(([c, t]) => `<span><i style="background:${c}"></i>${esc(t)}</span>`).join('')}`).join('');
+    if (this.cur) this.#apply(this.cur);
+  }
+
+  setLayers(ids) {
+    this.on = new Set(ids);
+    this.#layers();
   }
 
   #target(state) {
@@ -103,6 +161,7 @@ export class Crater {
       const fy = (Math.min(...ys) + Math.max(...ys)) / 2 * 0.7 + this.v.places.summit.xy[1] * 0.3;
       return { fx, fy, s: cover * (wide ? 1.55 : 2.3), sx: wide ? 0.64 : 0.5, sy: wide ? 0.5 : 0.2 };
     }
+    if (state === 'orbit') return { fx: 0.56, fy: 0.5, s: cover * 1.1, sx: wide ? 0.62 : 0.5, sy: wide ? 0.5 : 0.3 };
     return { fx: 0.47, fy: 0.46, s: cover * 1.04, sx: wide ? 0.62 : 0.5, sy: wide ? 0.5 : 0.32 };
   }
 
@@ -121,10 +180,12 @@ export class Crater {
     this.head.setAttribute('r', 6 * k);
     for (const p of this.pins) {
       const x = tx + p.xy[0] * w, y = ty + p.xy[1] * h;
-      const on = p.show.includes(this.state) && y > 84 && y < vh - 24 && x > 16 && x < vw - 16;   // never under the top bar
+      // Never under the top bar, and on a wide screen never under the story text on the left.
+      const clear = y > 84 && y < vh - 24 && x > (vw > 900 ? vw * 0.38 : 16) && x < vw - 16;
+      const on = p.show.includes(this.state) && (!p.layer || this.on.has(p.layer)) && clear;
       p.el.style.opacity = on ? 1 : 0;
       // On a narrow screen, put the label on whichever side has room.
-      const side = vw > 900 ? p.side : (x < vw / 2 ? 'r' : 'l');
+      const side = vw > 900 && !p.layer ? p.side : (x < vw * (vw > 900 ? 0.7 : 0.5) ? 'r' : 'l');
       p.el.classList.toggle('cpin--r', side === 'r');
       p.el.classList.toggle('cpin--l', side === 'l');
       p.el.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`;
@@ -154,7 +215,8 @@ export class Crater {
     this.clock.querySelector('span').textContent = `sol ${num(sol)} · ${when}`;
   }
 
-  show(state) {
+  show(state, layers) {
+    if (layers) this.setLayers(layers);
     if (state === this.state) return;
     const token = ++this.token;
     const from = this.cur || this.#target(state);
@@ -162,7 +224,7 @@ export class Crater {
     this.root.dataset.state = state;
     const to = this.#target(state);
     const startDraw = this.drawn;
-    const endDraw = state === 'line' ? 1 : 0;
+    const animateDraw = state === 'line' && startDraw < 1 && this.on.has('track');
     const dur = reduce ? 0 : 1500, drawDur = reduce ? 0 : 4200;
     const t0 = performance.now();
     const step = (now) => {
@@ -172,13 +234,13 @@ export class Crater {
       const t = {};
       for (const k of ['fx', 'fy', 's', 'sx', 'sy']) t[k] = from[k] + (to[k] - from[k]) * e;
       this.#apply(t);
-      if (endDraw === 1) {
+      if (animateDraw) {
         const g = drawDur ? Math.min(1, Math.max(0, (now - t0 - 700) / drawDur)) : 1;
-        this.#draw(startDraw >= 1 ? 1 : ease(g));
+        this.#draw(ease(g));
       } else {
-        this.#draw(0);
+        this.#draw(this.on.has('track') ? 1 : 0);
       }
-      if (f < 1 || (endDraw === 1 && this.drawn < 1)) requestAnimationFrame(step);
+      if (f < 1 || (animateDraw && this.drawn < 1)) requestAnimationFrame(step);
     };
     requestAnimationFrame(step);
   }

@@ -122,6 +122,7 @@ def build_mesh(geo):
 
 
 def ground_material():
+    """Viking colour, with a second map that can be laid over it. set_layer() picks which."""
     m = bpy.data.materials.new("Gale ground")
     m.use_nodes = True
     nt = m.node_tree
@@ -134,10 +135,40 @@ def ground_material():
     curve.inputs["Bright"].default_value = 0.02
     curve.inputs["Contrast"].default_value = -0.08
     nt.links.new(tex.outputs["Color"], curve.inputs["Color"])
-    nt.links.new(curve.outputs["Color"], bsdf.inputs["Base Color"])
+    over = nt.nodes.new("ShaderNodeTexImage")
+    over.name = "Overlay"
+    over.interpolation = "Cubic"
+    mix = nt.nodes.new("ShaderNodeMix")
+    mix.name = "Mix"
+    mix.data_type = "RGBA"
+    nt.links.new(curve.outputs["Color"], mix.inputs["A"])
+    nt.links.new(over.outputs["Color"], mix.inputs["B"])
+    mix.inputs["Factor"].default_value = 0.0
+    nt.links.new(mix.outputs["Result"], bsdf.inputs["Base Color"])
     bsdf.inputs["Roughness"].default_value = 1.0
     bsdf.inputs["Specular IOR Level"].default_value = 0.1
     return m
+
+
+# The layers a viewer can switch between, all rendered through the same camera so they line up exactly.
+LAYERS = {
+    "color": None,
+    "height": ("height.jpg", "MIX", 0.88),     # MOLA + HRSC colour-shaded relief
+    "geology": ("geology.png", "COLOR", 0.8),  # USGS units: take their hue, keep the ground's light and shade
+}
+
+
+def set_layer(mat, name):
+    nt = mat.node_tree
+    mix, over = nt.nodes["Mix"], nt.nodes["Overlay"]
+    spec = LAYERS[name]
+    if not spec:
+        mix.inputs["Factor"].default_value = 0.0
+        return
+    fname, mode, fac = spec
+    over.image = bpy.data.images.get(fname) or bpy.data.images.load(path("art", "gale", fname))
+    mix.blend_type = mode
+    mix.inputs["Factor"].default_value = fac
 
 
 def setup(sc, geo):
@@ -242,7 +273,8 @@ def main():
     geo = Geo(gale["box"], dem)
 
     ob = bpy.data.objects.new("Gale", build_mesh(geo))
-    ob.data.materials.append(ground_material())
+    mat = ground_material()
+    ob.data.materials.append(mat)
     sc.collection.objects.link(ob)
     setup(sc, geo)
     cams = {name: camera(sc, geo, name) for name in VIEWS}
@@ -265,6 +297,7 @@ def main():
         "rover": {"lonlat": r["latest"], "label": f"Curiosity today, sol {r['latestSol']}"},
         "walk": {"lonlat": [137.3815, -4.8072], "label": "Your walk"},
         "summit": {"lonlat": [peak[0], peak[1]], "label": "Summit of Mount Sharp"},
+        "floor": {"lonlat": [float(lon[dist < 70].flat[np.argmin(dem[dist < 70])]), float(lat[dist < 70].flat[np.argmin(dem[dist < 70])])], "label": "Lowest point of the floor"},
         # A point on the far (south-east) rim: 77 km from the centre on a bearing of 135 degrees.
         "rim": {"lonlat": [138.72, -6.32], "label": "Far rim of Gale crater"},
     }
@@ -276,17 +309,39 @@ def main():
         "mountain": {"summitElevM": round(peak[2]), "floorElevM": round(floor), "heightM": round(peak[2] - floor)},
         "views": {},
     }
+    # Each geologic unit's colour, read from the USGS map at a point we know is in it.
+    gimg = bpy.data.images.load(path("art", "gale", "geology.png"))
+    gpx = np.array(gimg.pixels[:]).reshape(gimg.size[1], gimg.size[0], 4)[::-1]
+    def unit_color(lonlat):
+        c = int((lonlat[0] - b["west"]) / (b["east"] - b["west"]) * gimg.size[0])
+        r_ = int((b["north"] - lonlat[1]) / (b["north"] - b["south"]) * gimg.size[1])
+        rgb = gpx[r_, c, :3]
+        return "#%02x%02x%02x" % tuple(int(round(v * 255)) for v in rgb)
+    names = dict(gale["geologicUnits"])
+    view["geologicUnits"] = [
+        {"unit": "Htu", "name": names.get("Htu", "Htu"), "color": unit_color((peak[0], peak[1]))},
+        {"unit": "AHi", "name": names.get("AHi", "AHi"), "color": unit_color(r["landing"])},
+    ]
+    seen = {}
+    for m in gale["waterMinerals"]:
+        seen.setdefault((m["lon"], m["lat"]), []).append(m["instrument"])
+
     for name, cam in cams.items():
         sc.camera = cam
         view["views"][name] = {
-            "image": f"assets/img/gale-{name}.jpg",
             "width": sc.render.resolution_x, "height": sc.render.resolution_y,
+            "images": {layer: f"assets/img/gale-{name}-{layer}.jpg" for layer in LAYERS},
             "track": [project(sc, cam, geo.xyz(a, c, 0.05)) for a, c in gale["traverse"]],
             "places": {k_: dict(p, xy=project(sc, cam, geo.xyz(p["lonlat"][0], p["lonlat"][1], 0))) for k_, p in places.items()},
+            "waterMinerals": [{"lonlat": [lo, la], "instruments": sorted(ins), "xy": project(sc, cam, geo.xyz(lo, la, 0))}
+                              for (lo, la), ins in seen.items()],
         }
-        sc.render.filepath = os.path.join(out_dir, f"gale-{name}.jpg")
-        bpy.ops.render.render(write_still=True)
-        print("wrote", sc.render.filepath)
+        for layer in LAYERS:
+            set_layer(mat, layer)
+            sc.render.filepath = os.path.join(out_dir, f"gale-{name}-{layer}.jpg")
+            bpy.ops.render.render(write_still=True)
+            print("wrote", sc.render.filepath)
+        set_layer(mat, "color")
     target = path("data", "gale-view.json") if not PREVIEW else os.path.join(out_dir, "gale-view.json")
     with open(target, "w", encoding="utf-8") as fh:
         json.dump(view, fh, separators=(",", ":"))

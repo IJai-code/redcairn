@@ -178,6 +178,17 @@ function craterHTML() {
     ${sourcesLine(['trek', 'gale-guide'])}`;
 }
 
+function orbitHTML() {
+  const u = S.galeView.geologicUnits;
+  return `
+    <p class="eyebrow">Seen from space first</p>
+    <h2>Orbiters found the water before any rover did.</h2>
+    <p class="lede">Long before Curiosity landed, two instruments circling Mars split the sunlight bouncing off this ground into its colours, and found the signature of minerals that only form in water. The blue dots are those detections.</p>
+    <p>The US Geological Survey’s map of Mars draws Mount Sharp as rock of its own (${esc(u[0].unit)}), sitting inside the crater’s older ground (${esc(u[1].unit)}). A layered mountain with water minerals at its foot: that is why Gale was chosen, and the rover was sent to check from the ground.</p>
+    <p class="fine">Switch the layers at the top of the screen, the way you would in Mars Trek: true colour, height, rock units, water minerals, the rover’s track. Water minerals come from CRISM on Mars Reconnaissance Orbiter and OMEGA on Mars Express. Their positions are given to the nearest tenth of a degree, about 6 km, so each dot marks an area, not a rock.</p>
+    ${sourcesLine(['hydrous', 'usgs-geology', 'gale-guide'])}`;
+}
+
 function lineHTML() {
   const r = S.gale.rover, wps = stops();
   const month = (iso) => new Date(iso).toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' });
@@ -326,9 +337,25 @@ function endHTML() {
     </div>
     <p class="stones__done" id="stones-done" ${S.stones.size === ORDER.length ? '' : 'hidden'}>Nobody is forgotten.</p>
     <p class="closing">The rover could not come home. Its last job is to make sure you can.</p>
+    <figure class="still" id="still-out" hidden></figure>
     <h3>What this guide is made of</h3>
     <ul class="made-of">${kinds.map(([a, b]) => `<li>${esc(a)}<span>${esc(b)}</span></li>`).join('')}</ul>
     <p style="margin-top:18px"><button class="link" id="about-2" type="button">Every source, and how AI was used</button> · <button class="link" type="button" data-go="hero">Back to the start</button></p>`;
+}
+
+// The other working rover, live: the newest navigation-camera frame from Perseverance.
+function showStillOut() {
+  const el = $('still-out');
+  if (!el || el.dataset.done) return;
+  el.dataset.done = '1';
+  fetchJson(S.mission.liveFeeds.perseveranceLatest).then((d) => {
+    const im = d.images && d.images[0];
+    if (!im) return;
+    const when = new Date(im.date_taken_utc).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+    el.innerHTML = `<img src="${esc(im.image_files.medium)}" alt="The newest navigation camera picture from the Perseverance rover" referrerpolicy="no-referrer" loading="lazy">
+      <figcaption><b>Still out there.</b> While you read this, Perseverance is working at Jezero crater, about 3,750 km from the trail you just walked. This is the newest picture it has sent, from its Mars day ${num(Number(im.sol))} (${esc(when)}). ${esc(im.credit)}</figcaption>`;
+    el.hidden = false;
+  }).catch(() => {});
 }
 
 function renderEnd() {
@@ -404,8 +431,9 @@ function buildBeats() {
   });
   B.push({ id: 'bridge', act: 1, stage: 'globe', html: bridgeHTML(), enter: gl(ghost('curiosity'), 1.8) });
 
-  B.push({ id: 'crater', act: 2, stage: 'crater', html: craterHTML(), enter: () => S.crater.show('wide') });
-  B.push({ id: 'line', act: 2, stage: 'crater', html: lineHTML(), enter: () => S.crater.show('line') });
+  B.push({ id: 'crater', act: 2, stage: 'crater', html: craterHTML(), enter: () => S.crater.show('wide', ['color']) });
+  B.push({ id: 'orbit', act: 2, stage: 'crater', html: orbitHTML(), enter: () => S.crater.show('orbit', ['geology', 'water']) });
+  B.push({ id: 'line', act: 2, stage: 'crater', html: lineHTML(), enter: () => S.crater.show('line', ['color', 'track']) });
 
   const layers = S.strata.layers;
   B.push({ id: 'strata', act: 2, stage: 'stack', html: strataIntroHTML(), enter: () => {
@@ -429,6 +457,7 @@ function buildBeats() {
     const useTl = S.finalTl || tl;
     toWalk({ view: view.back(true), layers: S.env.spe ? ['home'] : [], t: useTl.end.t, tl: useTl, here: -1, reached: last + 1, ret: S.finalTl });
     renderEnd();
+    showStillOut();
   } });
   return B;
 }

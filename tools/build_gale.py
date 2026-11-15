@@ -5,6 +5,8 @@
 Writes:
   art/gale/dem.tif       Gale crater elevation, MOLA + HRSC blend at ~200 m/px (Mars Trek ImageServer), float32 metres
   art/gale/color.jpg     Viking MDIM 2.1 true-colour mosaic of the same box (Mars Trek ImageServer)
+  art/gale/height.jpg    MOLA + HRSC colour-shaded relief of the same box (Mars Trek ImageServer)
+  art/gale/geology.png   USGS SIM 3292 Geologic Map of Mars, same box (Mars Trek MapServer)
   data/gale.json         the box, Curiosity's whole traverse (simplified) and the numbers the story quotes
 
 Then render it with tools/blender_gale.py.
@@ -18,6 +20,7 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), 
 TREK = "https://trek.nasa.gov/mars/trekarcgis/rest/services"
 TRAVERSE = "https://mars.nasa.gov/mmgis-maps/MSL/Layers/json/MSL_traverse.json"
 WAYPOINTS = "https://mars.nasa.gov/mmgis-maps/MSL/Layers/json/MSL_waypoints.json"
+MINERALS = TREK + "/Hydrous_Mineral_Detections_OMEGA_CRISM_clon0/MapServer/0/query"
 
 # Gale crater is 154 km across, centred near 137.8 E, 5.4 S. A 3 by 3 degree box holds the rim.
 BOX = {"west": 136.3, "east": 139.3, "south": -6.9, "north": -3.9}
@@ -79,6 +82,16 @@ def main():
     get(export("Mars_Viking_MDIM21_ClrMosaic_global_232m", 4326, COLOR_PX, "jpg"),
         os.path.join(ROOT, "art", "gale", "color.jpg"))
 
+    get(export("Mars_MOLA_blend200ppx_HRSC_ClrShade_clon0dd_200mpp", 4326, COLOR_PX, "jpg"),
+        os.path.join(ROOT, "art", "gale", "height.jpg"))
+    bbox = f"{BOX['west']},{BOX['south']},{BOX['east']},{BOX['north']}"
+    get(f"{TREK}/SIM3292_Global_Geology/MapServer/export?bbox={bbox}&bboxSR=104905&imageSR=104905"
+        f"&size={COLOR_PX},{COLOR_PX}&format=png&transparent=false&f=image", os.path.join(ROOT, "art", "gale", "geology.png"))
+    units = json.loads(get(f"{TREK}/SIM3292_Global_Geology/MapServer/0/query?geometry={bbox}&geometryType=esriGeometryEnvelope"
+                           f"&inSR=104905&spatialRel=esriSpatialRelIntersects&returnGeometry=false&outFields=Unit,UnitDesc&f=json"))
+    minerals = json.loads(get(f"{MINERALS}?geometry={bbox}&geometryType=esriGeometryEnvelope&inSR=104905"
+                              f"&spatialRel=esriSpatialRelIntersects&returnGeometry=false&outFields=Long_East,Latitude,Instrument&f=json"))
+
     trav = json.loads(get(TRAVERSE))
     pts = [p for f in trav["features"] for p in line_points(f["geometry"])]
     wps = json.loads(get(WAYPOINTS))["features"]
@@ -93,6 +106,9 @@ def main():
             "color": f"{TREK}/Mars_Viking_MDIM21_ClrMosaic_global_232m/ImageServer",
             "traverse": TRAVERSE,
             "waypoints": WAYPOINTS,
+            "height": f"{TREK}/Mars_MOLA_blend200ppx_HRSC_ClrShade_clon0dd_200mpp/ImageServer",
+            "geology": f"{TREK}/SIM3292_Global_Geology/MapServer",
+            "waterMinerals": MINERALS,
         },
         "rover": {
             "landedSol": first["sol"],
@@ -107,6 +123,9 @@ def main():
         "traverse": [[round(p[0], 5), round(p[1], 5)] for p in simplify(pts, 0.04)],
         # Odometry against time, so the story can say which sol the rover reached each point of the line.
         "solByKm": sol_by_km(wps),
+        "geologicUnits": sorted({(f["attributes"]["Unit"], f["attributes"]["UnitDesc"]) for f in units["features"]}),
+        "waterMinerals": [{"lon": round(f["attributes"]["Long_East"], 3), "lat": round(f["attributes"]["Latitude"], 3),
+                           "instrument": f["attributes"]["Instrument"]} for f in minerals["features"]],
     }
     with open(os.path.join(ROOT, "data", "gale.json"), "w", encoding="utf-8") as fh:
         json.dump(out, fh, separators=(",", ":"))

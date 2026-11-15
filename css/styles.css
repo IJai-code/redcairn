@@ -149,6 +149,10 @@ main { position: relative; z-index: 2; pointer-events: none; }
 .stones__btns button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 .stones__done { font: italic 20px var(--serif); color: var(--ember-soft) !important; }
 .closing { font: italic 24px/1.4 var(--serif) !important; margin-top: 34px !important; padding-top: 24px; border-top: 1px solid var(--line); color: #fbf3e6 !important; }
+.still { margin-top: 26px; }
+.still img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 4px; background: #1b1410; }
+.still figcaption { font-size: 13px; line-height: 1.5; color: var(--soft); margin-top: 8px; }
+.still figcaption b { color: var(--go); }
 .made-of li { padding: 8px 0; border-top: 1px solid var(--line); font-size: 14.5px; display: flex; gap: 12px; justify-content: space-between; }
 .made-of li span { color: var(--soft); text-align: right; }
 
@@ -170,6 +174,17 @@ body[data-stage="crater"] .crater { opacity: 1; }
 .cpin--l span { right: 14px; }
 .cpin[data-id="rover"] i { background: var(--go); animation: ping 2.2s ease-out infinite; }
 .cpin[data-id="walk"] i { background: var(--ember); }
+.crater__frame img { transition: opacity 0.6s; }
+.crater__frame svg { transition: opacity 0.4s; }
+.crater__chips { top: 72px; }
+body[data-stage="crater"] .crater__chips, body[data-stage="crater"] .crater__legend { pointer-events: auto; }
+.crater__legend { bottom: 28px; max-width: 300px; }
+.crater[data-state="line"] .crater__legend { display: none; }
+.crater__legend b:not(:first-child) { margin-top: 8px; }
+.cpin--water { display: none; }
+.crater[data-water] .cpin--water { display: block; }
+.cpin--water i { background: var(--water); width: 14px; height: 14px; left: -7px; top: -7px; box-shadow: 0 0 0 3px rgba(111, 183, 224, 0.35), 0 0 18px rgba(111, 183, 224, 0.8); }
+.cpin--water span { font-size: 11.5px; padding: 4px 8px; color: #cfe9f7; }
 .crater__clock { position: absolute; right: clamp(16px, 3vw, 32px); bottom: 28px; text-align: right; opacity: 0; transition: opacity 0.5s; text-shadow: 0 1px 12px rgba(0, 0, 0, 0.6); }
 .crater[data-state="line"] .crater__clock { opacity: 1; }
 .crater__clock b { display: block; font: 700 clamp(34px, 4vw, 52px)/1 var(--serif); font-variant-numeric: tabular-nums; }
@@ -260,7 +275,9 @@ body:not([data-booting]) .boot { opacity: 0; pointer-events: none; }
   .beat--hero .card { background: none; backdrop-filter: none; padding: 0 6px; }
   .card h1 { font-size: 38px; }
   .stackbig { top: 60px; width: 100%; height: 48vh; bottom: auto; }
-  .crater__clock { top: 70px; bottom: auto; right: 16px; }
+  .crater__clock { top: 112px; bottom: auto; right: 16px; }
+  .crater__chips { top: 62px; }
+  .crater__legend { left: 12px; right: 12px; top: 108px; bottom: auto; max-width: none; }
   .crater__clock b { font-size: 30px; }
   .cpin span { font-size: 12px; padding: 5px 8px; }
   .chips { top: 62px; left: 12px; right: 12px; max-width: none; justify-content: flex-start; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }

@@ -857,17 +857,17 @@
     {
       "source": "trek",
       "name": "Mars Trek",
-      "role": "Every map pixel and every elevation value: the 25 cm orbital mosaic, the 1 m elevation model behind slope, routing, shielding and the 3D terrain blocks, and the human Exploration Zones layer behind the site choice."
+      "role": "Every map pixel and every height: the Viking colour globe, the MOLA and HRSC elevation and colour-shaded relief behind the 3D Gale crater, the water-mineral detections, the 25 cm HiRISE photograph and the 1 m elevation model behind slope, routing, shielding and the walk diorama, and the Exploration Zones layer behind the site choice."
     },
     {
       "source": "usgs-geology",
       "name": "USGS planetary geologic mapping",
-      "role": "The regional unit under the whole walk, read from the global geologic map at the site: Htu, the Hesperian transition undivided unit."
+      "role": "The Rock units layer on the 3D crater: the USGS Geologic Map of Mars (SIM 3292) draped over Gale in Blender, showing Mount Sharp (Htu, Hesperian transition undivided unit) inside the crater's impact unit (AHi). Htu is also the unit under the whole walk."
     },
     {
       "source": "mount-sharp-route",
       "name": "Curiosity's proposed path up Mount Sharp",
-      "role": "The plan this walk completes. That map promised a climb from clay through sulfate-bearing rock; the EVA follows the track the rover actually drove through the sulfate unit."
+      "role": "Act II draws the route the plan became: Curiosity's whole 38.6 km track, from landing to today, over the Blender render of the mountain it was planned for. The plan promised a climb from clay into sulfate-bearing rock; the walk follows the rover's actual track through the sulfate unit."
     },
     {
       "source": "worldview",
@@ -877,7 +877,7 @@
     {
       "source": "m2020-raw",
       "name": "Perseverance raw images",
-      "role": "A live feed of the newest frame from the other rover, at Jezero crater, shown in the briefing and this panel. The same image service family supplies the eye-level photos at each waypoint."
+      "role": "The last thing the story shows: the newest frame from the other working rover, Perseverance at Jezero crater, fetched live when you reach the end. It is also in the sources panel."
     }
   ],
   "liveFeeds": {
