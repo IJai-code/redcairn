@@ -618,8 +618,8 @@ function mapPanel() {
       <p><b>Radiation</b> ${S.mission.hazards.radiation.backgroundMSvPerDay} mSv per day at the surface · Curiosity RAD</p>
       ${sw.sepCount != null ? `<p><b>Space weather</b> ${sw.sepCount} solar energetic particle events logged by NASA DONKI, ${esc(day(sw.from))} to ${esc(day(sw.to))}; latest ${esc(day(sw.latestSep))}. Not every one reaches Mars.</p>` : ''}
     </section>
-    <section class="mapui__sec"><h3>Next walk: Jezero crater</h3>
-      <p>The same engine works anywhere with an orbital elevation model and a rover’s photos. Next is Jezero crater, where Perseverance is exploring now. Its newest raw image:</p>
+    <section class="mapui__sec"><h3>The other rover, today</h3>
+      <p>Perseverance is driving in Jezero crater, about 3,800 km from this walk. Its newest raw image, fetched live: the same ground truth a crew would get before a walk there. This map needs only an elevation model and a rover’s photos, so Jezero could be mapped the same way.</p>
       <figure class="mapui__live" id="map-live"></figure>
     </section>`;
   fillLive($('map-live'), true);

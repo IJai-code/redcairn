@@ -13,7 +13,7 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230b0907'/%3E%3Cellipse cx='16' cy='24' rx='10' ry='3.6' fill='%23ff6a2b'/%3E%3Cellipse cx='16' cy='16.5' rx='7' ry='3.2' fill='%23ff6a2b'/%3E%3Cellipse cx='16' cy='9.8' rx='4.2' ry='2.8' fill='%23ff6a2b'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..700&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400..600&display=swap">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
   <link rel="stylesheet" href="css/styles.css">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
@@ -26,7 +26,8 @@
   </div>
 
   <!-- The planning map: Mars Trek's own tiles, our computed layers, the routes and the cairns. -->
-  <div class="map" id="map"><div class="coords" id="coords" hidden></div><div class="scale" aria-hidden="true"><span class="scale__bar" id="scale-bar"></span><span id="scale-text"></span></div></div>
+  <div class="map" id="map"><div class="coords" id="coords" hidden></div>
+    <div class="sheet" aria-hidden="true"><svg viewBox="0 0 18 34"><path d="M9 1 L16 22 L9 17 Z" fill="#ece5d8"/><path d="M9 1 L2 22 L9 17 Z" fill="none" stroke="#ece5d8" stroke-width="1"/><text x="9" y="33" text-anchor="middle" fill="#ece5d8" font-size="10" font-family="Archivo, sans-serif" font-weight="700">N</text></svg><b>GALE CRATER, MARS</b><span>Mount Sharp, lower slopes</span><span>Mars Trek tiles · north up</span></div><div class="scale" aria-hidden="true"><span class="scale__bar" id="scale-bar"></span><span id="scale-text"></span></div></div>
   <aside class="mapui" id="mapui" aria-label="Map layers and data"></aside>
   <!-- The story, told on the map one beat at a time. -->
   <article class="guide" id="guide" aria-live="polite" hidden></article>

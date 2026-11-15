@@ -21,7 +21,7 @@ The map is the product. A story card on the left tells the walk one beat at a ti
 | **Home** | The three questions answered with your numbers. In the window, the rover turns away and drives on up its own track, alone | Curiosity's track beyond the walk |
 | **See it from the ground** | A button on the window at any stop: first person at true scale, under the real horizon, beside the team's rover (wheels turning, body tilting to the ground), with the same data on a helmet visor. Follow the rover to the next cairn, or go back to the map | HiRISE photo on the 1 m elevation model; 360° horizon and rover prepared in Blender |
 
-The right-hand panel groups every layer by kind of data (optical, topographic, thermal, spectral, geologic, chemical, radiation, ground truth, computed) with its mission, and shows today's REMS weather, the RAD radiation rate, NASA DONKI space weather, and Perseverance's newest raw image under "Next walk: Jezero crater". On a phone the story card sits at the bottom and the panel opens from a Layers button.
+The right-hand panel groups every layer by kind of data (optical, topographic, thermal, spectral, geologic, chemical, radiation, ground truth, computed) with its mission, and shows today's REMS weather, the RAD radiation rate, NASA DONKI space weather, and Perseverance's newest raw image under "The other rover, today". On a phone the story card sits at the bottom and the panel opens from a Layers button.
 
 ## Why it looks like this
 
@@ -35,7 +35,7 @@ One story card, one map, one panel. The 3D stays low and close, where the HiRISE
 | [USGS planetary geologic mapping](https://astrogeology-usgs.hub.arcgis.com/pages/interactive-maps-mars) | The **Rock units** layer on the map: Mount Sharp (Htu) inside the crater's impact unit (AHi) |
 | [Curiosity's proposed path up Mount Sharp](https://science.nasa.gov/resource/curiositys-proposed-path-up-mount-sharp/) | The intro beat and the "Curiosity's whole climb" layer: the 38.6 km route that plan became; our walk is its 2025–26 stretch |
 | [Worldview](https://worldview.earthdata.nasa.gov/) | Each cairn named after a place on Earth links to that place in Worldview |
-| [Perseverance raw images](https://mars.nasa.gov/mars2020/multimedia/raw-images/) | "Next walk: Jezero crater": Perseverance's newest raw image, fetched live; the engine needs only an elevation model and a rover's photos |
+| [Perseverance raw images](https://mars.nasa.gov/mars2020/multimedia/raw-images/) | "The other rover, today": Perseverance's newest raw image from Jezero crater, fetched live; the engine needs only an elevation model and a rover's photos |
 
 ## What is real and what is simulated
 

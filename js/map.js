@@ -73,8 +73,8 @@ export class MapView {
   #padding() {
     // Leave room for the story card (left) and, on wide screens, the data panel (right).
     const w = this.el.clientWidth, h = this.el.clientHeight, free = document.body.hasAttribute('data-free');
-    if (w <= 760) return { paddingTopLeft: [16, 60], paddingBottomRight: [16, free ? 30 : Math.round(h * 0.52)] };
-    return { paddingTopLeft: [free ? 30 : 460, 70], paddingBottomRight: [w > 1100 ? 400 : 30, 30] };
+    if (w <= 760) return { paddingTopLeft: [16, 20], paddingBottomRight: [16, free ? 30 : Math.round(window.innerHeight * 0.52)] };
+    return { paddingTopLeft: [free ? 30 : 460, 30], paddingBottomRight: [w > 1100 ? 400 : 30, 70] };
   }
 
   // Fly to a point, showing about `spanM` metres around it.
