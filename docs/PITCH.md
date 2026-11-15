@@ -1,81 +1,93 @@
-# REDCAIRN — pitch and demo script
+# REDCAIRN: pitch and demo script
 
 Live: https://redcairn.netlify.app · Code: https://github.com/IJai-code/redcairn
 
 ## The one sentence
 
-REDCAIRN turns fourteen years of a rover's footsteps into the first trail on Mars a person can follow out and follow home.
+REDCAIRN turns what the machines on Mars left behind into the first trail a person can follow out, and follow home.
 
 ## The 30-second version
 
-> For fourteen years one rover climbed a Martian mountain alone, a few metres a day. Every place it stopped, it recorded where it stood, how far it tilted and what the rock was made of.
+> Mars is full of machines that went quiet: Viking, Sojourner, Spirit, Opportunity, Phoenix, InSight, Ingenuity. Only Curiosity is still driving. For fourteen years it has climbed a mountain inside Gale crater, and every place it stopped became a record: where it stood, how steep it was, what the rock was made of.
 >
-> On Earth, hikers stack stones into cairns to mark the safe way for whoever comes next. REDCAIRN turns the rover's stops into cairns. It fuses orbital imagery, a one-metre elevation model, rover ground truth and surface radiation data into one wrist-sized map that answers the only three questions an astronaut on foot has: where is it safe to step, what is worth stopping for, and can I still get home.
+> On Earth, hikers stack stones into cairns to mark the safe way for whoever comes next. REDCAIRN turns those records into cairns. It layers orbital imagery, elevation, geologic mapping, water minerals seen from orbit, rover ground truth and measured radiation into one guide that answers the three questions an astronaut on foot has: where is it safe to step, what is worth stopping for, and can I still get home?
+
+## How it is built, in one breath
+
+One scroll, three acts, one stage behind the words.
+
+| Act | What you see | Made from |
+|---|---|---|
+| I · Remember | A true-colour Mars globe with every machine that went quiet | Viking colour mosaic (Mars Trek), stitched in Blender; mission records |
+| II · Read the mountain | Gale crater in 3D, layer switches like Mars Trek, Curiosity's 38.6 km line drawing itself; then Mount Sharp's six rock layers | MOLA + HRSC elevation, Viking colour, USGS geologic map, CRISM + OMEGA water minerals, rendered in Blender through one camera; Curiosity odometry to sol 5,073 |
+| III · Walk it | A 2.5D diorama of the real ground, five stops, the suit, the way home, a solar-storm drill | HiRISE 25 cm photograph and 1 m elevation model (Mars Trek), Curiosity's track, photos and radiation data |
 
 ## The 3-minute demo
 
-Rehearse this until it runs without looking at the script. Use playback speed ×240. Plan numbers are exactly what the app shows; the storm numbers depend on the moment you trigger it, so read them off the screen.
+Use the chapter buttons at the top (I, II, III) to jump. Scroll slowly; every scene changes on its own.
 
 | Time | Do this | Say this |
 |---|---|---|
-| 0:00 | Open the site. Leave the briefing screen up. | "This is a real place: the boxwork ridges on lower Mount Sharp. The background is that ground, rendered in Blender from orbital data. The orange line is a walk nobody has taken yet." |
-| 0:20 | Read the headline aloud, then click **Open the trail**. | "A rover walked this ground alone so that you would not have to." |
-| 0:30 | Point at the map. Toggle **Slope** off and on. | "Every pixel is real orbital imagery at 64 cm. The colours are our slope analysis of 146,000 terrain cells: green is walkable in a suit, amber is caution, red is no-go. The route is not drawn by hand. It is the track the rover actually drove, and our slopes agree with the rover's own measurements to within one metre." |
-| 0:55 | Click waypoint **2** (Monte Grande). Scroll the card. | "Each cairn is a real rover stop. This is what you will see at eye level, photographed from that exact spot. This is the terrain in 3D at true scale, with a 1.8 metre figure. Two drill holes ten metres apart; the team named the high one after Bolivia's tallest peak. 'Go big or go home,' they wrote." |
-| 1:25 | Click the Worldview link, show Earth, come back. | "Every stop named for a place on Earth links back to that place from orbit. The crew is never far from home." |
-| 1:40 | Switch route to **Fastest**, then back to **Proven**. | "Three routes: the rover-proven one, the fastest, the gentlest. The plan updates instantly: 3 kilometres round trip, 3 hours 21 minutes, 4 and a half hours of oxygen left at the dock." |
-| 1:55 | Click **Start EVA**. Let it run to about MET 00:25. | "Now we walk it. Oxygen, battery, pace and radiation dose update with the slope under the crew's boots. This number is the one that matters: walk-back margin. How much oxygen is left after the walk home from exactly here." |
-| 2:15 | Click **Solar particle event**. Pause on the alert. | "A solar storm hits. This is a simulated drill, and we label it that way. REDCAIRN recalculates the way home and puts the decision in front of the crew: return now, about seven minutes, almost no extra dose. Or continue the plan and take roughly twenty-five times more. It also checks whether any terrain could shelter them. Here the best ridge blocks 11 percent. Not enough. Go home." |
-| 2:40 | Click **Execute return**. Watch the marker take the white line. | "One button. The safe way home was already marked." |
-| 2:50 | Turn on **Walk-back time**. | "And that is the idea underneath all of it. Every point on this map knows how long it takes to walk home. That is what a cairn is for." |
+| 0:00 | Open the site. Leave the first screen up. | "Mars is full of machines that went quiet. They left us a trail. This is the real colour of Mars, from the Viking orbiters." |
+| 0:15 | Scroll to **Opportunity**. | "Built for ninety days. It stayed fourteen years, and a dust storm took it. Every one of these machines left a record. We built a walking guide out of those records." |
+| 0:35 | Click **II · Read the mountain**. | "This is Gale crater, 154 km across, rendered in Blender from real elevation. The mountain in the middle rises 5,502 metres from the floor. We measured that from the data." |
+| 0:50 | Scroll once: **Seen from space first**. Click **Height**, then **Rock units (USGS)**. | "Before any rover landed, two orbiters saw minerals that only form in water, the blue dots. The USGS geologic map shows the mountain as its own rock unit. Every layer is a separate Blender render through the same camera, so you can switch them like in Mars Trek and they line up exactly." |
+| 1:15 | Scroll once: **That thin line is Curiosity**. Let the line draw. | "That line is fourteen years. 38.6 kilometres, 1,029 metres of climbing, and that is only 19% of the way up. The counter is the rover's own odometry, current to sol 5,073. The white bit at the end is our walk." |
+| 1:40 | Click **III · Walk it**. Scroll to **Stop 2**. Toggle **Steepness** and **Radiation shelter**. | "Now we are on the ground: the real 25 cm orbital photo over the 1 m elevation model. Green is walkable in a suit, red is too steep. The route is the track the rover actually drove, and our elevation model agrees with the rover's own measurements to within a metre. This photo is what you will see standing here, taken by Curiosity from this spot." |
+| 2:10 | Scroll to **The way home**. Click **Start the drill**. | "Every point on this map knows how long it takes to walk home. Now a solar storm hits; it is a simulated drill, and it says so. REDCAIRN draws a new white line home in an instant: 18 minutes instead of 32, and 45% less dose. Could you hide behind a hill? The best one here blocks 11%. Not enough. Go home." |
+| 2:40 | Scroll to the end. Add a stone or two. Point at the Perseverance photo. | "Back at the rover with 4 hours 45 minutes of air left. You leave a stone for each machine that made the walk possible. And this picture is live: the newest frame from Perseverance, still working on the other side of Mars." |
+| 2:55 | Stop. | "The rover could not come home. Its last job is to make sure you can." |
 
 ## Why this wins each criterion
 
-**Impact.** Getting home is the first safety problem of any surface walk. Walk-back margin is the constraint Apollo crews planned around, and the regional mapping tools we were given do not compute it.
+**Impact.** Getting home is the first safety problem of any surface walk. Walk-back time as a map layer, a route proven by a rover, and a storm drill that re-plans the way home are things the regional mapping tools we were given do not do.
 
-**Creativity.** The cairn idea: a rover's stops become the trail markers for the humans who follow. Walk-back time as a map layer. Earth-namesake links for emotional grounding.
+**Creativity.** The cairn idea: a rover's stops become trail markers for the humans who follow. The story starts with the machines that went quiet, so the guide carries their memory. The 14-year track draws itself with the rover's real odometry.
 
-**Validity.** Nothing is typed in by hand. Route, elevations, slopes, photos and geologic units are pulled from public mission data by scripts in the repo, and the elevation model is validated against rover ground truth (0.99 m RMS). Simulated values are labelled everywhere.
+**Validity.** Nothing is typed in by hand. Every layer, height, track point, photo, mineral detection and geologic unit is fetched from public mission services by scripts in the repo (`tools/`), and Blender renders the 3D views from those same files. The elevation model is checked against rover ground truth (0.99 m RMS). Simulated values (suit, storm strength, walker) are labelled on screen.
 
-**Relevance.** All five listed resources are used, each for something real:
+**Relevance.** All five listed resources are visible in the product, each doing something real:
 
-| Resource | What it does in REDCAIRN |
+| Resource | Where it shows up |
 |---|---|
-| Mars Trek | Every map tile and every elevation value |
-| USGS geologic mapping | The geologic unit shown on each stop (Htu) |
-| Curiosity's proposed path up Mount Sharp | The plan this walk completes |
-| Worldview | The layer-stack model, and the Earth-namesake links |
-| Perseverance raw images | A live frame from the other rover, in the attribution panel |
+| Mars Trek | Every map pixel and height: the colour globe, the 3D crater's elevation and relief, the water minerals, the 25 cm photo and 1 m elevation model of the walk |
+| USGS planetary geologic mapping | The **Rock units (USGS)** layer on the 3D crater: Mount Sharp (Htu) inside the crater's impact unit (AHi) |
+| Curiosity's proposed path up Mount Sharp | The 38.6 km line the plan became, drawn over the mountain it was planned for; the walk follows it through the sulfate unit |
+| Worldview | Each stop named after a place on Earth opens that place in Worldview |
+| Perseverance raw images | The last picture in the story: Perseverance's newest frame, fetched live |
 
-**Presentation.** One story, one walk, one decision under pressure. Blender render to open, live demo in the middle, one line to close.
+**Presentation.** One story everyone can follow, told in plain words, with the data underneath it. Blender renders, a live demo, one line to close.
 
 ## Numbers to know cold
 
 | Fact | Value |
 |---|---|
-| Route, one way | 1.52 km, +77 m climb |
-| Stops | 6 (dock plus 5) |
-| Planned EVA | 3 h 21 min, 3.03 km round trip |
-| Steepest slope on route | 14.6°, just under the 15° caution limit |
-| Terrain on the site | 88% safe, 5% caution, 7% no-go |
-| Terrain cells analysed in the browser | 146,034 at 2 m |
-| Elevation model vs rover | 0.99 m RMS |
-| Background radiation at Gale | 0.67 mSv per day (measured) |
-| Planned EVA dose | 0.09 mSv |
+| Gale crater | 154 km across |
+| Mount Sharp, floor to summit (our measurement, MOLA + HRSC) | 5,502 m |
+| Curiosity, as of sol 5,073 (Nov 2026) | 38.6 km driven, 1,029 m climbed, 19% of the mountain |
+| Walk, one way | 1.52 km, +77 m |
+| Stops | 5, plus the rover |
+| Planned time outside | 3 h 21 min, on 8 hours of air |
 | Walk home from the far end | 18 min |
-| Measured terrain shielding (Murray Buttes) | 4% dose reduction |
+| Storm drill | new line home: 18 min, 0.16 mSv; the way you came: 32 min, 0.30 mSv (45% less dose) |
+| Best natural shelter on the site | blocks 11% of the dose |
+| Elevation model vs rover | 0.99 m RMS |
+| Normal radiation at Gale | 0.67 mSv per day (measured by Curiosity) |
+| NASA career dose limit | 600 mSv (NASA-STD-3001, 2022) |
 
 ## Questions judges may ask
 
-**"Is the radiation data real?"** The background dose rate and the terrain-shielding effect are measured by the rover's radiation detector. The storm is a simulated drill shaped on the September 2017 event and exaggerated twenty times so the response is visible in a short demo. The app says so on screen.
+**"Is the radiation data real?"** The everyday dose rate and the effect of terrain shielding were measured by Curiosity's radiation detector. The storm is a simulated drill shaped on the September 2017 event and made twenty times stronger so the response is visible in a short demo. The app says so on screen.
 
-**"Why this site?"** Gale crater was proposed three times as a human exploration zone, and it is the only place with a one-metre elevation model, surface radiation measurements and a rover track on the same ground. The challenge brief itself names the boxwork on Mount Sharp.
+**"Why Gale?"** It was proposed three times as a human exploration zone, orbiters found water minerals there, and it is the only place with a 1 m elevation model, 25 cm photographs, years of surface radiation data and a rover track on the same ground.
 
-**"Would this work somewhere a rover has not been?"** The slope, shielding, routing and walk-back engine only need an elevation model and imagery. The rover track adds ground truth and photos. The site is one data file, so Jezero crater is the next one to add.
+**"How did you use Blender?"** Headless scripts in `tools/` build the scenes from the data: `blender_globe.py` stitches the Viking colour globe, `blender_gale.py` builds Gale crater from the elevation model and renders each layer through one camera, then projects Curiosity's track and the mineral detections into the picture, and `blender_scene.py` builds the walk site's orbital photo and models. Re-run them and you get the same pictures from fresh data.
 
-**"What did AI do?"** AI assistants accelerated the code and the data-retrieval scripts. The data, the site choice rationale and every figure trace to public sources listed in the app's attribution panel.
+**"Would this work somewhere a rover has not been?"** The slope, shelter, routing and walk-home engine only needs an elevation model and a photograph. The rover track adds ground truth and photos. Jezero crater is the obvious next site.
 
-**"What is not finished?"** Suit values are planning assumptions, not flight numbers. Orbital mineral maps are too coarse for a 1.5 km walk, so rock information comes from what the rover found on the ground.
+**"What did AI do?"** AI assistants helped write code and data-retrieval scripts. The data, the site choice and every figure trace to public sources listed in the app's Sources & honesty panel.
+
+**"What is not finished?"** Suit values are planning assumptions, not flight numbers. Orbital mineral maps are too coarse for a 1.5 km walk, so the rock at each stop comes from what the rover found on the ground.
 
 ## Closing line
 

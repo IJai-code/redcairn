@@ -623,7 +623,7 @@
       "backgroundBasis": "Average galactic cosmic ray dose equivalent measured on the surface at Gale crater by the rover's radiation detector.",
       "backgroundSource": "hassler-2014",
       "careerLimitMSv": 600,
-      "careerLimitNote": "Agency career limit adopted in 2022; confirm the figure before quoting it in the presentation.",
+      "careerLimitNote": "NASA career effective-dose limit for all astronauts, NASA-STD-3001 Volume 1 Revision B (2022).",
       "terrainShielding": {
         "observedDoseReductionPct": 4,
         "basis": "Measured while the rover was parked at the foot of a cliff at Murray Buttes, 9–21 September 2016.",
@@ -768,7 +768,7 @@
       "id": "blog-4845",
       "title": "Curiosity Blog, Sols 4845-4851: Bye-Bye Boxwork, Bye-Bye",
       "org": "NASA",
-      "url": "https://astrobiology.com/2026/04/20/mars-curiosity-blog-sols-4845-4851-bye-bye-boxwork-bye-bye/",
+      "url": "https://science.nasa.gov/blog/curiosity-blog-sols-4845-4851-bye-bye-boxwork-bye-bye/",
       "use": "WP4",
       "note": "Mirror of the mission blog post; replace with the science.nasa.gov link before submission."
     },
