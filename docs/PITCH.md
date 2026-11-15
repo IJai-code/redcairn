@@ -16,7 +16,7 @@ The judging guide scores Impact, Creativity, Validity, Relevance and Presentatio
 | Impact | The visor knows the walk home from every point and redraws it in an instant when the Sun flares |
 | Creativity | The map is inside the helmet. You land, suit up, and follow the rover that went first; its old stops are your cairns |
 | Validity | True-scale ground from a 1 m elevation model that matches the rover's own heights to 0.99 m; routes, slope, time, air and dose computed live; simulated values labelled |
-| Relevance | Optical, topographic, spectral, geologic, radiation, atmospheric and chemical data from Viking, Mars Global Surveyor, Mars Express, MRO, Curiosity and Perseverance; all five listed resources used |
+| Relevance | A real layered map on Mars Trek tiles: optical, topographic, thermal, spectral, geologic, chemical, radiation and ground-truth layers from Viking, Mars Global Surveyor, Mars Odyssey, Mars Express, MRO, Curiosity and Perseverance, plus NASA DONKI space weather; all five listed resources visible |
 | Presentation | One line of text at a time, like subtitles; a story everyone can follow; a rover you come to care about |
 
 ## 30-second video (the demo we submit)
@@ -44,16 +44,15 @@ The judging guide scores Impact, Creativity, Validity, Relevance and Presentatio
 
 | Time | Click | Say |
 |---|---|---|
-| 0:00 | Open the site | "In a few minutes you'll be the first person to walk on Mars." |
-| 0:05 | **Begin the descent** | "This is the lander window. Gale crater, rendered in Blender from real elevation. Orbit already found the water minerals; that's why we're here. That orange line is Curiosity: 38.6 km in fourteen years." |
-| 0:30 | Touchdown; the visor boots | "Your helmet loads the map: terrain, slope limits, radiation, weather. Three routes: the rover's is longer, but every metre of it has been driven." |
-| 0:45 | **Open the hatch** | "True scale, the real ground, the real horizon. Mount Sharp's slopes are where the elevation data says they are. And that is our rover; it drove this ground alone a year before you." |
-| 1:00 | **Follow the rover** twice; drag to look around; tap **Slope** | "The visor draws the route and the cairns. Air, the walk home, dose, the slope under your boots. At each cairn: the photo Curiosity took from this exact spot." |
-| 1:45 | Jump to the turnaround (or keep walking), **Collect, then turn for home** | "Solar storm, simulated, at twenty times the September 2017 event." |
-| 2:00 | Pick **Shelter behind a ridge**, explain | "Shelter sounds right. The best ridge blocks 9%. Six times the dose. The visor already drew the answer: go home." |
-| 2:30 | The ending | "It walked this ground alone, so that you would not have to. Curiosity is still out there, 810 m past our turnaround." |
+| 0:00 | Open the site | "A survival map for the first walk on Mars. Three questions: where is it safe to step, what's worth stopping for, can I get home." |
+| 0:10 | **Begin the mission** (or **1 Land**) | "Gale crater, rendered in Blender from real elevation. Orbit found the water minerals; that's why we're here. That orange line is Curiosity: 38.6 km in fourteen years." |
+| 0:35 | **2 Plan** opens on its own | "This is the habitat display: Mars Trek's own tiles, at walking scale. Slope for a spacesuit. Three routes: the rover's is longer, but every metre has been driven." Tap **Night-time ground temperature**, **Rock units**, **The crater**. "Thermal, geologic, spectral, topographic, radiation: eight kinds of data from seven missions." Tap cairn **2**: "Curiosity's photo from this exact spot, and the Earth place it's named after, in Worldview." |
+| 1:20 | **Suit up**, **Open the hatch** | "The visor checks in every data source, including NASA's real space-weather log. True scale, real ground, real horizon. And that's our rover; it crossed this ground first." |
+| 1:40 | **Follow the rover** | "Air, the walk home, dose, slope under your boots. At each cairn, a question and what the rover saw." |
+| 2:05 | **4 Storm** | "Solar storm, simulated at twenty times the September 2017 event. Shelter sounds right; the best ridge blocks 9%. Six times the dose. The visor already drew the answer: go home." |
+| 2:35 | **5 Home** | "It walked this ground alone, so that you would not have to." |
 
-Shortcuts: `#walk` starts outside the hatch, `#suit` at the visor boot, `#explore` on the free map. Press Space or Enter for the main button.
+Shortcuts: `#plan`, `#walk`, `#storm`, `#home`, `#explore` (the full map). Press Space or Enter for the main button.
 
 ## Numbers to know cold
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="description" content="REDCAIRN: land on Mars, suit up, and walk the first Marswalk through your own helmet, on the real ground of Gale crater, behind the rover that drove it first. NASA Space Apps 2026, Interplanetary Survival Guide: Martian Map.">
+  <meta name="description" content="REDCAIRN: a layered survival map for the first walk on Mars. Plan a Marswalk in Gale crater on real Mars Trek data, then walk it through your helmet behind the rover that crossed it first. NASA Space Apps 2026, Interplanetary Survival Guide: Martian Map.">
   <meta name="theme-color" content="#0b0907">
   <meta property="og:title" content="REDCAIRN: your first walk on Mars">
   <meta property="og:description" content="Land, suit up, and follow the rover that went first. Six missions' data, seen through your helmet.">
@@ -14,7 +14,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
   <link rel="stylesheet" href="css/styles.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 </head>
 <body data-stage="globe" data-step="cover" data-booting>
 
@@ -23,6 +25,10 @@
     <div class="pins" id="pins"></div>
     <div class="crater" id="crater"></div>
   </div>
+
+  <!-- The planning map: Mars Trek's own tiles, our computed layers, the routes and the cairns. -->
+  <div class="map" id="map"><div class="scale" aria-hidden="true"><span class="scale__bar" id="scale-bar"></span><span id="scale-text"></span></div></div>
+  <aside class="mapui" id="mapui" aria-label="Map layers and plan"></aside>
 
   <!-- Cover: what this is, the three questions it answers, and two honest ways in. -->
   <section class="cover" aria-labelledby="cover-title">
@@ -38,7 +44,7 @@
       <button type="button" class="act" data-a="begin">Begin the mission<small>3 minutes · you are the astronaut</small></button>
       <button type="button" class="act act--alt" data-a="explore">Skip to the map<small>every layer, free to explore</small></button>
     </div>
-    <p class="cover__meta">NASA Space Apps 2026 · Interplanetary Survival Guide: Martian Map · data from Viking, MGS, Mars Express, MRO, Curiosity and Perseverance</p>
+    <p class="cover__meta">NASA Space Apps 2026 · Interplanetary Survival Guide: Martian Map · data from Viking, Mars Global Surveyor, Mars Odyssey, Mars Express, MRO, Curiosity and Perseverance</p>
   </section>
 
   <!-- The lander window during descent. -->
@@ -76,13 +82,13 @@
   <section class="end" id="end" hidden></section>
 
   <nav class="sections" id="sections" aria-label="Jump to a part of the mission">
-    <button type="button" data-go="cover">Mission</button>
-    <button type="button" data-go="descent">Land</button>
-    <button type="button" data-go="suit">Suit up</button>
-    <button type="button" data-go="walk">Walk</button>
-    <button type="button" data-go="storm">Storm</button>
-    <button type="button" data-go="home">Home</button>
-    <button type="button" data-go="explore">Map</button>
+    <button type="button" data-go="cover" class="sections__home">Redcairn</button>
+    <button type="button" data-go="descent"><i>1</i>Land</button>
+    <button type="button" data-go="plan"><i>2</i>Plan</button>
+    <button type="button" data-go="walk"><i>3</i>Walk</button>
+    <button type="button" data-go="storm"><i>4</i>Storm</button>
+    <button type="button" data-go="home"><i>5</i>Home</button>
+    <button type="button" data-go="explore" class="sections__map">Map</button>
     <button type="button" class="sections__about" id="btn-about">Data &amp; sources</button>
   </nav>
   <dialog class="about" id="about" aria-labelledby="about-title">

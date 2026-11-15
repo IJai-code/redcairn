@@ -56,5 +56,16 @@
     "instrument": "CRISM"
    }
   ]
+ },
+ "spaceWeather": {
+  "source": "https://kauai.ccmc.gsfc.nasa.gov/DONKI/",
+  "api": "https://api.nasa.gov/ (DONKI)",
+  "from": "2026-07-18",
+  "to": "2026-11-14",
+  "sepCount": 17,
+  "latestSep": "2026-09-05T16:30Z",
+  "strongFlares": null,
+  "latestStrongFlare": null,
+  "note": "Solar energetic particle events and M/X-class flares logged by NASA's space weather office. Mars is not always on the same side of the Sun as Earth, so not every event reaches Mars."
  }
 }

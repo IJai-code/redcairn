@@ -1,6 +1,6 @@
 # REDCAIRN: your first walk on Mars
 
-Land on Mars, suit up, and walk the first Marswalk through your own helmet, on the real ground of Gale crater, behind the rover that drove it first. About three minutes.
+A layered survival map for the first walk on Mars: plan a Marswalk in Gale crater on real Mars Trek data, then walk it through your helmet behind the rover that crossed it first. About three minutes.
 
 Live: <https://redcairn.netlify.app>
 
@@ -10,16 +10,16 @@ On Earth, hikers stack stones into cairns to mark the safe way for whoever comes
 
 ## How it plays
 
-You are the astronaut. Everything after the cover is seen through your own eyes, and after the hatch, through your helmet.
+Five steps, about three minutes, then a free map. The numbered bar across the top jumps to any step.
 
-| Moment | What happens | Built from |
+| Step | What happens | Built from |
 |---|---|---|
-| **Descent** | Through the lander window: Mars, then Gale crater in 3D; the lander computer overlays what orbit saw (water minerals, rock units) and Curiosity's 14-year track; touchdown on the real ground | Viking colour; MOLA + HRSC elevation; CRISM + OMEGA; USGS SIM 3292; Curiosity odometry to sol 5,073. Crater rendered in Blender, one camera per layer |
-| **Suit up** | The visor boots. Each data source checks in (terrain, slope limits, radiation, weather, minerals, cairns) and you pick a route: rover-proven, fastest or gentlest | Routes computed in the browser on the HiRISE 1 m elevation model |
-| **Outside** | First person, at true scale, on the real ground under the real horizon. The team's rover, wheels turning and body tilting with the terrain, leads you cairn to cairn; the visor draws the route, compass, air, walk-home time, dose and slope underfoot. At each cairn, Curiosity's own photo from that spot | HiRISE 33 cm photo on the 1 m elevation model; 360° horizon rendered in Blender from MOLA + HRSC; rover model converted in Blender; Curiosity Navcam |
-| **Storm** | A simulated solar particle event. The visor draws a new line home and you choose: the new line, the way you came, or shelter behind a ridge, each costed on the real terrain | Curiosity RAD (Sept 2017 event ×20); 16-direction sky-shielding scan |
-| **Home** | The helmet comes off. The rover drives on up the mountain, alone. Your time outside, air left, dose, and Perseverance's newest picture, live | Perseverance raw images |
-| **Explore** | Every layer, free: slope, shelter, way home, rock, height, rover tracks; slide along the walk; tap a cairn | |
+| **1 · Land** | Through the lander window: Mars in true colour, then Gale crater in 3D; the lander overlays what orbit saw (water minerals, rock units) and Curiosity's 14-year track; touchdown on the real ground | Viking colour; MOLA + HRSC elevation; CRISM + OMEGA; USGS SIM 3292; Curiosity odometry to sol 5,073. Crater rendered in Blender, one camera per layer |
+| **2 · Plan** | The habitat display: a real layered map on Mars Trek's own tiles. Pick one of three routes through the same five cairns (rover-proven, fastest, gentlest) and switch layers grouped by kind of data: optical, topographic, thermal, spectral, geologic, chemical, radiation, ground truth. Tap a cairn for Curiosity's photo from that spot and its Earth namesake in Worldview. Live weather, space weather and Perseverance's newest picture | Mars Trek tiles (HiRISE, CTX, THEMIS, MOLA/HRSC, USGS); 1 m HiRISE elevation; routes computed in the browser; REMS; NASA DONKI |
+| **3 · Walk** | Suit up: the visor checks in each data source. Then first person, at true scale, under the real horizon, behind the team's rover (wheels turning, body tilting to the terrain). The visor shows air, walk-home time, dose, slope underfoot, weather, the next cairn and a mini-map. At each cairn: a question, its answer, and Curiosity's photo from that exact spot | HiRISE photo on the 1 m elevation model; 360° horizon rendered in Blender; rover converted in Blender; Curiosity Navcam |
+| **4 · Storm** | A simulated solar particle event. The visor redraws the way home; choose the new line, the way you came, or shelter behind a ridge, each costed on the real terrain | Curiosity RAD (Sept 2017 event ×20); 16-direction sky-shielding scan |
+| **5 · Home** | The three questions answered with your numbers; the rover drives on up the mountain, alone; Perseverance's newest picture, live | Perseverance raw images |
+| **Map** | Every layer, free, with the storm drill drawn on the map | |
 
 ## Why it looks like this
 
@@ -59,7 +59,7 @@ Every number, picture and layer comes from public services through scripts in `t
 python3 tools/build_terrain.py        # HiRISE 1 m elevation for the walk site -> data/terrain.*
 python3 tools/build_route.py          # Curiosity's track, slopes and validation -> data/route.json
 python3 tools/build_ortho.py          # HiRISE photo of the site at ~33 cm/px -> art/hirise/site.png
-python3 tools/build_conditions.py     # REMS weather and hydrous minerals -> data/conditions.json
+python3 tools/build_conditions.py     # REMS weather, hydrous minerals, NASA DONKI space weather -> data/conditions.json
 python3 tools/build_gale.py           # Gale crater elevation, colour, relief, geology, minerals, full traverse -> art/gale/, data/gale.json
 ```
 
@@ -81,6 +81,7 @@ css/styles.css        styles
 js/app.js             the mission: descent, visor boot, the walk behind the rover, storm, home, explore
 js/scene.js           three.js: the globe, and the true-scale world (ground, horizon, rocks, rover, cameras)
 js/crater.js          the Blender-rendered crater, its layers and the drawn track
+js/map.js             the planning map: Mars Trek tiles in Leaflet, computed layers, routes and cairns
 js/terrain.js         slope, sky shielding and least-time routing on the 2 m grid
 js/sim.js             suit timeline and dose
 data/                 baked mission data (see tools/)

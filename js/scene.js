@@ -24,8 +24,8 @@ function loadTexture(url) {
 
 const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
 const ROVER_PAINT = {
-  graphite: new THREE.Color(0x2a2a2e), orange: new THREE.Color(0xe5582c), pearl: new THREE.Color(0xece7dc),
-  steel: new THREE.Color(0x44525d), tyre: new THREE.Color(0x1d1c1f), ring: new THREE.Color(0x9aa0a4),
+  graphite: new THREE.Color(0x3a3936), orange: new THREE.Color(0xd9d2c3), pearl: new THREE.Color(0xeee9de),
+  steel: new THREE.Color(0x8f9296), tyre: new THREE.Color(0xa7a9aa), ring: new THREE.Color(0x7f8285),
 };
 
 // A stone: a subdivided sphere pushed in and out by layered waves so it has crags and planes, not a ball.
@@ -68,7 +68,7 @@ function averageColour(img, f0, f1) {
 // Every layer fades out as it gets smaller than a pixel, so nothing shimmers. `broad` is the plain apron beyond the photo.
 const SURFACE_GLSL = `
 varying vec3 vWP;
-float gPeb, gCrack, gScr, gRip, mH;
+float gPeb, gCrack, gScr, gRip, mH, gNear;
 float h21(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
   return mix(mix(h21(i), h21(i + vec2(1.0, 0.0)), f.x), mix(h21(i + vec2(0.0, 1.0)), h21(i + vec2(1.0, 1.0)), f.x), f.y); }
@@ -112,7 +112,7 @@ float surfH(vec2 p, float fp){
   if (w > 0.001){
     vec3 v = vor(p * 1.25 + warp * 0.1);
     float m = smoothstep(0.42, 0.62, fbm(p * 0.06 + 11.0));
-    gCrack = (1.0 - smoothstep(0.0, 0.07, v.y - v.x)) * m * w;
+    gCrack = 0.0 * m * w * v.x;   // no desiccation cracks: HiRISE shows none at this site
     h -= gCrack * 0.05;
   }
   gScr = 0.0;
@@ -142,7 +142,7 @@ function grainShader(mat, broad) {
   float pch = fbm(P * 0.035 + 3.7);
   float dust = smoothstep(0.3, 0.7, fbm(P * 0.11 + 8.1));
   float sand = smoothstep(0.58, 0.72, fbm(P * 0.05 + 21.0));
-  vec3 c = diffuseColor.rgb;
+  vec3 c = diffuseColor.rgb, photo = c;
   c *= ${broad ? '0.74 + 0.52' : '0.86 + 0.28'} * pch + ${broad ? '0.0' : '0.0'};
   c = mix(c, c * vec3(1.2, 1.03, 0.86) + 0.02, dust * 0.5);
   c = mix(c, c * vec3(0.62, 0.6, 0.66), sand * 0.7);
@@ -151,7 +151,9 @@ function grainShader(mat, broad) {
   c *= 1.0 - gPeb * 0.38 * (0.6 + 0.8 * vn(P * 23.0));
   c += gScr * 0.05 * vec3(1.0, 0.8, 0.6);
   c *= mix(1.0, 0.84 + 0.32 * vn(P * 38.0), wOct(38.0, fp));
-  diffuseColor.rgb = c;
+  // The orbital photograph is the truth; invented grain only where HiRISE runs out of pixels, right underfoot.
+  gNear = ${broad ? '1.0' : '1.0 - smoothstep(12.0, 45.0, length(vWP - cameraPosition))'};
+  diffuseColor.rgb = mix(photo, c, gNear);
 }`)
       .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
 {
@@ -159,7 +161,7 @@ function grainShader(mat, broad) {
   vec3 r1 = cross(sy, normal), r2 = cross(normal, sx);
   float det = dot(sx, r1);
   vec3 grad = sign(det) * (dFdx(mH) * r1 + dFdy(mH) * r2);
-  normal = normalize(abs(det) * normal - grad * 1.7);
+  normal = normalize(abs(det) * normal - grad * 1.7 * gNear);
 }`);
   };
 }
@@ -200,6 +202,7 @@ export class Stage {
     r.shadowMap.type = THREE.PCFSoftShadowMap;
 
     this.gCam = new THREE.PerspectiveCamera(36, 1, 0.1, 100);
+    this.gCam.position.z = 6;   // start outside the planet (and its haze), then ease in
     this.wCam = new THREE.PerspectiveCamera(62, 1, 0.1, 9000);
     this.#buildGlobe();
     this.#buildWalk();
@@ -699,14 +702,12 @@ export class Stage {
     this.wScene.add(this.back);
   }
 
-  // Cairns at true size: a hand-stacked pile of flat stones, a red pennant on a pole so it can be seen from far off,
-  // and, for the one you are heading to, a faint beam of light up into the haze.
+  // Cairns at true size: a hand-stacked pile of flat stones, and for the one you are heading to,
+  // a faint beam the visor draws up into the haze so you can find it from far off.
   #buildMarkers() {
     const wps = this.data.mission.waypoints, rand = rng(2024);
     this.cairns = [];
     const tints = [0xd2c0a6, 0xbba083, 0xdccdb6, 0xad9279, 0xc8b295].map((h) => new THREE.Color(h));
-    const poleMat = new THREE.MeshStandardMaterial({ color: 0x2b2b30, roughness: 0.5, metalness: 0.4 });
-    const flagMat = new THREE.MeshBasicMaterial({ color: 0xe5582c, side: THREE.DoubleSide });
     const beamMat = new THREE.ShaderMaterial({
       transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false,
       vertexShader: 'varying float vT; void main(){ vT = (position.y + 40.0) / 80.0; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
@@ -735,21 +736,13 @@ export class Stage {
         m.castShadow = true;
         g.add(m);
       }
-      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.026, 2.5, 6), poleMat);
-      pole.position.y = y + 1.0; pole.castShadow = true;
-      g.add(pole);
-      const flag = new THREE.Group();
-      const cloth = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.44, 6, 1), flagMat);
-      cloth.position.x = 0.35;
-      flag.add(cloth);
-      flag.position.y = y + 2.0;
-      g.add(flag);
+      const flag = new THREE.Group();   // kept as an empty hook for the wind animation
       const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 80, 20, 1, true), beamMat);
       beam.position.y = 40; beam.visible = false; beam.frustumCulled = false;
       g.add(beam);
       g.position.copy(this.worldOf(wp.lon, wp.lat, 0));
       g.rotation.y = rand() * 6.28;
-      g.scale.setScalar(k ? 1.25 : 0.001);   // the dock has the rover, not a cairn
+      g.scale.setScalar(k ? 1 : 0.001);   // the dock has the rover, not a cairn
       this.wScene.add(g);
       this.cairns.push({ g, mat, rise: 1, flag, beam });
 
@@ -760,7 +753,7 @@ export class Stage {
       if (k === 0) el.dataset.start = '';
       el.addEventListener('click', () => this.onStop(k));
       this.pinRoot.appendChild(el);
-      this.pins.push({ el, kind: 'walk', local: this.worldOf(wp.lon, wp.lat, 4.4), id: k });
+      this.pins.push({ el, kind: 'walk', local: this.worldOf(wp.lon, wp.lat, 2.6), id: k });
     });
   }
 
@@ -814,7 +807,7 @@ export class Stage {
           tmp.multiplyScalar(0.9 + 0.1 * Math.min(1, Math.max(0, (y + 1250) / 2500)));
         } else {
           const r = Math.hypot(x, z) / 252;
-          tmp.copy(K.tyre).lerp(K.ring, smooth(0.66, 0.6, r)).lerp(K.orange, smooth(0.5, 0.44, r));
+          tmp.copy(K.tyre).lerp(K.ring, smooth(0.66, 0.6, r)).lerp(K.graphite, smooth(0.5, 0.44, r));
         }
         col[i * 3] = tmp.r; col[i * 3 + 1] = tmp.g; col[i * 3 + 2] = tmp.b;
       }
@@ -926,7 +919,7 @@ export class Stage {
     for (const c of this.cairns) {
       if (c.target === undefined) continue;
       c.rise += ((c.target || 0) - c.rise) * (1 - Math.exp(-2.5 * dt));
-      c.g.scale.setScalar(Math.max(0.001, c.rise * 1.25));
+      c.g.scale.setScalar(Math.max(0.001, c.rise));
     }
   }
 

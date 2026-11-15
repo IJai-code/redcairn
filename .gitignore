@@ -15,3 +15,4 @@ node_modules/
 # Tile caches: re-downloaded by the build scripts
 art/globe/
 tools/__pycache__/
+art/donki/

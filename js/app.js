@@ -11,6 +11,7 @@ import { Terrain, Router, fetchJson, groundMetres } from './terrain.js';
 import * as sim from './sim.js';
 import { Stage } from './scene.js';
 import { Crater } from './crater.js';
+import { MapView } from './map.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -31,6 +32,19 @@ const LAYERS = [
   { id: 'height', name: 'Height', note: 'Blue low to white high: 77 m of climb', from: 'HiRISE 1 m elevation' },
   { id: 'track', name: 'Rover tracks', note: 'Every drive Curiosity made here', from: 'Curiosity traverse' },
 ];
+// The planning map's layers, grouped by the kind of data, each with the mission it came from.
+const MAP_LAYERS = [
+  ['Optical', [['hirise', 'Photo from orbit, 25 cm', 'HiRISE · Mars Reconnaissance Orbiter', 'always'], ['ctx', 'Wide photo from orbit', 'CTX · Mars Reconnaissance Orbiter', 'always']]],
+  ['Topographic', [['slope', 'Slope for a spacesuit', 'HiRISE 1 m elevation · MRO'], ['relief', 'Shaded relief', 'HiRISE 1 m elevation · MRO'], ['mola', 'Height of the land', 'MOLA · Mars Global Surveyor + HRSC · Mars Express']]],
+  ['Thermal', [['thermal', 'Night-time ground temperature', 'THEMIS · Mars Odyssey']]],
+  ['Spectral', [['minerals', 'Minerals formed in water', 'CRISM · MRO and OMEGA · Mars Express']]],
+  ['Geologic', [['geology', 'Rock units', 'USGS Geologic Map of Mars (SIM 3292)']]],
+  ['Chemical', [['rocks', 'Rock along the route', 'Curiosity drill and laser']]],
+  ['Radiation', [['shield', 'Shelter from terrain', 'Curiosity RAD + elevation model']]],
+  ['Ground truth', [['track', 'Curiosity’s wheel tracks here', 'Curiosity traverse'], ['curiosity', 'Curiosity’s whole climb, 2012 to today', 'Curiosity · its proposed path up Mount Sharp']]],
+  ['Computed', [['home', 'Minutes to walk home', 'REDCAIRN routing on the elevation model']]],
+];
+
 const ROUTES = [
   { id: 'rover', name: 'Rover-proven' },
   { id: 'fast', name: 'Fastest' },
@@ -139,7 +153,8 @@ function readout(st) {
   $('h-air').textContent = mins(air);
   $('h-home').textContent = homeSec < 40 ? 'here' : mins(homeSec / 60);
   $('h-dose').textContent = st.dose.toFixed(2);
-  $('h-met').textContent = `${clock(st.t)} outside`;
+  const wx = S.conditions.weather;
+  $('h-met').textContent = `${clock(st.t)} outside · ${wx.airMinC}° to ${wx.airMaxC}° C, ${num(wx.pressurePa)} Pa (REMS)`;
   document.body.dataset.level = spare < 20 ? 'stop' : spare < 60 ? 'care' : '';
   const cell = cellOf(st), sl = S.terrain.slope[cell], cls = S.terrain.cls[cell];
   $('h-slope').textContent = `${sl.toFixed(0)}° ${['safe', 'care', 'too steep'][cls]}`;
@@ -204,6 +219,124 @@ function stage(mode) {
   S.stage.setMode(mode === 'globe' ? 'globe' : mode === 'walk' ? 'walk' : 'none');
 }
 
+// ---------------------------------------------------------------- the planning map
+function ensureMap() {
+  if (S.map) return;
+  S.map = new MapView($('map'), S.mission, S.terrain);
+  S.map.buildRasters();
+  S.map.buildHome(S.homeField);
+  S.map.drawStatic(S.route, S.conditions, S.terrain.shelters(4, 120), cfgFor(false).shieldEff);
+  S.map.drawTraverse(S.gale);
+  S.map.addStops(stops());
+  S.map.onStop = (k) => mapStop(k);
+  S.mapOn = new Set(['slope']);
+}
+
+function applyMapLayers() {
+  for (const [, items] of MAP_LAYERS) for (const [id, , , always] of items) if (!always) S.map.setLayer(id, S.mapOn.has(id));
+  drawMapRoute();
+}
+
+function drawMapRoute() {
+  const r = R();
+  S.map.drawRoute(r.plan.out, S.mapOn.has('slope'));
+  S.map.drawReturn(S.mapStorm ? stormOptionsFor(r).direct.line : null);
+}
+
+function openMap(mode) {
+  token();
+  S.step = mode;
+  document.body.dataset.step = mode;
+  document.body.classList.remove('alarm', 'thud');
+  hud(false);
+  for (const el of [$('end'), $('boot'), $('h-photo'), $('h-jobs')]) el.hidden = true;
+  say(''); act([]);
+  stage('map');
+  ensureMap();
+  requestAnimationFrame(() => {
+    S.map.resize();
+    S.map.setView('walk', false);
+    applyMapLayers();
+  });
+  S.mapStop = null;
+  S.mapStorm = false;
+  mapPanel();
+}
+
+function mapPanel() {
+  const plan = S.step === 'plan', routes = computeRoutes(), w = S.conditions.weather, sw = S.conditions.spaceWeather || {};
+  const kinds = MAP_LAYERS.filter(([k]) => k !== 'Computed').length;
+  const wp = S.mapStop != null ? stops()[S.mapStop] : null;
+  const st = wp ? (S.story.stops[wp.id] || {}) : null;
+  const o = S.mapStorm ? stormOptionsFor(R()) : null;
+  $('mapui').innerHTML = `
+    <header class="mapui__head">
+      <p class="mapui__kicker">${plan ? 'Step 2 · plan it on the habitat display' : 'The map'}</p>
+      <h2>${plan ? 'Choose your route.' : 'Every layer, in one place.'}</h2>
+      <p>${plan ? 'Same five cairns, three ways to reach them. Switch layers to see why.' : `${kinds} kinds of data from seven Mars missions, at walking scale. Tap a cairn.`}</p>
+    </header>
+    <div class="mapui__views">${['walk', 'mountain', 'crater'].map((v) => `<button type="button" data-view="${v}">${esc(S.mission.views[v].label)}</button>`).join('')}</div>
+    <section class="mapui__sec"><h3>Route</h3>
+      ${ROUTES.map((r) => { const x = routes[r.id]; return `<button type="button" class="mroute" data-route="${r.id}" aria-pressed="${r.id === S.pick}"><b>${esc(r.name)}</b><span>${mins(x.tl.end.t)} · ${(x.plan.outD * 2 / 1000).toFixed(1)} km · steepest ${x.plan.maxSlope.toFixed(0)}°</span></button>`; }).join('')}
+      <p class="mapui__note">Rover-proven follows Curiosity’s own wheel tracks: longest, but every metre has been driven. The other two are computed from orbital elevation, which cannot see rocks smaller than a metre.</p>
+    </section>
+    ${wp ? `<section class="mapui__sec mapui__stop"><h3>${S.mapStop ? `Cairn ${S.mapStop}` : 'The rover dock'} · ${esc(st.title || wp.plain.title)}</h3>
+      <img src="${esc(wp.pov.imageUrl)}" alt="${esc(wp.plain.see)}" referrerpolicy="no-referrer">
+      <p class="mapui__cap">What Curiosity saw from this spot, ${esc(day(wp.pov.utc))}. ${esc(wp.pov.credit)}</p>
+      ${st.q ? `<p><b>${esc(st.q)}</b> ${esc(st.a || '')}</p>` : ''}
+      ${wp.earthNamesakes.length ? `<p class="mapui__earth">Named after Earth: ${wp.earthNamesakes.map((n) => `<a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.name)} in Worldview</a>`).join(' · ')}</p>` : ''}
+    </section>` : ''}
+    <section class="mapui__sec"><h3>Layers</h3>
+      ${MAP_LAYERS.map(([kind, items]) => `<div class="mlayer__group"><span>${esc(kind)}</span>${items.map(([id, name, from, always]) => `<button type="button" class="mlayer" data-maplayer="${id}" aria-pressed="${always ? 'true' : S.mapOn.has(id)}" ${always ? 'disabled' : ''}><b>${esc(name)}</b><small>${esc(from)}</small></button>`).join('')}</div>`).join('')}
+    </section>
+    <section class="mapui__sec"><h3>Conditions today</h3>
+      <p><b>Weather</b> ${w.airMinC}° to ${w.airMaxC}° C, ${num(w.pressurePa)} Pa, sky ${esc(String(w.sky).toLowerCase())} · Curiosity REMS, sol ${num(w.sol)} (${esc(day(w.earthDate))})</p>
+      <p><b>Radiation</b> ${S.mission.hazards.radiation.backgroundMSvPerDay} mSv per day at the surface · Curiosity RAD</p>
+      <figure class="mapui__live" id="map-live"></figure>
+      ${sw.sepCount != null ? `<p><b>Space weather</b> ${sw.sepCount} solar energetic particle events logged by NASA DONKI, ${esc(day(sw.from))} to ${esc(day(sw.to))}; latest ${esc(day(sw.latestSep))}. Not every one reaches Mars.</p>` : ''}
+    </section>
+    ${o ? `<section class="mapui__sec mapui__storm"><h3>Storm drill (simulated ×20)</h3><p>From the turnaround, the white dashed line is the way home with least radiation: <b>${mins(o.direct.min)}, ${o.direct.dose.toFixed(2)} mSv</b>, against ${mins(o.trail.min)}, ${o.trail.dose.toFixed(2)} mSv the way you came. The best ridge nearby blocks only ${o.shelter.blocked}%.</p></section>` : ''}
+    <div class="mapui__go" data-live>
+      <button type="button" class="act" data-a="suit">${plan ? 'Suit up' : 'Walk it in first person'}<small>${plan ? 'step 3 · walk it behind the rover' : 'through the helmet, behind the rover'}</small></button>
+      ${plan ? '' : `<button type="button" class="act act--alt" data-a="mapstorm" aria-pressed="${!!S.mapStorm}">${S.mapStorm ? 'End storm drill' : 'Storm drill'}</button>`}
+    </div>`;
+  fillLive($('map-live'), true);
+}
+
+// Perseverance's newest frame, fetched once and shown wherever there is a place for it.
+function m2020(cb) {
+  if (S.m2020) return cb(S.m2020);
+  fetchJson(S.mission.liveFeeds.perseveranceLatest).then((d) => { const im = d.images && d.images[0]; if (im) { S.m2020 = im; cb(im); } }).catch(() => {});
+}
+function fillLive(el, short) {
+  if (!el) return;
+  m2020((im) => {
+    el.innerHTML = `<img src="${esc(im.image_files.medium)}" alt="Newest picture from the Perseverance rover" referrerpolicy="no-referrer"><figcaption>${short ? '<b>Right now on Mars</b> ' : ''}Perseverance’s newest picture, from Jezero crater, its Mars day ${num(im.sol)} (${esc(day(im.date_taken_utc))}). ${esc(im.credit)}</figcaption>`;
+    el.hidden = false;
+  });
+}
+
+function mapStop(k) {
+  S.mapStop = k;
+  S.map.markStops(k, 0);
+  mapPanel();
+  const el = document.querySelector('.mapui__stop');
+  if (el) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+
+// The suit-up scene: back in the 3D world, at the dock, the visor starting.
+function toSuit() {
+  token();
+  const dock = stops()[0], w = S.stage.worldOf(dock.lon, dock.lat);
+  S.stage.rate = 3.2;
+  S.stage.setPinsVisible(false);
+  S.stage.setCairns(0);
+  S.stage.setEye(w.x - 9, w.z + 4, -0.55, -0.12, 0, true);
+  stage('walk');
+  setLayers([]);
+  return suitUp();
+}
+
 // Every section can be entered directly. Each jump clears whatever the last one left behind.
 function jump(id) {
   token();
@@ -214,19 +347,12 @@ function jump(id) {
   S.stage.resetLook();
   if (id === 'cover') return cover();
   if (id === 'descent') return descent();
-  if (id === 'suit') {
-    const dock = stops()[0], w = S.stage.worldOf(dock.lon, dock.lat);
-    S.stage.setPinsVisible(false);
-    S.stage.setCairns(0);
-    S.stage.setEye(w.x - 9, w.z + 4, -0.55, -0.12, 0, true);
-    stage('walk');
-    setLayers([]);
-    return suitUp();
-  }
+  if (id === 'plan') return openMap('plan');
+  if (id === 'suit') return toSuit();
   if (id === 'walk') return outside();
   if (id === 'storm') { outside(); S.youD = S.plan.outD; return storm(); }
   if (id === 'home') { outside(); return homecoming(null); }
-  if (id === 'explore') return explore();
+  if (id === 'explore') return openMap('explore');
 }
 
 function cover() {
@@ -268,23 +394,24 @@ async function descent() {
   S.stage.setPinsVisible(false);
   S.stage.setCairns(0);
   S.stage.rate = 0.9;
-  S.stage.setEye(w.x - 9, w.z + 4, -0.6, -1.45, 700, true);
+  const w1 = S.stage.worldOf(stops()[1].lon, stops()[1].lat), yaw = Math.atan2(w1.z - w.z, w1.x - w.x);
+  S.stage.setEye(w.x - 9, w.z + 4, yaw, -0.62, 180, true);
   stage('walk');
   setLayers([]);
-  L('Final descent', 'Altitude 700 m');
+  L('Final descent', 'Altitude 180 m');
   await wait(500); if (!live(t)) return;
-  S.stage.setEye(w.x - 9, w.z + 4, -0.55, -0.12, 0);
+  S.stage.setEye(w.x - 9, w.z + 4, yaw, -0.1, 0);
   const t0 = performance.now();
   while (performance.now() - t0 < 4600) {
     if (!live(t)) return;
-    $('lander-b').textContent = `Altitude ${num(Math.max(0, Math.round(700 * Math.exp(-((performance.now() - t0) / 1000) * 1.1))))} m`;
+    $('lander-b').textContent = `Altitude ${num(Math.max(0, Math.round(180 * Math.exp(-((performance.now() - t0) / 1000) * 1.1))))} m`;
     await wait(100);
   }
   L('Touchdown', 'Sol 1, Gale crater');
   document.body.classList.add('thud');
   await wait(1500);
   document.body.classList.remove('thud');
-  if (live(t)) suitUp();
+  if (live(t)) openMap('plan');
 }
 
 // The visor boots: each line is a real data source checking in.
@@ -305,13 +432,13 @@ async function suitUp() {
     [`Weather · REMS · sol ${num(w.sol)}`, `${w.airMinC}° to ${w.airMaxC}° C`],
     ['Water minerals · CRISM, OMEGA', 'loaded'],
     ['Cairns · Curiosity’s stops, 2025–26', `${stops().length - 1} ahead`],
+    ['Space weather · NASA DONKI', S.conditions.spaceWeather && S.conditions.spaceWeather.latestSep ? `last particle event ${day(S.conditions.spaceWeather.latestSep)}` : 'watching'],
+    ['Route', `${ROUTES.find((r) => r.id === S.pick).name} · ${mins(R().tl.end.t)}`],
   ];
   $('boot').innerHTML = `<p class="boot__head">Your visor is waking up</p><ol>${lines.map(([a, b]) => `<li><span>${esc(a)}</span><b>${esc(b)}</b></li>`).join('')}</ol>
-    <div class="boot__route"><span>Route</span>${ROUTES.map((r) => { const x = routes[r.id]; return `<button type="button" data-route="${r.id}" aria-pressed="${r.id === S.pick}">${esc(r.name)}<small>${mins(x.tl.end.t)} · ${(x.plan.outD * 2 / 1000).toFixed(1)} km · max ${x.plan.maxSlope.toFixed(0)}°</small></button>`; }).join('')}</div>
-    <p class="boot__note"><b>Rover-proven</b> follows Curiosity’s own wheel tracks: the longest, but every metre has been driven. <b>Fastest</b> and <b>Gentlest</b> are computed from orbital elevation, which cannot see rocks smaller than a metre.</p>
-    <button type="button" class="act" data-a="hatch">Open the hatch</button>`;
+    <button type="button" class="act" data-a="hatch">Open the hatch<small>step 3 · the walk</small></button>`;
   $('boot').hidden = false;
-  const items = [...$('boot').querySelectorAll('li, .boot__route, .boot__note, .act')];
+  const items = [...$('boot').querySelectorAll('li, .act')];
   items.forEach((el) => el.classList.add('is-wait'));
   for (const el of items) { await wait(240); if (!live(t)) return; el.classList.remove('is-wait'); }
 }
@@ -412,7 +539,8 @@ function arrive(k) {
   setLayers(s.layers || []);
   const c = S.stage.worldOf(wp.lon, wp.lat), me = S.path.at(S.youD);
   S.stage.setEye(me.x, me.z, Math.atan2(c.z - me.z, c.x - me.x), -0.16, 0);
-  $('h-photo').innerHTML = `<img src="${esc(wp.pov.imageUrl)}" alt="${esc(wp.plain.see)}" referrerpolicy="no-referrer"><figcaption>Curiosity stood here on ${esc(day(wp.pov.utc))}. This is what it saw.</figcaption>`;
+  const earth = wp.earthNamesakes.length ? `<span class="hud__earth">Named after Earth: ${wp.earthNamesakes.map((n) => `<a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.name)} in Worldview</a>`).join(' · ')}</span>` : '';
+  $('h-photo').innerHTML = `<img src="${esc(wp.pov.imageUrl)}" alt="${esc(wp.plain.see)}" referrerpolicy="no-referrer"><figcaption>Curiosity stood here on ${esc(day(wp.pov.utc))}. This is what it saw. ${earth}</figcaption>`;
   $('h-photo').hidden = false;
   $('h-jobs').innerHTML = wp.plain.do.map((j) => `<li>${esc(j)}</li>`).join('');
   $('h-jobs').hidden = false;
@@ -425,15 +553,22 @@ function arrive(k) {
 
 // ---------------------------------------------------------------- the storm
 function stormOptions() {
-  if (S.stormOpts) return S.stormOpts;
+  if (!S.stormOpts) S.stormOpts = stormOptionsFor({ id: S.pick, plan: S.plan, tl: S.tl, dep: S.marks.dep });
+  return S.stormOpts;
+}
+
+// The three ways home from the turnaround, at storm radiation, for any planned route (cached per route).
+function stormOptionsFor(r) {
+  S.stormCache = S.stormCache || {};
+  if (S.stormCache[r.id]) return S.stormCache[r.id];
   const last = stops().length - 1, wp = stops()[last];
-  const st = sim.stateAt(S.tl, S.marks.dep[last].t);
+  const st = sim.stateAt(r.tl, r.dep[last].t);
   const start = { t: st.t, o2: st.o2, batt: st.batt, dose: st.dose };
   const hot = cfgFor(true), calm = cfgFor(false), at = cellOf(wp);
   const res = (tl, line) => ({ tl, line, min: tl.end.t - start.t, dose: tl.end.dose - start.dose });
   const dLine = [{ lon: wp.lon, lat: wp.lat }, ...sim.smooth(S.router.trace(S.stormField, at), 2).slice(1)];
   const direct = res(sim.buildTimeline(sim.profile(S.terrain, dLine, S.limits, 4), new Map(), start, hot), dLine);
-  const plan = S.plan;
+  const plan = r.plan;
   const bPts = plan.pts.slice(plan.idx[last]).map((p) => ({ ...p, d: p.d - plan.outD }));
   const trail = res(sim.buildTimeline(bPts, new Map(), start, hot), bPts.map((p) => ({ lon: p.lon, lat: p.lat })));
   const cands = S.terrain.shelters(60, 20).filter((c) => groundMetres(c, wp) < 300);
@@ -445,8 +580,8 @@ function stormOptions() {
   const home = sim.smooth(S.router.trace(S.homeField, best.idx), 2);
   const t2 = sim.buildTimeline(sim.profile(S.terrain, home, S.limits, 4), new Map(), t1.end, calm);
   const shelter = { ...res(t2, toShelter.concat(home)), blocked: Math.round(best.blocked * hot.shieldEff * 100) };
-  S.stormOpts = { start, direct, trail, shelter };
-  return S.stormOpts;
+  S.stormCache[r.id] = { start, direct, trail, shelter };
+  return S.stormCache[r.id];
 }
 
 async function storm() {
@@ -577,7 +712,8 @@ function liveFrame() {
 }
 
 // ---------------------------------------------------------------- explore
-function explore() {
+function explore() { return openMap('explore'); }
+function exploreOld() {
   token();
   S.step = 'explore';
   document.body.dataset.step = 'explore';
@@ -627,6 +763,9 @@ function scrubTo(f) {
 function aboutHTML() {
   const m = S.mission, src = (id) => m.sources.find((s) => s.id === id);
   const rows = [
+    ...MAP_LAYERS.flatMap(([kind, items]) => items.map(([, name, from]) => [`Map layer: ${name}`, kind, `${from}${['hirise', 'ctx', 'mola', 'thermal', 'geology'].some((x) => items.find((i) => i[1] === name && i[0] === x)) ? ', tiles from Mars Trek' : ''}`])),
+    ['Space weather', 'Heliophysics', `NASA DONKI (Space Weather Database of Notifications, Knowledge, Information), ${S.conditions.spaceWeather ? `${S.conditions.spaceWeather.sepCount} solar particle events, ${S.conditions.spaceWeather.from} to ${S.conditions.spaceWeather.to}` : 'not loaded'}`],
+    ['Earth namesakes at the cairns', 'Optical, Earth', 'NASA Worldview satellite imagery'],
     ['Mars from orbit', 'Optical, true colour', 'Viking orbiters · MDIM 2.1 mosaic, via Mars Trek, stitched in Blender'],
     ['Gale crater in the lander window', 'Topographic + optical', 'Mars Global Surveyor MOLA and Mars Express HRSC elevation, Viking colour, via Mars Trek; rendered in Blender'],
     ['Rock units', 'Geologic', 'USGS SIM 3292 Geologic Map of Mars'],
@@ -641,7 +780,7 @@ function aboutHTML() {
     ['The rover', '3D model', 'Our team’s rover model, decimated in Blender; wheels turn with distance, the body tilts to the real ground'],
   ];
   return `
-    <section><h3>The challenge</h3><p>NASA Space Apps 2026, <b>Interplanetary Survival Guide: Martian Map</b>: a layered, hyper-local map a Mars astronaut could use to plan and walk a Marswalk safely, doing science on the way. REDCAIRN puts that map inside the astronaut’s helmet. An independent student project, not affiliated with or endorsed by NASA.</p></section>
+    <section><h3>The challenge</h3><p>NASA Space Apps 2026, <b>Interplanetary Survival Guide: Martian Map</b>: a layered, hyper-local map a Mars astronaut could use to plan and walk a Marswalk safely, doing science on the way. REDCAIRN is that map twice: a layered planning map built on Mars Trek tiles for the habitat, and the same data drawn on the astronaut’s helmet visor during the walk. An independent student project, not affiliated with or endorsed by NASA.</p></section>
     <section><h3>The five resources we were given</h3><ul>${m.anchorResources.map((a) => `<li><b><a href="${esc(src(a.source).url)}" target="_blank" rel="noopener">${esc(a.name)}</a></b> ${esc(a.role)}</li>`).join('')}</ul></section>
     <section><h3>Every layer, its data, its mission</h3><div class="tablewrap"><table><thead><tr><th>What you see</th><th>Data</th><th>Source</th></tr></thead><tbody>${rows.map((r) => `<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td><td>${esc(r[2])}</td></tr>`).join('')}</tbody></table></div></section>
     <section><h3>Real and simulated</h3><p><b>Real:</b> the ground and its height at true scale, the slopes, the routes’ terrain, the horizon, the rover track and photos, the rock findings, the water minerals, the geologic units, the normal radiation rate and the measured effect of terrain on it. Our elevation model matches the rover’s own elevations to ${esc(S.route.summary.demVsRoverRmsResidualM)} m along the route.</p><p><b>Simulated:</b> the suit (air, pace), you, the time compression of the walk, the storm’s strength (×20) and its ${STORM_HOURS} h length for the shelter option, and the rocks smaller than a metre scattered for scale (HiRISE can’t resolve them). The crater view stretches heights ×3; the walk is true scale.</p></section>
@@ -685,8 +824,15 @@ async function boot() {
     if (a) {
       const id = a.dataset.a;
       if (id === 'begin') return descent();
-      if (id === 'skip') return jump('suit');
+      if (id === 'skip') return jump('plan');
       if (id === 'hatch') return outside();
+      if (id === 'suit') return toSuit();
+      if (id === 'mapstorm') {
+        S.mapStorm = !S.mapStorm;
+        if (S.mapStorm) S.mapOn.add('shield'); 
+        applyMapLayers();
+        return mapPanel();
+      }
       if (id === 'go') { $('h-photo').hidden = true; $('h-jobs').hidden = true; return leg(S.k); }
       if (id === 'turn') return storm();
       if (id.startsWith('c-')) return goHome(id.slice(2));
@@ -698,7 +844,17 @@ async function boot() {
     if (r) {
       S.pick = r.dataset.route;
       for (const b of document.querySelectorAll('[data-route]')) b.setAttribute('aria-pressed', String(b.dataset.route === S.pick));
+      if (S.map && document.body.dataset.stage === 'map') { drawMapRoute(); mapPanel(); }
       return;
+    }
+    const v = t.closest('[data-view]');
+    if (v) return S.map.setView(v.dataset.view);
+    const ml = t.closest('[data-maplayer]');
+    if (ml) {
+      const id = ml.dataset.maplayer;
+      if (S.mapOn.has(id)) S.mapOn.delete(id); else S.mapOn.add(id);
+      applyMapLayers();
+      return mapPanel();
     }
     const l = t.closest('[data-layer]');
     if (l) {
@@ -714,14 +870,15 @@ async function boot() {
   document.addEventListener('keydown', (e) => {
     if ($('about').open || e.target.closest('input')) return;
     if (e.key === ' ' || e.key === 'Enter') {
-      const b = [...document.querySelectorAll('.cover .act, #boot .act:not(.is-wait), #act .act')].find((x) => x.offsetParent);
+      const b = [...document.querySelectorAll('.cover .act, #boot .act:not(.is-wait), #act .act, #mapui .act')].find((x) => x.offsetParent);
       if (b) { e.preventDefault(); b.click(); }
     }
   });
 
   document.body.removeAttribute('data-booting');
+  addEventListener('hashchange', () => { const h = location.hash.slice(1); if (['cover', 'descent', 'plan', 'suit', 'walk', 'storm', 'home', 'explore'].includes(h) && h !== S.step) jump(h); });
   const start = location.hash.slice(1);
-  if (start === 'walk') outside(); else if (start === 'explore') explore(); else if (start === 'suit') suitUp(); else if (start === 'storm') { outside(); S.youD = S.plan.outD; storm(); } else cover();
+  if (['descent', 'plan', 'suit', 'walk', 'storm', 'home', 'explore', 'map'].includes(start)) jump(start === 'map' ? 'explore' : start); else cover();
 }
 
 boot().catch((err) => {

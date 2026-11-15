@@ -841,6 +841,20 @@
       "org": "NASA/JPL-Caltech/JHUAPL and ESA",
       "url": "https://trek.nasa.gov/mars/trekarcgis/rest/services/Hydrous_Mineral_Detections_OMEGA_CRISM_clon0/MapServer",
       "use": "Water-formed minerals seen from orbit"
+    },
+    {
+      "id": "themis",
+      "title": "THEMIS night-time infrared mosaic (Mars Odyssey)",
+      "url": "https://trek.nasa.gov/tiles/Mars/EQ/THEMIS_NightIR_ControlledMosaics_100m_v2_oct2018/1.0.0/default/default028mm/{z}/{y}/{x}.png",
+      "org": "NASA/JPL-Caltech/Arizona State University via Mars Trek",
+      "use": "Thermal layer on the planning map: where the ground holds heat at night (rock) or loses it (dust)."
+    },
+    {
+      "id": "donki",
+      "title": "DONKI: Space Weather Database Of Notifications, Knowledge, Information",
+      "url": "https://kauai.ccmc.gsfc.nasa.gov/DONKI/",
+      "org": "NASA Community Coordinated Modeling Center",
+      "use": "Real solar energetic particle events, shown with the conditions and in the visor."
     }
   ],
   "aiDisclosure": "AI coding assistants were used to accelerate scaffolding, data retrieval scripts, code generation and review. All positions, elevations, imagery and mission findings come from the public sources listed. Suit telemetry and space-weather scenarios are simulated and labelled as such.",
@@ -857,27 +871,27 @@
     {
       "source": "trek",
       "name": "Mars Trek",
-      "role": "Every map pixel and every height: the Viking colour globe, the MOLA and HRSC elevation and colour-shaded relief behind the 3D Gale crater, the water-mineral detections, the HiRISE photograph and the 1 m elevation model behind slope, routing, shielding and the walk diorama, and the Exploration Zones layer behind the site choice."
+      "role": "The planning map is built on Mars Trek's own tiles (HiRISE 25 cm, CTX, THEMIS night infrared, MOLA + HRSC colour height, the USGS geology service), and every height in the app (the 1 m elevation model of the walk, the crater, the 360° horizon) comes from Mars Trek services."
     },
     {
       "source": "usgs-geology",
       "name": "USGS planetary geologic mapping",
-      "role": "The Rock units layer on the 3D crater: the USGS Geologic Map of Mars (SIM 3292) draped over Gale in Blender, showing Mount Sharp (Htu, Hesperian transition undivided unit) inside the crater's impact unit (AHi). Htu is also the unit under the whole walk."
+      "role": "The Rock units layer on the planning map (USGS SIM 3292 via Mars Trek) and in the lander window over Gale crater: Mount Sharp (Htu) inside the crater's impact unit (AHi). Htu is the unit under the whole walk."
     },
     {
       "source": "mount-sharp-route",
       "name": "Curiosity's proposed path up Mount Sharp",
-      "role": "Act II draws the route the plan became: Curiosity's whole 38.6 km track, from landing to today, over the Blender render of the mountain it was planned for. The plan promised a climb from clay into sulfate-bearing rock; the walk follows the rover's actual track through the sulfate unit."
+      "role": "The planning map's 'Curiosity's whole climb' layer and the lander-window line: the route the team planned up Mount Sharp, as Curiosity actually drove it, landing to sol 5,073. Our walk follows its 2025–26 stretch."
     },
     {
       "source": "worldview",
       "name": "Worldview",
-      "role": "The model for the layer stack, and the link home: each waypoint named after a place on Earth opens that place in Worldview."
+      "role": "Each cairn named after a place on Earth (Altadena, Valle de la Luna, Nevado Sajama, the Atacama) links to that place in Worldview, on the planning map and in the helmet view."
     },
     {
       "source": "m2020-raw",
       "name": "Perseverance raw images",
-      "role": "The last thing the story shows: the newest frame from the other working rover, Perseverance at Jezero crater, fetched live when you reach the end. It is also in the sources panel."
+      "role": "Perseverance's newest picture is fetched live and shown on the planning map's conditions and at the end of the walk: the other rover, still working."
     }
   ],
   "liveFeeds": {
