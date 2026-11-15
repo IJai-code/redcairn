@@ -5,6 +5,7 @@
 //   radio    a click of static before the habitat speaks
 //   voice    a recorded line through a radio filter, when assets/audio has it
 //   alarm    two-tone warning for the solar storm
+//   film     wind and a low rumble under the opening; birthday(): the tune Curiosity vibrated in 2013
 
 export class Sound {
   constructor() {
@@ -76,8 +77,8 @@ export class Sound {
     if (!this.ctx) return;
     const t = this.ctx.currentTime;
     const set = (v, x) => v.g.gain.setTargetAtTime(x, t, 0.8);
-    set(this.wind, mode === 'outside' || mode === 'storm' || mode === 'home' ? this.wind.gain : 0);
-    set(this.rumble, mode === 'lander' ? this.rumble.gain : 0);
+    set(this.wind, mode === 'outside' || mode === 'storm' || mode === 'home' ? this.wind.gain : mode === 'film' ? this.wind.gain * 0.75 : 0);
+    set(this.rumble, mode === 'lander' ? this.rumble.gain : mode === 'film' ? this.rumble.gain * 0.35 : 0);
     if (mode !== 'outside' && mode !== 'storm') this.motor.gain.setTargetAtTime(0, t, 0.4);
   }
 
@@ -138,6 +139,30 @@ export class Sound {
       src.start(t);
       this.#static(t + buf.duration, 0.16, 0.4);
     } catch (e) { this.vcache[url] = null; }
+  }
+
+  // On 5 August 2013 Curiosity's sample lab (SAM) vibrated at the pitches of "Happy Birthday".
+  // This is that tune as a vibration would make it: a buzzy tone through a narrow band, not an instrument.
+  birthday() {
+    if (!this.ctx || !this.on) return;
+    const t0 = this.ctx.currentTime + 0.15, q = 0.4;
+    const N = { G4: 392, A4: 440, B4: 493.88, C5: 523.25, D5: 587.33 };
+    const tune = [['G4', 0.75], ['G4', 0.25], ['A4', 1], ['G4', 1], ['C5', 1], ['B4', 2], ['G4', 0.75], ['G4', 0.25], ['A4', 1], ['G4', 1], ['D5', 1], ['C5', 2.5]];
+    let t = t0;
+    for (const [n, d] of tune) { this.#buzz(N[n], t, d * q * 0.9); t += d * q; }
+  }
+
+  #buzz(f, start, dur) {
+    const ctx = this.ctx, o = ctx.createOscillator(), o2 = ctx.createOscillator(), bp = ctx.createBiquadFilter(), g = ctx.createGain();
+    o.type = 'square'; o.frequency.value = f;
+    o2.type = 'sawtooth'; o2.frequency.value = f * 1.006;
+    bp.type = 'bandpass'; bp.frequency.value = f * 2; bp.Q.value = 2.2;
+    g.gain.setValueAtTime(0.0001, start);
+    g.gain.exponentialRampToValueAtTime(0.07, start + 0.025);
+    g.gain.setValueAtTime(0.07, start + dur * 0.75);
+    g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+    o.connect(bp); o2.connect(bp); bp.connect(g).connect(this.master);
+    o.start(start); o2.start(start); o.stop(start + dur + 0.05); o2.stop(start + dur + 0.05);
   }
 
   alarm() {

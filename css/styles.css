@@ -504,3 +504,93 @@ body[data-step="walk"] .stop:not([data-next]) { display: none !important; }
 .film__go { position: absolute; z-index: 2; right: 18px; top: 14px; }
 .film__go .link { color: rgba(251, 243, 230, 0.85); font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; }
 @media (max-width: 760px) { .film__line { bottom: 12vh; font-size: 22px; } .film__credit { right: 18px; } }
+.film__gate { position: absolute; z-index: 3; inset: 0; display: none; place-content: center; justify-items: center; gap: 10px; text-align: center; background: rgba(13, 10, 8, 0.45); }
+.film.is-gate .film__gate { display: grid; }
+.film.is-gate .film__line, .film.is-gate .film__go { display: none; }
+.film__mark { font: 700 13px var(--sans); letter-spacing: 0.32em; text-transform: uppercase; color: #fbf3e6; }
+.film__gate h1 { font: 500 clamp(44px, 6vw, 84px)/1 var(--serif); color: #fffaf0; text-shadow: 0 2px 30px rgba(0, 0, 0, 0.5); }
+.film__sub { font: 600 12px var(--sans); font-stretch: 78%; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(251, 243, 230, 0.85); }
+.film__start { display: flex; gap: 10px; margin-top: 18px; }
+.film__start .act--alt { color: #fbf3e6; border-color: rgba(251, 243, 230, 0.55); background: rgba(13, 10, 8, 0.35); }
+
+/* ================= the living illustration: the story drawn on the real ground ================= */
+/* During the story the illustration fills the screen; the Mars Trek map is a sheet you open on demand. */
+body[data-stage="map"][data-world]:not([data-sheet]):not([data-free]) .map,
+body[data-stage="map"][data-world]:not([data-sheet]):not([data-free]) .mapui { visibility: hidden; opacity: 0; }
+body[data-world] .stage { z-index: 0; }
+body[data-sheet] .map, body[data-free] .map { z-index: 2; }
+body[data-sheet] .mapui { z-index: 13; }
+body[data-world][data-sheet] .map { inset: 44px 0 0 0; }
+.sections .sections__sheet { color: var(--ink); }
+.sections .sections__sheet[aria-pressed="true"] { color: var(--accent); }
+body:not([data-world]) .sections__sheet { display: none; }
+
+/* paper and ink: the caption card, like a printed label laid on the plate */
+body[data-world]:not([data-sheet]) .guide {
+  --pi: #2b160f; --ps: #5d4436; --pf: #8a7262; --pr: rgba(43, 22, 15, 0.16);
+  background: #f6ead6; color: var(--pi); border: 1px solid rgba(43, 22, 15, 0.35);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) inset, 0 18px 40px rgba(43, 22, 15, 0.28);
+  top: auto; bottom: 18px; max-height: calc(100svh - 80px);
+}
+body[data-world]:not([data-sheet]) .guide__top { border-bottom-color: var(--pr); color: var(--ps); }
+body[data-world]:not([data-sheet]) .guide__top span { color: #b5511c; }
+body[data-world]:not([data-sheet]) .guide__top em { color: var(--pf); }
+body[data-world]:not([data-sheet]) .guide h2 { color: var(--pi); }
+body[data-world]:not([data-sheet]) .guide__body { color: var(--ps); }
+body[data-world]:not([data-sheet]) .guide__body b { color: var(--pi); }
+body[data-world]:not([data-sheet]) .guide__view { margin-top: 8px; font: italic 500 13px/1.45 var(--serif); color: var(--pf); }
+body[data-world]:not([data-sheet]) .guide__view .link { font: 600 11px var(--sans); font-stretch: 78%; letter-spacing: 0.08em; text-transform: uppercase; color: #b5511c; text-decoration-color: rgba(181, 81, 28, 0.4); padding: 0; }
+body[data-world]:not([data-sheet]) .guide__photo figcaption { color: var(--pf); }
+body[data-world]:not([data-sheet]) .guide__photo figcaption b { color: var(--pi); }
+body[data-world]:not([data-sheet]) .guide__photo a { color: var(--ps); }
+body[data-world]:not([data-sheet]) .guide__photo img { outline-color: var(--pr); filter: sepia(0.25) contrast(1.05); }
+body[data-world]:not([data-sheet]) .guide__nums, body[data-world]:not([data-sheet]) .guide__nums > div,
+body[data-world]:not([data-sheet]) .guide__routes, body[data-world]:not([data-sheet]) .mroute,
+body[data-world]:not([data-sheet]) .guide__answers, body[data-world]:not([data-sheet]) .guide__answers > div,
+body[data-world]:not([data-sheet]) .guide__sol { border-color: var(--pr); }
+body[data-world]:not([data-sheet]) .guide__nums dt, body[data-world]:not([data-sheet]) .guide__sol span { color: var(--pf); }
+body[data-world]:not([data-sheet]) .guide__nums dd, body[data-world]:not([data-sheet]) .guide__sol b { color: var(--pi); }
+body[data-world]:not([data-sheet]) .mroute b, body[data-world]:not([data-sheet]) .guide__answers dt { color: var(--pi); }
+body[data-world]:not([data-sheet]) .mroute span, body[data-world]:not([data-sheet]) .guide__answers dd, body[data-world]:not([data-sheet]) .guide__sol em { color: var(--ps); }
+body[data-world]:not([data-sheet]) .mroute::before { border-color: var(--ps); }
+body[data-world]:not([data-sheet]) .mroute:hover { background: rgba(43, 22, 15, 0.04); }
+body[data-world]:not([data-sheet]) .act { background: var(--pi); border-color: var(--pi); color: #f6ead6; }
+body[data-world]:not([data-sheet]) .act:hover { background: #4a2a1e; border-color: #4a2a1e; }
+body[data-world]:not([data-sheet]) .act--alt { background: transparent; color: var(--pi); border-color: rgba(43, 22, 15, 0.45); }
+body[data-world]:not([data-sheet]) .act--alt:hover { border-color: var(--pi); background: rgba(43, 22, 15, 0.05); }
+body[data-world]:not([data-sheet]) .guide__stone, body[data-world]:not([data-sheet]) .guide__walkers { background: rgba(43, 22, 15, 0.06); color: var(--pi); }
+body[data-world]:not([data-sheet]) .guide__stone b { color: var(--pi); }
+body[data-world]:not([data-sheet]) .guide::-webkit-scrollbar { width: 6px; }
+body.alarm[data-world]:not([data-sheet]) .guide { border-color: #9e2a17; }
+
+/* the key to the drawing, top right, like a map's legend box */
+.inklegend { position: fixed; z-index: 11; top: 56px; right: 12px; display: none; gap: 5px; max-width: 250px; padding: 10px 12px; background: rgba(246, 234, 214, 0.94); border: 1px solid rgba(43, 22, 15, 0.35); color: #3b2418; font-size: 11.5px; line-height: 1.35; }
+body[data-world][data-stage="map"]:not([data-sheet]):not([data-free]) .inklegend { display: grid; }
+.inklegend b { font: 600 10px var(--sans); font-stretch: 78%; letter-spacing: 0.1em; text-transform: uppercase; color: #b5511c; }
+.inklegend span { display: flex; align-items: center; gap: 8px; }
+.k { flex: none; width: 22px; height: 10px; border: 1px solid rgba(43, 22, 15, 0.45); background: #e7a473; }
+.k--contour { background: linear-gradient(transparent 4px, #2b160f 4px 5px, transparent 5px); border-color: transparent; }
+.k--route { background: #e2742f; height: 4px; border: 0; }
+.k--care { background: repeating-linear-gradient(45deg, #e7a473 0 3px, #9a5f15 3px 4px); }
+.k--nogo { background: repeating-linear-gradient(45deg, transparent 0 3px, #7a1f10 3px 4px), repeating-linear-gradient(-45deg, #d8805f 0 3px, #7a1f10 3px 4px); }
+.k--shelter { background: radial-gradient(circle, #4a2f86 1.4px, transparent 1.6px) 0 0 / 5px 5px, #e7a473; }
+.k--home { background: #fff; height: 4px; }
+.k--track { background: repeating-linear-gradient(90deg, #fff 0 4px, transparent 4px 7px); height: 4px; border: 0; }
+
+/* the top line turns to paper while you are in the drawing */
+body[data-world][data-stage="map"]:not([data-sheet]):not([data-free]) .sections { background: #f6ead6; border-bottom-color: rgba(43, 22, 15, 0.25); }
+body[data-world][data-stage="map"]:not([data-sheet]):not([data-free]) .sections button { color: #6b5142; border-left-color: rgba(43, 22, 15, 0.15); }
+body[data-world][data-stage="map"]:not([data-sheet]):not([data-free]) .sections button:hover { background: rgba(43, 22, 15, 0.05); color: #2b160f; }
+body[data-world][data-stage="map"]:not([data-sheet]):not([data-free]) .sections .sections__home { color: #2b160f; }
+body[data-world][data-stage="map"]:not([data-sheet]):not([data-free]) .sections__sheet { color: #b5511c !important; }
+body[data-world] .radio { background: rgba(246, 234, 214, 0.96); border-color: rgba(43, 22, 15, 0.3); border-left-color: #2f6f93; }
+body[data-world] .radio span { color: #2b160f; }
+body[data-world] .radio b { color: #2f6f93; }
+@media (max-width: 760px) {
+  .inklegend { top: auto; bottom: calc(52svh + 8px); left: 8px; right: auto; max-width: 60vw; font-size: 10.5px; padding: 7px 9px; }
+  .inklegend span:nth-child(n+4) { display: none; }
+  body[data-world]:not([data-sheet]) .guide { bottom: 0; }
+}
+body[data-world]:not([data-sheet]) .mapbar { display: none !important; }
+@media (max-width: 760px) { .sections button { padding: 0 8px; } }
+@media (max-width: 760px) { body[data-world]:not([data-sheet]) .guide { max-height: 50svh; } }

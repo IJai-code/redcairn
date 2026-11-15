@@ -4,7 +4,7 @@
 
 Every plate is the real 1 m elevation model of the walk (data/terrain.bin, from Mars Trek), shaded in flat
 illustration tones with ink contour lines every 2 m of real height, like a field map stood up in 3D. The team's
-rover (~/Downloads/rover_v8_ultra_detailed.stl, scaled to Curiosity's 2.9 m) and a 1.8 m suited figure stand at
+rover (~/Downloads/rover_v8_ultra_detailed.stl, at true size: 2.2 m to the mast top, like Curiosity) and a 1.8 m suited figure stand at
 real waypoints. No AI images: every line is computed from NASA elevation data.
 
 Writes assets/img/plates/<id>.jpg (1920 x 1080; 640 x 360 with --preview).
@@ -173,7 +173,7 @@ def import_rover(sc, mat_body, mat_wheel):
     bpy.ops.wm.stl_import(filepath=STL)
     ob = bpy.context.selected_objects[0]
     ob.name = "Rover"
-    ob.scale = (0.001 * 0.7,) * 3      # millimetres -> metres, 4.1 m model -> Curiosity's ~2.9 m
+    ob.scale = (0.001,) * 3            # millimetres -> metres: the model is Curiosity-sized, 2.2 m to the mast top
     ob.data.materials.append(mat_body)
     for p in ob.data.polygons:
         p.use_smooth = False
@@ -339,8 +339,8 @@ def p3(sc, frame, route, mission, rover, crew, cam):
     off(crew)
     t = frame.xyz(w["lon"], w["lat"], 0.3)
     cam.data.lens = 28
-    cam.location = t + Vector((math.cos(h + 0.75) * 4.6, math.sin(h + 0.75) * 4.6, 0.7))
-    look(cam, t + Vector((math.cos(h) * 0.6, math.sin(h) * 0.6, 0.35)))
+    cam_at(cam, frame, t.x + math.cos(h + 0.75) * 6.0, t.y + math.sin(h + 0.75) * 6.0, 0.9)
+    look(cam, t + Vector((math.cos(h) * 0.6, math.sin(h) * 0.6, 0.75)))
 
 
 def p4(sc, frame, route, mission, rover, crew, cam):
@@ -386,11 +386,11 @@ def p6(sc, frame, route, mission, rover, crew, cam):
     side = Vector((math.cos(h + math.pi / 2), math.sin(h + math.pi / 2), 0))
     fwd = Vector((math.cos(h), math.sin(h), 0))
     base = frame.xyz(w["lon"], w["lat"])
-    spot = base + fwd * 0.85 + side * 1.55
+    spot = base + fwd * 0.9 + side * 1.85
     crew.location = on_ground(frame, spot.x, spot.y)
     crew.rotation_euler = (0, 0, math.atan2(-side.y, -side.x) - math.pi / 2)   # facing the rover's flank
     cam.data.lens = 32
-    c = base + fwd * 5.2 + side * 4.2
+    c = base + fwd * 6.2 + side * 5.0
     cam_at(cam, frame, c.x, c.y, 1.7)
     look(cam, base + side * 0.9 + Vector((0, 0, 1.0)))
 

@@ -336,6 +336,7 @@ function guide(i, opts = {}) {
   say(''); act([]);
   const prev = S.lastBeat;
   S.lastBeat = id;
+  if (prev !== id) document.body.toggleAttribute('data-sheet', false);
   if (prev !== id) radio(id);
   if (id === `stop-${roverK()}` && prev === `stop-${roverK() - 1}` && !S.metOnce) {
     S.metOnce = true;
@@ -399,6 +400,8 @@ function card() {
   const g = S.gale.rover;
   let kicker = '', title = '', body = '', extra = '', go = '';
   S.win = '';
+  document.body.toggleAttribute('data-world', id !== 'intro');
+  frameShift(id !== 'intro');
   if (id === 'intro') {
     kicker = 'A survival map for the first walk on Mars';
     title = 'It has been alone up there since 2012.';
@@ -477,7 +480,7 @@ function card() {
   }
   parkStage();
   $('guide').innerHTML = `<div class="guide__top"><span>${esc(kicker)}</span><em>${S.beat + 1} / ${n}</em></div>
-    ${S.win}<h2>${title}</h2><p class="guide__body">${body}</p>${extra}<div class="guide__go">${go}</div>`;
+    ${id === 'intro' ? S.win : ''}<h2>${title}</h2><p class="guide__body">${body}</p>${id !== 'intro' ? S.win : ''}${extra}<div class="guide__go">${go}</div>`;
   $('guide').hidden = false;
   mountStage();
   fillCuriosity();
@@ -510,6 +513,14 @@ function chooseOnMap(id) {
 }
 
 // Leave the story on screen but out of the way, so every layer can be explored by hand.
+// The field map: Mars Trek's tiles, every layer and the cursor readout, opened over the illustration on demand.
+function toggleSheet(force) {
+  const on = force ?? !document.body.hasAttribute('data-sheet');
+  document.body.toggleAttribute('data-sheet', on);
+  $('btn-sheet').setAttribute('aria-pressed', String(on));
+  if (on && S.map) { S.map.resize(); mapPanel(); }
+}
+
 function freeMap() {
   token();
   document.body.setAttribute('data-free', '');
@@ -521,7 +532,7 @@ function freeMap() {
 
 // ---------------------------------------------------------------- the window: the 3D ground inside the story card
 function win3d(caption, ground) {
-  return `<div class="guide__window" id="gwin"><span class="guide__wincap">${esc(caption)}</span>${ground ? '<button type="button" class="guide__ground" data-a="ground">See it from the ground</button>' : ''}</div>`;
+  return `<p class="guide__view">${esc(caption.replace(' Drag to look around.', ''))}${ground ? ' <button type="button" class="link" data-a="ground">See it through your own eyes</button>' : ''}</p>`;
 }
 
 // The intro: Gale crater rendered in Blender, with Curiosity's fourteen years drawing themselves across it.
@@ -584,27 +595,29 @@ function roll(path, d0, d1, ms, cam, onMain) {
   }).then((ok) => { S.stage.camRate = 2.6; if (S.sound && ok) S.sound.roverMoving(false); return ok; });
 }
 
-// Walk in first person along a path (eye height, true scale); the map's marker follows you.
-// The camera is set directly every frame so it holds at any frame rate; only turning is smoothed, in real time.
+// Walk the suited figure along a path; the camera follows behind and to one side, and the map marker follows too.
+// Positions are set every frame so it holds at any frame rate; only the camera's turning is smoothed, in real time.
 function walkTo(path, d0, d1, ms, lookAt) {
   const t = S.token, start = performance.now();
   let yawS = null, lastT = start;
   S.spin = 0;
+  S.stage.camRate = 7;
   return new Promise((done) => {
     const frame = (now) => {
       if (!live(t)) return done(false);
       const f = Math.min(1, (now - start) / ms), e = f < 0.5 ? 2 * f * f : 1 - Math.pow(-2 * f + 2, 2) / 2;
       const d = d0 + (d1 - d0) * e, p = path.at(d);
       let yaw = path.dir(d);
-      if (lookAt && f > 0.75) { const q = lookAt(); const w = (f - 0.75) / 0.25; const ty = Math.atan2(q.z - p.z, q.x - p.x); yaw = yaw + Math.atan2(Math.sin(ty - yaw), Math.cos(ty - yaw)) * w; }
+      if (lookAt && f > 0.8) { const q = lookAt(); const w = (f - 0.8) / 0.2; const ty = Math.atan2(q.z - p.z, q.x - p.x); yaw += Math.atan2(Math.sin(ty - yaw), Math.cos(ty - yaw)) * w; }
       const dtr = (now - lastT) / 1000; lastT = now;
-      yawS = yawS == null ? yaw : yawS + Math.atan2(Math.sin(yaw - yawS), Math.cos(yaw - yawS)) * (1 - Math.exp(-3 * dtr));
-      S.stage.setEye(p.x, p.z, yawS, -0.06 + Math.sin(now / 230) * 0.008, 0, true);
+      yawS = yawS == null ? yaw : yawS + Math.atan2(Math.sin(yaw - yawS), Math.cos(yaw - yawS)) * (1 - Math.exp(-2.5 * dtr));
+      S.stage.placeFigure(p.x, p.z, yaw, Math.abs(d - d0) * 2.4);
+      chaseCam(p, yawS, { side: 26, dist: 9, polar: 77 }, true);
       S.map.setCrew(lonOfX(p.x), latOfZ(p.z));
       if (f < 1) requestAnimationFrame(frame); else done(true);
     };
     requestAnimationFrame(frame);
-  });
+  }).then((ok) => { S.stage.camRate = 2.6; return ok; });
 }
 
 // Curiosity waits at its real latest position, at the end of the route, facing on up the slope.
@@ -615,43 +628,56 @@ function parkCuriosity() {
 }
 const eyeAt = (d) => S.path.at(Math.max(0, Math.min(S.path.length, d)));
 const lookYaw = (from, to) => Math.atan2(to.z - from.z, to.x - from.x);
+const midOf = (a, b) => ({ x: (a.x + b.x) / 2, z: (a.z + b.z) / 2 });
 
-// What the window shows on each beat: always the real ground at true scale, through your own eyes.
+// In the drawing, keep the subject clear of the story card.
+function frameShift(on) {
+  const phone = innerWidth <= 760;
+  S.stage.setFrameShift(on ? (phone ? -0.16 : -0.14) : 0, on && phone ? 0.24 : 0);
+}
+addEventListener('resize', () => { if (S.stage) frameShift(document.body.hasAttribute('data-world') && document.body.dataset.stage === 'map'); });
+
+// Stand the figure and frame it with what it is looking at: a three-quarter view from behind its shoulder.
+function standAt(me, q, o = {}, immediate = true) {
+  const yaw = lookYaw(me, q);
+  S.stage.placeFigure(me.x, me.z, yaw, 0);
+  chaseCam(o.onFigure ? me : midOf(me, q), yaw, { side: o.side ?? 42, dist: o.dist ?? 10, polar: o.polar ?? 78 }, immediate);
+  S.spin = o.spin ?? 0.9;
+}
+
+// What the illustration shows on each beat: the real ground, the figure (you), the cairns and the rover.
 function window3d(id, prev) {
   S.spin = 0;
-  if (id === 'intro' || !$('gwin')) return;
+  if (id === 'intro') return;
   const r = R(), n = stops().length, rk = roverK();
   prep3d(r);
   const rover = parkCuriosity();
+  inkLegend(id);
   if (id === 'plan') {
     setLayers(['slope']);
     S.stage.setCairns(0);
     S.stage.markStops(-1, 0);
-    const me = eyeAt(0), ahead = eyeAt(70);
-    S.stage.setEye(me.x, me.z, lookYaw(me, ahead), -0.1, 0, true);
+    standAt(eyeAt(0), eyeAt(80), { side: 22, dist: 12, polar: 79, onFigure: true });
     return;
   }
   if (id.startsWith('stop-')) {
     const k = Number(id.slice(5)), s = S.story.stops[stops()[k].id] || {};
-    setLayers((s.layers || []).filter((l) => l === 'track'));
+    setLayers((s.layers || []).filter((l) => l === 'track' || l === 'slope'));
     S.stage.markStops(k, k);
-    const dk = S.plan.out[S.plan.idx[k]].d, stand = k === rk ? S.path.length - 7 : Math.max(0, dk - 5);
+    const dk = S.plan.out[S.plan.idx[k]].d, stand = k === rk ? S.path.length - 5.5 : Math.max(0, dk - 3.5);
     const target = () => (k === rk ? rover : k ? S.stage.cairnPoint(k) : eyeAt(60));
     if (k === lastCairnK()) S.stage.setCommunal(k, Math.max(0, (S.cairn ? S.cairn.count : 0) - (S.stoneLaid ? 1 : 0)));
-    const settle = () => {
-      const me = eyeAt(stand), q = target();
-      S.stage.setEye(me.x, me.z, lookYaw(me, q), k === rk ? -0.12 : -0.2, 0, true);
-    };
+    const settle = (immediate) => standAt(eyeAt(stand), target(), k === rk ? { side: 55, dist: 11, polar: 80 } : { side: 44, dist: 9.5, polar: 78 }, immediate);
     const prevK = prev && prev.startsWith('stop-') ? Number(prev.slice(5)) : -1;
     if (prevK === k - 1 && k > 0) {
       // Walk the leg. The cairn ahead is not there yet: it rises as you arrive.
       S.stage.setCairns(k - 1);
-      const from = prevK === 0 ? 0 : Math.max(0, S.plan.out[S.plan.idx[prevK]].d - 5);
+      const from = prevK === 0 ? 0 : Math.max(0, S.plan.out[S.plan.idx[prevK]].d - 3.5);
       walkTo(S.path, from, stand, clamp((stand - from) * 9, 3500, k === rk ? 9000 : 7000), target)
-        .then((ok) => { if (ok) { S.stage.setCairns(k); if (k === rk) S.stage.setCairns(rk - 1); } });
+        .then((ok) => { if (ok) { S.stage.setCairns(k === rk ? rk - 1 : k); settle(false); } });
     } else {
       S.stage.setCairns(k === rk ? rk - 1 : k);
-      settle();
+      settle(true);
     }
     if (k === rk && S.touched) touchWheel(true);
     return;
@@ -666,7 +692,8 @@ function window3d(id, prev) {
       S.stage.drawReturn(o.direct.line);
       S.stage.setAlternatives([o.trail.line]);
       const me = eyeAt(S.path.length - 6), dock = S.stage.worldOf(stops()[0].lon, stops()[0].lat);
-      S.stage.setEye(me.x, me.z, lookYaw(me, dock), -0.14, 0, true);
+      const ahead = { x: me.x + (dock.x - me.x) * 0.05, z: me.z + (dock.z - me.z) * 0.05 };
+      standAt(me, ahead, { side: 18, dist: 14, polar: 68, onFigure: true, spin: 0.4 });
     } else {
       const x = o[S.choice], path = worldPath(x.line);
       S.stage.drawReturn(x.line);
@@ -681,19 +708,34 @@ function window3d(id, prev) {
     S.stage.markStops(-1, n);
     setLayers(['track']);
     const me = eyeAt(0);
-    S.stage.setEye(me.x, me.z, lookYaw(me, rover), 0.02, 0, true);
+    standAt(me, rover, { side: 12, dist: 7, polar: 80, onFigure: true, spin: 0.3 });
     S.map.setCrew(stops()[0].lon, stops()[0].lat);
   }
 }
 
-// Kneel at its front wheel: the torn aluminium, close enough to touch.
+// What the illustration is drawing right now, in a mapmaker's key.
+function inkLegend(id) {
+  const el = $('inklegend');
+  if (!el) return;
+  const k = id.startsWith('stop-') ? Number(id.slice(5)) : -1, s = k >= 0 ? S.story.stops[stops()[k].id] || {} : {};
+  const slope = id === 'plan' || (s.layers || []).includes('slope'), shelter = id === 'storm', track = id === 'home' || (s.layers || []).includes('track');
+  el.innerHTML = `<b>On the ground</b>
+    <span><i class="k k--contour"></i>Contour every 2 m of real height</span>
+    <span><i class="k k--route"></i>Your route</span>
+    ${slope ? '<span><i class="k k--care"></i>Hatched: take care, 15–20°</span><span><i class="k k--nogo"></i>Cross-hatched: too steep, over 20°</span>' : ''}
+    ${shelter ? '<span><i class="k k--shelter"></i>Stipple: hills hide part of the sky</span><span><i class="k k--home"></i>White: the new line home</span>' : ''}
+    ${track ? '<span><i class="k k--track"></i>Curiosity’s wheel tracks</span>' : ''}`;
+}
+
+// Beside its front wheel: the torn aluminium, close enough to touch.
 function touchWheel(immediate) {
   const d = S.path.length, p = S.path.at(d), yaw = S.path.dir(d - 4);
   const fx = Math.cos(yaw), fz = Math.sin(yaw);
-  // Stand ahead and to the left of the front-left wheel, looking back at it, a little down.
-  const ex = p.x + fx * 3.0 - fz * 1.6, ez = p.z + fz * 3.0 + fx * 1.6;
-  const wx = p.x + fx * 1.0 - fz * 1.0, wz = p.z + fz * 1.0 + fx * 1.0;
-  S.stage.setEye(ex, ez, Math.atan2(wz - ez, wx - ex), -0.42, -0.55, !!immediate);
+  const wheel = { x: p.x + fx * 1.0 - fz * 1.25, z: p.z + fz * 1.0 + fx * 1.25 };
+  const me = { x: wheel.x - fz * 0.75 + fx * 0.25, z: wheel.z + fx * 0.75 + fz * 0.25 };
+  S.stage.placeFigure(me.x, me.z, lookYaw(me, wheel), 0);
+  chaseCam(midOf(me, wheel), lookYaw(me, wheel), { side: 70, dist: 4.2, polar: 72 }, !!immediate);
+  S.spin = 0.4;
 }
 
 function mapPanel() {
@@ -745,6 +787,8 @@ function groundAt(k) {
   S.stage.setPinsVisible(true);
   S.stage.resetLook();
   S.stage.setHaze();
+  if (S.stage.figure) S.stage.figure.visible = false;   // through your own eyes, you are not in the picture
+  S.stage.setFrameShift(0, 0);
   S.stage.rate = 3.2;
   miniMap(r.plan);
   const s = S.story.stops[stops()[k].id] || {};
@@ -797,15 +841,15 @@ function mapStop(k) {
 // Five plates, one true line each. Every picture is a Blender render of the real ground (tools/blender_plates.py).
 const FILM = [
   ['p1', 'In August 2012, a rover landed alone in Gale crater, and began to climb.'],
-  ['p2', 'On its first birthday, it played itself “Happy Birthday”. Once.'],
+  ['p2', 'On its first birthday, it played itself “Happy Birthday”. Once.', 'birthday'],
   ['p3', 'Sharp rock tore its wheels. It kept climbing.'],
   ['p4', 'One evening, it photographed Earth: a single point of light.'],
   ['p5', 'Fourteen years later, you land at the foot of its tracks.'],
-  ['p5', 'It is still up there. Go and find it.'],
+  ['p5', 'It is still up there. Go and find it.', 'radio'],
 ];
 function playFilm(shots, done, ms = 4300) {
   const run = (S.filmRun = (S.filmRun || 0) + 1), el = $('film'), box = $('film-plates');
-  S.filmDone = () => { if (run !== S.filmRun) return; S.filmRun++; el.classList.remove('is-on'); setTimeout(() => { el.hidden = true; box.innerHTML = ''; }, 700); clearTimeout(S.filmT); done(); };
+  S.filmDone = () => { if (run !== S.filmRun) return; S.filmRun++; el.classList.remove('is-on'); setTimeout(() => { el.hidden = true; box.innerHTML = ''; }, 700); clearTimeout(S.filmT); if (S.sound) S.sound.scene('off'); done(); };
   box.innerHTML = '';
   el.hidden = false;
   void el.offsetWidth;
@@ -814,7 +858,8 @@ function playFilm(shots, done, ms = 4300) {
   const step = () => {
     if (run !== S.filmRun) return;
     if (i >= shots.length) return S.filmDone();
-    const [id, line] = shots[i++];
+    const [id, line, cue] = shots[i++];
+    if (S.sound && S.sound.on) { if (cue === 'birthday') S.sound.birthday(); if (cue === 'radio') S.sound.radio(); }
     if (shown !== id) {
       const img = new Image();
       img.src = `assets/img/plates/${id}.jpg`;
@@ -835,7 +880,27 @@ function playFilm(shots, done, ms = 4300) {
   S.filmNext = step;
   // warm the cache so plates never pop in
   shots.forEach(([id]) => { const im = new Image(); im.src = `assets/img/plates/${id}.jpg`; });
+  if (S.sound && S.sound.on) S.sound.scene('film');
   step();
+}
+
+// The first screen: a title card that asks for one click, so the opening can play with sound.
+function filmGate(done) {
+  const el = $('film');
+  el.hidden = false;
+  void el.offsetWidth;
+  el.classList.add('is-on', 'is-gate');
+  $('film-plates').innerHTML = '<img class="film__plate is-in" src="assets/img/plates/p5.jpg" alt="">';
+  $('film-line').textContent = '';
+  S.filmGate = (withSound) => {
+    el.classList.remove('is-gate');
+    if (withSound) {
+      S.sound.setEnabled(true);
+      $('btn-sound').setAttribute('aria-pressed', 'true');
+      $('btn-sound').innerHTML = '<span class="w">Sound </span>on';
+    }
+    playFilm(FILM, done);
+  };
 }
 
 // Every part can be entered directly (nav, hash links). Each jump clears whatever the last one left behind.
@@ -1036,12 +1101,14 @@ async function boot() {
 
   document.addEventListener('click', (e) => {
     const t = e.target;
-    if (t.closest('#film') && !t.closest('[data-a]')) { clearTimeout(S.filmT); return S.filmNext && S.filmNext(); }
+    if (t.closest('#film') && !t.closest('[data-a]')) { if ($('film').classList.contains('is-gate')) return; clearTimeout(S.filmT); return S.filmNext && S.filmNext(); }
     const a = t.closest('[data-a]');
     if (a) {
       const id = a.dataset.a;
-      if (id === 'filmskip') return S.filmDone && S.filmDone();
+      if (id === 'filmskip') { $('film').classList.remove('is-gate'); return S.filmDone ? S.filmDone() : (($('film').hidden = true), guide(0)); }
+      if (id === 'filmsound' || id === 'filmquiet') return S.filmGate && S.filmGate(id === 'filmsound');
       if (id === 'opening') return playFilm(FILM, () => guide(0));
+      if (id === 'sheet') return toggleSheet();
       if (id === 'next') return guide(S.beat + 1);
       if (id === 'touch') { S.touched = true; card(); touchWheel(false); if (S.sound) S.sound.thud(); return; }
       if (id === 'stone') {
@@ -1051,7 +1118,7 @@ async function boot() {
         const k = lastCairnK(), c = S.stage.cairnPoint(k);
         S.stage.addStone(k);
         S.spin = 0;
-        { const me = eyeAt(S.plan.out[S.plan.idx[k]].d - 1); S.stage.setEye(me.x, me.z, lookYaw(me, c), -0.45, -0.3); }
+        { const me = eyeAt(S.plan.out[S.plan.idx[k]].d - 1.2); standAt(me, c, { side: 55, dist: 5.5, polar: 66 }, false); }
         return card();
       }
       if (id === 'prev') return guide(S.beat - 1);
@@ -1106,6 +1173,7 @@ async function boot() {
   new MutationObserver(() => S.sound.scene(SCENE[document.body.dataset.step] || 'off')).observe(document.body, { attributes: true, attributeFilter: ['data-step'] });
   document.addEventListener('keydown', (e) => {
     if ($('about').open || e.target.closest('input')) return; // typing a name, or the slider
+    if (!$('film').hidden && $('film').classList.contains('is-gate') && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); return S.filmGate(true); }
     if (!$('film').hidden && (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowRight')) { e.preventDefault(); clearTimeout(S.filmT); return S.filmNext && S.filmNext(); }
     if (!$('film').hidden && e.key === 'Escape') return S.filmDone && S.filmDone();
     if (e.key === ' ' || e.key === 'Enter') {
@@ -1118,7 +1186,7 @@ async function boot() {
   addEventListener('hashchange', () => { const h = location.hash.slice(1); if (HASHES().includes(h)) jump(h); });
   const start = location.hash.slice(1);
   if (HASHES().includes(start)) jump(start);
-  else { jump('intro'); playFilm(FILM, () => guide(0)); }
+  else { jump('intro'); filmGate(() => guide(0)); }
 }
 
 boot().catch((err) => {

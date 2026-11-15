@@ -31,6 +31,8 @@
   <aside class="mapui" id="mapui" aria-label="Map layers and data"></aside>
   <!-- The story, told on the map one beat at a time. -->
   <article class="guide" id="guide" aria-live="polite" hidden></article>
+  <!-- What the illustration is drawing, in a mapmaker's key. -->
+  <aside class="inklegend" id="inklegend" aria-label="Key to the drawing"></aside>
   <div class="mapbar"><button type="button" class="mapbar__story" data-a="story">Back to the story</button><button type="button" class="mapbar__layers" data-a="layers">Layers</button></div>
 
   <!-- The opening: illustrated plates, one true line each. Drawn by Blender from the real ground. -->
@@ -39,6 +41,12 @@
     <p class="film__line" id="film-line" aria-live="polite"></p>
     <p class="film__credit">Every picture is drawn by Blender from NASA elevation data of the real ground. No AI images.</p>
     <div class="film__go"><button type="button" class="link" data-a="filmskip">Skip</button></div>
+    <div class="film__gate">
+      <p class="film__mark">Redcairn</p>
+      <h1>Finding Curiosity</h1>
+      <p class="film__sub">A survival map for the first walk on Mars</p>
+      <div class="film__start"><button type="button" class="act" data-a="filmsound">Begin, with sound</button><button type="button" class="act act--alt" data-a="filmquiet">Without sound</button></div>
+    </div>
   </section>
 
   <!-- The helmet: everything after the hatch is seen through this. -->
@@ -76,6 +84,7 @@
     <button type="button" data-go="walk"><i>2</i>Walk</button>
     <button type="button" data-go="storm"><i>3</i>Storm</button>
     <button type="button" data-go="home"><i>4</i>Home</button>
+    <button type="button" class="sections__sheet" id="btn-sheet" data-a="sheet" aria-pressed="false"><span class="w">Field </span>map</button>
     <button type="button" class="sections__sound" id="btn-sound" aria-pressed="false"><span class="w">Sound </span>off</button>
     <button type="button" class="sections__about" id="btn-about"><span class="w">Architecture &amp; </span>data</button>
   </nav>

@@ -166,6 +166,82 @@ function grainShader(mat, broad) {
   };
 }
 
+// ---------------------------------------------------------------- the ink style
+// The walk is drawn like the opening's plates: three flat tones from the sun and the real photo, ink contour lines
+// every 2 m of real height, and the data drawn the way a mapmaker draws it: hachures on steep ground, stipple for
+// radiation shelter. Same palette as tools/blender_plates.py.
+const PAL = {
+  t0: new THREE.Color(0x6e3424), t1: new THREE.Color(0xb86a42), t2: new THREE.Color(0xe7a473),
+  ink: new THREE.Color(0x2b160f), paper: new THREE.Color(0xf3dfc2), paperHi: new THREE.Color(0xfbeedb),
+  care: new THREE.Color(0xc77e1c), nogo: new THREE.Color(0x9e2a17), shelter: new THREE.Color(0x4a2f86),
+};
+let TOON_RAMP = null;
+function toonRamp() {
+  if (TOON_RAMP) return TOON_RAMP;
+  TOON_RAMP = new THREE.DataTexture(new Uint8Array([60, 140, 255]), 3, 1, THREE.RedFormat);
+  TOON_RAMP.minFilter = TOON_RAMP.magFilter = THREE.NearestFilter;
+  TOON_RAMP.needsUpdate = true;
+  return TOON_RAMP;
+}
+function toon(color, vertexColors = false) {
+  return new THREE.MeshToonMaterial({ color, gradientMap: toonRamp(), vertexColors });
+}
+// Ink outline: the back faces, pushed out along their normals and drawn flat (an "inverted hull").
+function inkOutline(geometry, width) {
+  const m = new THREE.MeshBasicMaterial({ color: PAL.ink, side: THREE.BackSide });
+  m.onBeforeCompile = (sh) => {
+    sh.vertexShader = sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
+transformed += normalize(normal) * ${width.toFixed(4)};`);
+  };
+  const o = new THREE.Mesh(geometry, m);
+  o.castShadow = false;
+  return o;
+}
+
+const INK_GROUND_VS = `varying vec3 vWP; varying vec3 vN; varying vec2 vUv;
+void main(){ vUv = uv; vN = normalize(mat3(modelMatrix) * normal); vec4 w = modelMatrix * vec4(position, 1.0); vWP = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`;
+const INK_GROUND_FS = `uniform sampler2D photo, cls, shield; uniform float has, showSlope, showShield, fogD, y0;
+uniform vec3 sun, t0, t1, t2, ink, fogC, care, nogo, shelter;
+varying vec3 vWP; varying vec3 vN; varying vec2 vUv;
+float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float lineAt(float v, float px){ float d = abs(fract(v + 0.5) - 0.5); return 1.0 - smoothstep(px * 0.5, px * 1.3, d); }
+void main(){
+  vec3 n = normalize(vN);
+  float ndl = max(0.0, dot(n, normalize(sun)));
+  float lum = has > 0.5 ? pow(dot(texture2D(photo, vUv).rgb, vec3(0.299, 0.587, 0.114)), 0.4545) : 0.5;
+  float s = 0.3 + ndl * 0.62 + (lum - 0.5) * 0.38;
+  vec3 c = s < 0.36 ? t0 : (s < 0.7 ? t1 : t2);
+  // contour lines every 2 m of real height, bold every 10 m; they fade where they would crowd into grey
+  float h = vWP.y + y0;
+  float f2 = fwidth(h / 2.0), f10 = fwidth(h / 10.0);
+  float k = max(lineAt(h / 2.0, f2) * (1.0 - smoothstep(0.12, 0.3, f2)) * 0.5,
+                lineAt(h / 10.0, f10 * 1.7) * (1.0 - smoothstep(0.08, 0.2, f10)) * 0.85);
+  // hachures: ground that needs care is hatched; ground too steep for a suit is cross-hatched
+  if (showSlope > 0.5) {
+    float cl = floor(texture2D(cls, vUv).r * 255.0 + 0.5);
+    vec2 P = vWP.xz / 0.8;
+    float fa = fwidth(P.x + P.y), fb = fwidth(P.x - P.y);
+    float fade = 1.0 - smoothstep(0.3, 0.6, fa);
+    float a = lineAt(P.x + P.y, fa), b = lineAt(P.x - P.y, fb);
+    if (cl > 0.5 && cl < 1.5) c = mix(mix(c, care, 0.18), care * 0.75, a * fade);
+    if (cl > 1.5) c = mix(mix(c, nogo, 0.3), nogo * 0.7, max(a, b) * fade);
+  }
+  // shelter from radiation: stipple, denser where the hills hide more of the sky
+  if (showShield > 0.5) {
+    float v = texture2D(shield, vUv).r;
+    vec2 q = vWP.xz / 0.6;
+    vec2 g = floor(q), f = fract(q) - 0.5 + (vec2(hash(g), hash(g + 7.3)) - 0.5) * 0.4;
+    float fd = fwidth(q.x);
+    float d = (1.0 - smoothstep(0.07, 0.07 + fd, length(f))) * step(hash(g + 3.1), v * 1.4);
+    c = mix(c, shelter, d * 0.85 * (1.0 - smoothstep(0.35, 0.7, fd)));
+  }
+  c = mix(c, ink, k);
+  float dist = length(vWP - cameraPosition);
+  c = mix(c, fogC, 1.0 - exp(-fogD * fogD * dist * dist));
+  gl_FragColor = vec4(c, 1.0);
+  #include <colorspace_fragment>
+}`;
+
 function paintCanvas(w, h, fn) {
   const c = document.createElement('canvas');
   c.width = w; c.height = h;
@@ -342,11 +418,13 @@ export class Stage {
     loadTexture('assets/img/site-ortho.jpg').then((tex) => {
       if (!tex) return;
       groundMat.map = tex; groundMat.needsUpdate = true;
+      if (this.inkMat) { this.inkMat.uniforms.photo.value = tex; this.inkMat.uniforms.has.value = 1; }
       // Beyond the photo, the ground carries on in the photo's own colour, so there is no visible edge.
       const c = averageColour(tex.image, 0, 1);
       if (c) for (const m of this.apronMats) m.color.copy(c);
     });
 
+    this.#buildInkGround();
     this.#buildApron(pos);
     this.#buildSky();
     this.#buildRocks();
@@ -372,6 +450,30 @@ export class Stage {
     this.camMode = 'orbit';
   }
 
+  // The ink ground: slope classes and terrain shelter go to the shader as small data textures (row 0 = south).
+  #buildInkGround() {
+    const t = this.t, { cols, rows } = t;
+    const flipRows = (src, scale) => {
+      const out = new Uint8Array(cols * rows);
+      for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) out[(rows - 1 - r) * cols + c] = Math.max(0, Math.min(255, Math.round(src[r * cols + c] * scale)));
+      return out;
+    };
+    const tex = (data, linear) => { const x = new THREE.DataTexture(data, cols, rows, THREE.RedFormat); x.minFilter = x.magFilter = linear ? THREE.LinearFilter : THREE.NearestFilter; x.needsUpdate = true; return x; };
+    const top = Math.max(0.12, t.maxShield * 0.8);
+    this.inkMat = new THREE.ShaderMaterial({
+      uniforms: {
+        photo: { value: null }, has: { value: 0 }, cls: { value: tex(flipRows(t.cls, 1), false) }, shield: { value: tex(flipRows(t.shield, 255 / top), true) },
+        showSlope: { value: 0 }, showShield: { value: 0 }, fogD: { value: 0.0009 }, y0: { value: this.y0 },
+        sun: { value: new THREE.Vector3(-0.62, 0.42, 0.66).normalize() }, t0: { value: PAL.t0 }, t1: { value: PAL.t1 }, t2: { value: PAL.t2 },
+        ink: { value: PAL.ink }, fogC: { value: PAL.paper }, care: { value: PAL.care }, nogo: { value: PAL.nogo }, shelter: { value: PAL.shelter },
+      },
+      vertexShader: INK_GROUND_VS, fragmentShader: INK_GROUND_FS,
+    });
+    this.ground.material = this.inkMat;
+    this.wScene.fog.color.copy(PAL.paper);
+    this.wScene.fog.density = 0.0009;
+  }
+
   // Beyond the 1 m model the ground slopes gently away under the haze, so there is no cliff at the edge.
   #buildApron(pos) {
     const t = this.t, { cols, rows } = t, out = 900, sp = [], si = [];
@@ -391,11 +493,10 @@ export class Stage {
     g.setAttribute('position', new THREE.Float32BufferAttribute(sp, 3));
     g.setIndex(si);
     g.computeVertexNormals();
-    const apronMat = new THREE.MeshStandardMaterial({ color: 0x7c5a43, roughness: 1, side: THREE.DoubleSide });
-    const discMat = new THREE.MeshStandardMaterial({ color: 0x7c5a43, roughness: 1 });
-    grainShader(apronMat, true);
-    grainShader(discMat, true);
-    this.apronMats = [apronMat, discMat];
+    const apronMat = toon(PAL.t1.clone());
+    apronMat.side = THREE.DoubleSide;
+    const discMat = toon(PAL.t1.clone());
+    this.apronMats = [];
     this.wScene.add(new THREE.Mesh(g, apronMat));
     const disc = new THREE.Mesh(new THREE.CircleGeometry(6000, 64), discMat);
     disc.rotation.x = -Math.PI / 2;
@@ -414,7 +515,8 @@ export class Stage {
           vec3 d = normalize(vD);
           float u = atan(d.x, -d.z) / 6.2831853 + 0.5;
           float v = asin(clamp(d.y, -1.0, 1.0)) / 3.1415927 + 0.5;
-          vec3 c = has > 0.5 ? texture2D(map, vec2(u, v)).rgb : mix(haze, vec3(0.2, 0.13, 0.1), clamp(d.y * 2.0, 0.0, 1.0));
+          // The real horizon, drawn in ink by Blender from the MOLA + HRSC elevation (tools/blender_horizon_ink.py).
+          vec3 c = has > 0.5 ? texture2D(map, vec2(u, v)).rgb : vec3(0.89, 0.74, 0.55);
           gl_FragColor = vec4(c, 1.0);
           #include <colorspace_fragment>
         }`,
@@ -423,12 +525,11 @@ export class Stage {
     this.sky.renderOrder = -1;
     this.sky.frustumCulled = false;
     this.wScene.add(this.sky);
-    loadTexture('assets/img/horizon.jpg').then((tex) => {
+    loadTexture('assets/img/horizon-ink.jpg').then((tex) => {
       if (!tex) return;
       mat.uniforms.map.value = tex; mat.uniforms.has.value = 1;
       // The distance fades into the colour of the real horizon, so ground and sky meet without a seam.
-      const c = averageColour(tex.image, 0.455, 0.49);
-      if (c) { this.haze.copy(c); this.wScene.fog.color.copy(c); }
+      // the ink style keeps its paper-coloured haze
     });
   }
 
@@ -542,7 +643,7 @@ export class Stage {
     };
     const palette = [[0.2, 0.16, 0.15], [0.3, 0.2, 0.16], [0.42, 0.27, 0.19], [0.5, 0.38, 0.29], [0.58, 0.47, 0.37]];
     const make = (geos, n, flat, sizeFn, clear) => {
-      const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.96, flatShading: true });
+      const mat = toon(0xffffff, false);
       const per = Math.ceil(n / geos.length), meshes = [];
       geos.forEach((geo) => {
         const mesh = new THREE.InstancedMesh(geo, mat, per);
@@ -642,7 +743,7 @@ export class Stage {
     this.alts = [];
     this.setRoute(this.data.route.eva);
     const track = this.data.route.roverTrack.map((p) => this.worldOf(p[0], p[1], 0.05));
-    this.track = new THREE.Mesh(this.#tube(track, 0.35, 1600, 4), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55, fog: true }));
+    this.track = new THREE.Mesh(this.#tube(track, 0.09, 1600, 4), new THREE.MeshBasicMaterial({ color: 0xfbeedb, transparent: true, opacity: 0.9, fog: true }));
     this.track.visible = false;
     this.wScene.add(this.track);
     this.back = null;
@@ -653,7 +754,7 @@ export class Stage {
     if (this.route) { this.wScene.remove(this.route); this.route.geometry.dispose(); }
     this.eva = eva;
     const pts = eva.map((v) => this.worldOf(v.lon, v.lat, 0.08));
-    const geo = this.routeGeo = this.#tube(pts, 0.07, 1400, 4);
+    const geo = this.routeGeo = this.#tube(pts, 0.11, 1400, 4);
     geo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(geo.attributes.position.count * 3), 3));
     const mat = new THREE.MeshBasicMaterial({ vertexColors: true, toneMapped: false, transparent: true, opacity: 0.85, fog: false, depthWrite: false });
     // Fade the line in over the first few metres in front of you, like a projection on the visor rather than paint on the ground.
@@ -684,8 +785,8 @@ export class Stage {
     const eva = this.eva, total = eva[eva.length - 1].distM;
     const units = this.data.mission.layers.minerals.units.map((u) => ({ ...u, c: new THREE.Color(u.color) }));
     const mode = this.layers.has('slope') ? 'slope' : this.layers.has('rocks') ? 'rocks' : 'plain';
-    const classes = ['#4fe08f', '#ffc23a', '#ff5a3c'].map((h) => new THREE.Color(h));
-    const plain = new THREE.Color('#9ff2c4');
+    const classes = ['#e2742f', '#d99a1e', '#a8261a'].map((h) => new THREE.Color(h));
+    const plain = new THREE.Color('#e2742f');
     let j = 0;
     for (let r = 0; r < rings; r++) {
       const d = (r / (rings - 1)) * total;
@@ -719,7 +820,8 @@ export class Stage {
       fragmentShader: 'varying float vT; void main(){ float a = 0.30 * pow(1.0 - vT, 1.8) * smoothstep(0.0, 0.03, vT); gl_FragColor = vec4(1.0, 0.7, 0.46, a); }',
     });
     wps.forEach((wp, k) => {
-      const mat = new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.95, flatShading: true, emissive: 0x000000 });
+      const mat = toon(0xffffff, true);
+      mat.emissive = new THREE.Color(0x000000);
       const g = new THREE.Group();
       let y = 0;
       for (let n = 0; n < 8; n++) {
@@ -732,6 +834,9 @@ export class Stage {
         y += ry * 0.62;
         mesh.castShadow = true; mesh.receiveShadow = true;
         g.add(mesh);
+        const ol = inkOutline(mesh.geometry, 0.07);
+        ol.position.copy(mesh.position); ol.rotation.copy(mesh.rotation); ol.scale.copy(mesh.scale);
+        g.add(ol);
       }
       // a few fallen stones at the foot of the pile
       for (let n = 0; n < 5; n++) {
@@ -836,7 +941,7 @@ export class Stage {
   markStops(here, reached) {
     // The cairn you are heading to: the next one after where you stand, or the one the leg is aimed at.
     const next = here >= 0 ? here + 1 : reached >= 1 ? reached : reached === 0 ? 1 : -1;
-    this.cairns.forEach((c, k) => { c.mat.emissive.set(k === here ? 0x5a2410 : 0x000000); c.beam.visible = k > 0 && k === next; });
+    this.cairns.forEach((c, k) => { c.mat.emissive.set(k === here ? 0x5a2410 : 0x000000); c.beam.visible = false; /* the drawing marks the next cairn on the card, not with a light */ });
     for (const p of this.pins) {
       if (p.kind !== 'walk') continue;
       p.el.toggleAttribute('data-next', p.id === next);
@@ -884,13 +989,14 @@ export class Stage {
       }
       g.setAttribute('color', new THREE.BufferAttribute(col, 3));
       g.computeBoundingSphere();
-      const mesh = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, roughness: body ? 0.36 : 0.62, metalness: body ? 0.22 : 0.12 }));
+      const mesh = new THREE.Mesh(g, toon(0xffffff, true));
       mesh.castShadow = true;
-      if (p.name === 'body') { model.add(mesh); continue; }
+      const ol = inkOutline(g, 26);   // geometry is in millimetres
+      if (p.name === 'body') { model.add(mesh, ol); continue; }
       const pivot = new THREE.Group();
       const o = p.origin;   // metres, Blender frame
       pivot.position.set(o[0] * meta.unitsPerMetre, o[2] * meta.unitsPerMetre, -o[1] * meta.unitsPerMetre);
-      pivot.add(mesh);
+      pivot.add(mesh, ol);
       model.add(pivot);
       this.wheels.push(pivot);
     }
@@ -899,6 +1005,48 @@ export class Stage {
     this.roverState = { d: 0 };
     this.wScene.add(root);
     return root;
+  }
+
+  // ------------------------------------------------------------ you: a 1.8 m suited figure, drawn like the plates
+  #buildFigure() {
+    const root = new THREE.Group(), white = toon(0xf2efe8), dark = toon(0x3a3936), gold = toon(0xc98a2c), stripe = toon(0xe2742f);
+    const part = (geo, mat, x, y, z, parent = root) => {
+      const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = true;
+      const o = inkOutline(geo, 0.026); o.position.copy(m.position);
+      parent.add(m, o);
+      return m;
+    };
+    // the figure faces +X; legs hang from hip pivots so they can swing
+    this.legs = [];
+    for (const side of [-1, 1]) {
+      const hip = new THREE.Group(); hip.position.set(0, 0.86, side * 0.11); root.add(hip);
+      part(new THREE.CylinderGeometry(0.085, 0.08, 0.78, 12), white, 0, -0.42, 0, hip);
+      part(new THREE.BoxGeometry(0.28, 0.1, 0.15), dark, 0.04, -0.82, 0, hip);
+      this.legs.push(hip);
+      const arm = part(new THREE.CylinderGeometry(0.065, 0.06, 0.62, 10), white, 0, 1.12, side * 0.3);
+      arm.rotation.x = side * 0.12;
+      part(new THREE.SphereGeometry(0.07, 10, 8), dark, 0, 0.78, side * 0.33);
+    }
+    part(new THREE.CylinderGeometry(0.2, 0.17, 0.62, 14), white, 0, 1.13, 0);
+    part(new THREE.BoxGeometry(0.2, 0.58, 0.38), white, -0.21, 1.15, 0);
+    part(new THREE.BoxGeometry(0.02, 0.06, 0.24), stripe, -0.315, 1.32, 0);
+    part(new THREE.SphereGeometry(0.19, 18, 14), white, 0, 1.6, 0);
+    const visor = part(new THREE.SphereGeometry(0.15, 16, 12), gold, 0.08, 1.6, 0);
+    visor.scale.set(0.9, 0.85, 0.95);
+    root.visible = false;
+    this.figure = root;
+    this.wScene.add(root);
+  }
+
+  // Stand the figure on the real ground at x/z, facing yaw; phase swings the legs while walking.
+  placeFigure(x, z, yaw, phase = 0, visible = true) {
+    if (!this.figure) this.#buildFigure();
+    const f = this.figure;
+    f.visible = visible;
+    f.position.set(x, this.heightAt(x, z), z);
+    f.rotation.y = -yaw;
+    const sw = Math.sin(phase) * 0.42;
+    this.legs[0].rotation.z = sw; this.legs[1].rotation.z = -sw;
   }
 
   // Put the rover on the ground at x/z, facing a direction, wheels turned by the distance it rolled.
@@ -1019,13 +1167,25 @@ export class Stage {
 
   resetLook() { this.look = { yaw: 0, pitch: 0 }; }
 
+  // Keep the subject in the open part of the screen: right of the story card on a wide screen, above it on a phone.
+  // fx, fy are fractions of the view (negative fx moves the picture right, positive fy moves it up).
+  setFrameShift(fx = 0, fy = 0) { this.shift = { fx, fy }; this.#applyShift(); }
+  #applyShift() {
+    const c = this.wCam, sh = this.shift || { fx: 0, fy: 0 };
+    if (!this.W || !this.H) return;
+    if (sh.fx || sh.fy) c.setViewOffset(this.W, this.H, sh.fx * this.W, sh.fy * this.H, this.W, this.H);
+    else c.clearViewOffset();
+    c.updateProjectionMatrix();
+  }
+
   // Thinner haze for the overview from high up; the ground-level haze is tuned for standing on it.
   setHaze(density = 0.00055) { this.wScene.fog.density = density; }
 
   setLayers(set) {
     this.layers = new Set(set);
-    this.ov.slope.visible = set.has('slope');
-    this.ov.shield.visible = set.has('shield');
+    this.ov.slope.visible = false;
+    this.ov.shield.visible = false;
+    if (this.inkMat) { this.inkMat.uniforms.showSlope.value = set.has('slope') ? 1 : 0; this.inkMat.uniforms.showShield.value = set.has('shield') ? 1 : 0; }
     this.ov.height.visible = set.has('height');
     if (this.ov.home) this.ov.home.visible = set.has('home');
     this.track.visible = set.has('track');
@@ -1055,6 +1215,7 @@ export class Stage {
     this.canvas.style.height = '100%';
     this.W = W; this.H = H;
     for (const cam of [this.gCam, this.wCam]) { cam.aspect = W / H; cam.updateProjectionMatrix(); }
+    this.#applyShift();
     this.wCam.fov = W / H < 0.8 ? 72 : 62;
     this.wCam.updateProjectionMatrix();
     this.g.base = W > 900 ? 3.7 : 4.6;
