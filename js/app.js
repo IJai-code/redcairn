@@ -849,7 +849,7 @@ const FILM = [
 ];
 function playFilm(shots, done, ms = 4300) {
   const run = (S.filmRun = (S.filmRun || 0) + 1), el = $('film'), box = $('film-plates');
-  S.filmDone = () => { if (run !== S.filmRun) return; S.filmRun++; el.classList.remove('is-on'); setTimeout(() => { el.hidden = true; box.innerHTML = ''; }, 700); clearTimeout(S.filmT); if (S.sound) S.sound.scene('off'); done(); };
+  S.filmDone = () => { if (run !== S.filmRun) return; S.filmRun++; el.classList.remove('is-on'); setTimeout(() => { el.hidden = true; box.innerHTML = ''; }, 700); clearTimeout(S.filmT); if (S.sound) S.sound.scene('off'); if (S.bday) { S.bday.stop(1.5); S.bday = null; } done(); };
   box.innerHTML = '';
   el.hidden = false;
   void el.offsetWidth;
@@ -859,7 +859,15 @@ function playFilm(shots, done, ms = 4300) {
     if (run !== S.filmRun) return;
     if (i >= shots.length) return S.filmDone();
     const [id, line, cue] = shots[i++];
-    if (S.sound && S.sound.on) { if (cue === 'birthday') S.sound.birthday(); if (cue === 'radio') S.sound.radio(); }
+    if (S.sound && S.sound.on) {
+      if (cue === 'birthday') {
+        // NASA's own recording of SAM playing the tune (Goddard, 2013); the synthesized version only if it cannot load.
+        S.sound.clip('assets/audio/sam-birthday.m4a', 0.85).then((h) => { if (h) S.bday = h; else S.sound.birthday(); });
+        $('film-credit').textContent = 'Sound: Curiosity’s SAM instrument playing “Happy Birthday”, recorded by NASA Goddard, 2013.';
+      }
+      if (cue === 'radio') S.sound.radio();
+    }
+    if (cue !== 'birthday' && $('film-credit').dataset.base) $('film-credit').textContent = $('film-credit').dataset.base;
     if (shown !== id) {
       const img = new Image();
       img.src = `assets/img/plates/${id}.jpg`;
@@ -896,6 +904,7 @@ function filmGate(done) {
     el.classList.remove('is-gate');
     if (withSound) {
       S.sound.setEnabled(true);
+      S.sound.preload('assets/audio/sam-birthday.m4a');
       $('btn-sound').setAttribute('aria-pressed', 'true');
       $('btn-sound').innerHTML = '<span class="w">Sound </span>on';
     }
@@ -1046,7 +1055,8 @@ function aboutHTML() {
     ['Radio: Curiosity', 'Quoted, real', 'Its first post from Mars, @MarsCuriosity, 6 August 2012 (sol 0)'],
     ['Radio: habitat and EVA-2', 'Imagined', 'Written for this walk; every such line is labelled imagined on screen'],
     ['Earth in the evening sky', 'Optical', 'PIA17936, Curiosity Mastcam, sol 529 (31 January 2014), NASA/JPL-Caltech/MSSS/TAMU'],
-    ['The birthday song', 'History', 'NASA, August 2013: the SAM instrument vibrated “Happy Birthday” on Curiosity’s first anniversary'],
+    ['The birthday song', 'History, sound', 'NASA Goddard (SVS 11331), August 2013: the SAM instrument vibrating “Happy Birthday” on Curiosity’s first anniversary; the sound in the opening is that recording'],
+    ['Radio voices', 'Recorded', 'Read by our team; Curiosity’s line is its real first post, the rest are imagined and labelled so'],
     ['Curiosity’s mission clock', 'Computed', 'Sols since landing (one sol = 88,775 s), counted live'],
     ['Storm drill', 'Radiation, space weather', 'Curiosity RAD, September 2017 solar event, scaled ×20, labelled simulated'],
     ['Weather in the visor', 'Atmospheric', `Curiosity REMS, sol ${num(S.conditions.weather.sol)}`],

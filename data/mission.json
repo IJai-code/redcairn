@@ -924,9 +924,9 @@
     {
       "id": "happy-birthday",
       "title": "Happy Birthday, Curiosity",
-      "org": "NASA",
-      "url": "https://science.nasa.gov/resource/happy-birthday-curiosity/",
-      "use": "The SAM instrument played 'Happy Birthday' on 5 August 2013: told at home."
+      "org": "NASA Goddard Space Flight Center (SVS)",
+      "url": "https://svs.gsfc.nasa.gov/11331/",
+      "use": "The SAM instrument played 'Happy Birthday' on 5 August 2013; the opening plays that recording."
     },
     {
       "id": "marscuriosity-landing",

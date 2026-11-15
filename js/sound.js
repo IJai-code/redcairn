@@ -141,6 +141,34 @@ export class Sound {
     } catch (e) { this.vcache[url] = null; }
   }
 
+  // A recording played as it is (no radio filter): the real 2013 tune from NASA. Returns a handle to fade it out.
+  async clip(url, gain = 0.9) {
+    if (!this.ctx || !this.on) return null;
+    this.vcache = this.vcache || {};
+    try {
+      let buf = this.vcache[url];
+      if (buf === null) return null;
+      if (!buf) {
+        const r = await fetch(url);
+        if (!r.ok) { this.vcache[url] = null; return null; }
+        buf = this.vcache[url] = await this.ctx.decodeAudioData(await r.arrayBuffer());
+      }
+      const ctx = this.ctx, src = ctx.createBufferSource(), g = ctx.createGain();
+      src.buffer = buf; g.gain.value = gain;
+      src.connect(g).connect(this.master);
+      src.start(ctx.currentTime + 0.05);
+      return { stop: (fade = 1.2) => { const t = ctx.currentTime; g.gain.setTargetAtTime(0, t, fade / 3); try { src.stop(t + fade + 0.2); } catch (e) { /* already ended */ } } };
+    } catch (e) { this.vcache[url] = null; return null; }
+  }
+
+  // Warm the cache so the first play starts on time.
+  async preload(url) {
+    if (!this.ctx) return;
+    this.vcache = this.vcache || {};
+    if (this.vcache[url] !== undefined) return;
+    try { const r = await fetch(url); this.vcache[url] = r.ok ? await this.ctx.decodeAudioData(await r.arrayBuffer()) : null; } catch (e) { this.vcache[url] = null; }
+  }
+
   // On 5 August 2013 Curiosity's sample lab (SAM) vibrated at the pitches of "Happy Birthday".
   // This is that tune as a vibration would make it: a buzzy tone through a narrow band, not an instrument.
   birthday() {
