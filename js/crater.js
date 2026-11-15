@@ -36,8 +36,9 @@ export class Crater {
         </svg>
       </div>
       <div class="crater__pins"></div>
-      <div class="chips crater__chips" role="group" aria-label="Crater map layers"></div>
-      <div class="legend crater__legend" hidden></div>
+      <div class="layers crater__layers"><p class="layers__head">Map layers</p>
+        <div class="chips crater__chips" role="group" aria-label="Crater map layers"></div>
+        <div class="legend crater__legend" hidden></div></div>
       <div class="crater__clock" aria-hidden="true"><b>—</b><span>—</span></div>`;
     this.chips = root.querySelector('.crater__chips');
     this.legend = root.querySelector('.crater__legend');

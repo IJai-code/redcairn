@@ -174,9 +174,28 @@ function moveTo(tl, tB, dur = 1900, follow = true) {
 }
 
 // ---------- screen furniture ----------
+const deg = (v, pos, neg) => `${Math.abs(v).toFixed(v % 1 ? 3 : 1)}°${v >= 0 ? pos : neg}`;
+
+// The map collar: what this sheet shows, where its edges are, and which way north is.
 function stage(mode) {
   document.body.dataset.stage = mode;
   S.stage.setMode(mode === 'globe' ? 'globe' : mode === 'walk' ? 'walk' : 'none');
+  const b = S.terrain.meta.bounds, g = S.gale.box;
+  const L = {
+    globe: ['MARS · TRUE COLOUR', 'VIKING MDIM 2.1 VIA MARS TREK', 'SHEET 1 · PLANET', 'NOT TO SCALE'],
+    crater: ['GALE CRATER · AEOLIS MONS', `${deg(g.west, 'E')}–${deg(g.east, 'E')} · ${deg(-g.north, 'S')}–${deg(-g.south, 'S')}`, 'SHEET 2 · CRATER · BLENDER RENDER', 'HEIGHTS ×3 · SCALE VARIES'],
+    walk: ['EVA-1 TRAVERSE · BOXWORK, MT SHARP', `${deg(b.west, 'E')}–${deg(b.east, 'E')} · ${deg(-b.north, 'S')}–${deg(-b.south, 'S')}`, 'SHEET 3 · SITE · HIRISE 33 CM + 1 M DEM', 'HEIGHTS ×2 · SCALE VARIES'],
+  }[mode] || ['', '', '', ''];
+  ['f-tl', 'f-tr', 'f-bl', 'f-br'].forEach((id, i) => { $(id).textContent = L[i]; });
+}
+
+function northLoop() {
+  const n = $('f-north'), mode = document.body.dataset.stage;
+  // The crater camera looks along a bearing of about 161° (from north of the rim toward Mount Sharp).
+  const rot = mode === 'walk' ? (S.stage.heading || 0) : mode === 'crater' ? -161 : null;
+  n.style.display = rot === null ? 'none' : '';
+  if (rot !== null) n.style.transform = `rotate(${rot.toFixed(1)}deg)`;
+  requestAnimationFrame(northLoop);
 }
 
 function phase(id) {
@@ -192,6 +211,7 @@ function caption({ kicker = '', title = '', line = '', extra = '', wide = false 
   $('cap-line').innerHTML = line;
   $('cap-extra').innerHTML = extra;
   cap.classList.toggle('cap--wide', wide);
+  cap.dataset.page = String(Math.max(1, STEPS.indexOf(S.step) + 1)).padStart(2, '0');
   cap.classList.add('is-in');
 }
 
@@ -582,6 +602,7 @@ function aboutHTML() {
     <section><h3>The five resources we were given</h3><ul>${m.anchorResources.map((a) => `<li><b><a href="${esc(src(a.source).url)}" target="_blank" rel="noopener">${esc(a.name)}</a></b>${esc(a.role)}</li>`).join('')}</ul></section>
     <section><h3>Every layer, its kind of data, and its mission</h3><div class="tablewrap"><table><thead><tr><th>Layer</th><th>Data</th><th>Mission or source</th></tr></thead><tbody>${rows.map((r) => `<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td><td>${esc(r[2])}</td></tr>`).join('')}</tbody></table></div></section>
     <section><h3>Real and simulated</h3><p><b>Real:</b> the ground, heights and slopes, the routes' terrain, the rover track and photos, the rock findings, the water minerals, the geologic units, the normal radiation rate and the measured effect of terrain on it. Our elevation model matches the rover's own elevations to ${esc(S.route.summary.demVsRoverRmsResidualM)} m RMS along the route.</p><p><b>Simulated:</b> the suit (air, pace), the astronaut, the storm's strength (×20) and the ${STORM_HOURS} h storm length for the shelter option. Heights are stretched ×2 on the walk and ×3 on the crater.</p></section>
+    <section><h3>Why it looks like this</h3><p>Apollo moonwalkers carried a cuff checklist on the wrist and planned with printed traverse maps of numbered stations. REDCAIRN is that kit rebuilt for Mars: checklist pages, a map collar with coordinates and a turning north arrow, and the tasks on your wrist inside the helmet view. No agency logos or branding are used.</p></section>
     <section><h3>How it is built</h3><p>Scripts in the repository fetch public mission data. Blender, run headless from scripts, stitches the globe, renders Gale crater layer by layer through one camera and projects Curiosity's track into it, and builds the walk's ground photo. Your browser computes slope, sky shelter, three routes, the walk-home time for ${num(S.terrain.size)} patches of ground and the suit timeline, with no server. No build step.</p></section>
     <section><h3>All sources</h3><div class="tablewrap"><table><tbody>${m.sources.map((s) => `<tr><td><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)}</a></td><td>${esc(s.org)}</td><td>${esc(s.use)}</td></tr>`).join('')}</tbody></table></div></section>
     <section><h3>How AI was used</h3><p>${esc(m.aiDisclosure)}</p></section>`;
@@ -666,6 +687,7 @@ async function boot() {
   });
 
   addEventListener('hashchange', () => { const h = location.hash.slice(1); if (STEPS.includes(h) && h !== S.step) go(h); });
+  requestAnimationFrame(northLoop);
   const start = location.hash.slice(1);
   go(STEPS.includes(start) ? start : 'mars');
   document.body.removeAttribute('data-booting');

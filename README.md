@@ -18,6 +18,10 @@ On Earth, hikers stack stones into cairns to mark the safe way for whoever comes
 | **Storm** | Helmet HUD + map | A simulated solar particle event. Choose: a new line home, the way you came, or shelter behind a ridge. The cost of each is computed on the real terrain | Curiosity RAD (Sept 2017 event, ×20 for the drill), 16-direction sky-shielding scan |
 | **4 · Debrief** | | Tasks done, time outside, dose against NASA's career limit, your storm call. Then explore every layer and scrub the walk freely | Perseverance's newest frame, fetched live |
 
+## Why it looks like this
+
+The challenge suggests looking at how NASA mapped other worlds. On the Moon, Apollo crews carried a **cuff checklist** on the wrist (spiral-bound, typewritten tasks and times) and planned with printed **traverse maps** of numbered stations. REDCAIRN is that kit rebuilt for Mars: every panel is a checklist page, the 3D map wears a printed map's collar (ticks, coordinates, a north arrow that turns with the camera), layers are ticked on a legend, and in the helmet the tasks sit on the checklist at your wrist while the visor glows with live numbers. International orange, typewriter and condensed type; no logos or agency branding.
+
 ## The five resources we were given, and where each one shows up
 
 | Resource | In REDCAIRN |

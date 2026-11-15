@@ -11,6 +11,9 @@
   <meta name="twitter:card" content="summary_large_image">
   <title>REDCAIRN · your first walk on Mars</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230d0a08'/%3E%3Cellipse cx='16' cy='24' rx='10' ry='3.6' fill='%23e0683a'/%3E%3Cellipse cx='16' cy='16.5' rx='7' ry='3.2' fill='%23e0683a'/%3E%3Cellipse cx='16' cy='9.8' rx='4.2' ry='2.8' fill='%23e0683a'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Courier+Prime:wght@400;700&display=swap">
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body data-stage="globe" data-booting>
@@ -20,9 +23,17 @@
     <div class="pins" id="pins"></div>
     <div class="crater" id="crater"></div>
 
+    <!-- The map collar: a printed traverse map's frame, ticks, coordinates and north arrow. -->
+    <div class="frame" aria-hidden="true">
+      <span class="frame__c frame__c--tl" id="f-tl"></span><span class="frame__c frame__c--tr" id="f-tr"></span>
+      <span class="frame__c frame__c--bl" id="f-bl"></span><span class="frame__c frame__c--br" id="f-br"></span>
+      <svg class="frame__north" id="f-north" viewBox="-20 -26 40 52"><path d="M0 -20 L7 10 L0 5 L-7 10 Z"/><text y="22" text-anchor="middle">N</text></svg>
+    </div>
+
     <div class="hud" id="hud">
-      <div class="chips" id="chips" role="group" aria-label="Map layers"></div>
-      <div class="legend" id="legend" hidden></div>
+      <div class="layers"><p class="layers__head">Map layers</p>
+        <div class="chips" id="chips" role="group" aria-label="Map layers"></div>
+        <div class="legend" id="legend" hidden></div></div>
       <section class="suit" id="suit" aria-live="polite">
         <p class="suit__line" id="suit-line"></p>
         <dl class="suit__nums">

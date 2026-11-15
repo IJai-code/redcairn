@@ -442,6 +442,7 @@ export class Stage {
   #tickWalk(dt, now) {
     const c = this.cam, T = this.camT, k = 1 - Math.exp(-(reduce ? 12 : 3.2) * dt);
     for (const key of ['x', 'y', 'z', 'dist', 'polar', 'az']) c[key] += (T[key] - c[key]) * k;
+    this.heading = c.az + this.drag.az;   // degrees; 0 = looking north
     const az = (c.az + this.drag.az) * DEG, pol = clamp(c.polar + this.drag.pol, 14, 80) * DEG;
     this.wCam.position.set(c.x + c.dist * Math.sin(pol) * Math.sin(az), c.y + c.dist * Math.cos(pol), c.z + c.dist * Math.sin(pol) * Math.cos(az));
     this.wCam.lookAt(c.x, c.y, c.z);

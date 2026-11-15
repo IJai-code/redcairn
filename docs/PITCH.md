@@ -14,7 +14,7 @@ The official judging guide scores Impact, Creativity, Validity, Relevance and Pr
 | Criterion | What proves it, on screen |
 |---|---|
 | Impact | Every point of the map knows the walk home; the storm drill shows the map re-planning a crew's way home in an instant |
-| Creativity | You play the astronaut: habitat display → helmet HUD over the rover's real photo → a decision under a solar storm → debrief |
+| Creativity | Looks like no other entry: the interface is an Apollo-style cuff checklist and printed traverse map, rebuilt for Mars. You play the astronaut: habitat display → helmet HUD over the rover's real photo → a decision under a solar storm → debrief |
 | Validity | Routes, slopes, time, air and dose computed live on 146,034 cells of a 1 m elevation model that matches the rover's own heights to 0.99 m; simulated values labelled |
 | Relevance | Optical, topographic, spectral, geologic, radiation, atmospheric and chemical data from Viking, Mars Global Surveyor, Mars Express, MRO, Curiosity and Perseverance; all five listed resources visible |
 | Presentation | One headline and one sentence per screen; a rover that walked the ground first as the emotional thread |
