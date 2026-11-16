@@ -189,6 +189,15 @@ body.alarm .guide__window::after { content: ""; position: absolute; inset: 0; z-
 .gc__line { fill: none; stroke: var(--accent); stroke-width: 2.25; vector-effect: non-scaling-stroke; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw 6s 0.5s ease-in-out forwards; }
 .gc__walk { fill: #fff; stroke: #111; stroke-width: 1.5; vector-effect: non-scaling-stroke; opacity: 0; animation: rise 0.6s 6.2s forwards; }
 .gc__water { fill: #67b2e6; stroke: #0b1a24; stroke-width: 1; vector-effect: non-scaling-stroke; }
+.guide__window--site { background: #181713; }
+.jz__frame { position: absolute; left: 0; right: 0; }
+.jz__frame img, .jz__frame svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.jz__frame img { object-fit: fill; }
+.jz__track { fill: none; stroke: #ff6a2b; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; filter: drop-shadow(0 0 2px #17120e); stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw 6s .5s ease-in-out forwards; }
+.jz__landing { fill: #ffd6b5; stroke: #24140d; stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.jz__latest { fill: #fffaf0; stroke: #24140d; stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.jz__key { position: absolute; z-index: 2; top: 14px; left: 14px; display: flex; align-items: center; gap: 7px; padding: 6px 9px; background: rgba(18, 17, 16, .84); color: #f6ead6; font: 600 10px var(--sans); font-stretch: 78%; letter-spacing: .07em; text-transform: uppercase; }
+.jz__key i { width: 17px; height: 3px; background: #ff6a2b; }
 
 /* Curiosity's own photo: a thumbnail beside its caption, full size on click */
 .guide__photo { display: grid; grid-template-columns: 104px 1fr; gap: 12px; align-items: center; margin-top: 14px; }
@@ -686,11 +695,17 @@ body[data-world]:not([data-sheet]):not([data-free]) .map .shelter { display: non
 .numbers th { padding-top: 14px; font: 600 10.5px var(--sans); font-stretch: 78%; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent) !important; }
 .numbers td.n { font: 500 14px var(--mono); color: var(--ink); white-space: nowrap; }
 
-/* Site switch: Gale (main) and Jezero (beta), the same engine on two craters */
+/* Independent, visibly selected destinations for the two rover walks */
 .sections .sections__home { margin-right: 0; }
-.sections .sections__site { margin-right: auto; color: var(--soft); text-decoration: none; font-size: 11.5px; font-weight: 600; padding: 0 16px; display: inline-flex; align-items: center; gap: 4px; border-left: 1px solid var(--line, rgba(0,0,0,.15)); white-space: nowrap; }
-.sections .sections__site:hover { color: var(--accent); }
-.sections .sections__site sup { font-size: .62em; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+.site-switch { flex: none; display: inline-flex; align-items: center; gap: 2px; margin: 5px auto 5px 8px; padding: 2px; border: 1px solid var(--rule-2); }
+.sections .site-switch__option { min-height: 28px; padding: 0 10px; display: inline-flex; align-items: center; gap: 4px; color: var(--soft); text-decoration: none; font-size: 11.5px; font-weight: 600; white-space: nowrap; transition: color .15s, background .15s; }
+.sections .site-switch__option:hover { color: var(--ink); background: var(--plate); }
+.sections .site-switch__option[aria-current="page"] { color: var(--ink); background: var(--plate-2); box-shadow: inset 0 -2px var(--accent); }
+.site-switch__option sup { font-size: .62em; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+body[data-world][data-stage="map"] .site-switch { border-color: rgba(43, 22, 15, .25); }
+body[data-world][data-stage="map"] .sections .site-switch__option { color: #6b5142; }
+body[data-world][data-stage="map"] .sections .site-switch__option:hover { color: #2b160f; background: rgba(43, 22, 15, .05); }
+body[data-world][data-stage="map"] .sections .site-switch__option[aria-current="page"] { color: #2b160f; background: rgba(43, 22, 15, .08); box-shadow: inset 0 -2px #b5511c; }
 .numbers--two { margin-bottom: 6px; }
 .numbers--two th { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; text-align: left; }
 .numbers--two a { color: var(--accent); }

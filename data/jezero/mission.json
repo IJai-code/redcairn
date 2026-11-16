@@ -929,6 +929,8 @@
   "horizon": null,
   "wide": {
    "url": "assets/img/jezero/crater-ctx.jpg",
+   "width": 953,
+   "height": 1085,
    "bounds": {
     "west": 77.00085397837795,
     "east": 78.58147460363604,

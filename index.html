@@ -82,7 +82,10 @@
 
   <nav class="sections" id="sections" aria-label="Jump to a part of the walk">
     <button type="button" data-go="intro" class="sections__home">Redcairn</button>
-    <a class="sections__site" id="site-link" href="?site=jezero" title="Switch to the other site (same engine, different crater)"><span class="w">Gale · </span>Jezero <sup>beta</sup></a>
+    <div class="site-switch" role="group" aria-label="Choose a rover site">
+      <a class="site-switch__option" data-site-option="gale" href="./" title="Gale crater · Curiosity"><span>Gale</span></a>
+      <a class="site-switch__option" data-site-option="jezero" href="?site=jezero" title="Jezero crater · Perseverance"><span>Jezero</span><sup>beta</sup></a>
+    </div>
     <button type="button" data-go="plan"><i>1</i>Plan</button>
     <button type="button" data-go="walk"><i>2</i>Walk</button>
     <button type="button" data-go="storm"><i>3</i>Storm</button>

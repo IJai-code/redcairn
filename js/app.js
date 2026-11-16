@@ -383,6 +383,7 @@ function guide(i, opts = {}) {
   mapPanel();
   window3d(id, prev);
   try { history.replaceState(null, '', `#${id}`); } catch (e) { /* file:// */ }
+  syncSiteLinks(id);
 }
 
 // ---------------------------------------------------------------- which site
@@ -392,6 +393,18 @@ const DATA = SITE === 'jezero' ? 'data/jezero/' : 'data/';
 const JZ = SITE === 'jezero';
 const RV = () => (S.mission && S.mission.rover && S.mission.rover.name) || 'Curiosity';
 const CARD = (k) => (S.story.cards || {})[k];
+function syncSiteLinks(beat = location.hash.slice(1) || 'intro') {
+  document.querySelectorAll('[data-site-option]').forEach((link) => {
+    const site = link.dataset.siteOption;
+    const current = site === SITE;
+    const target = new URL(site === 'jezero' ? '?site=jezero' : './', location.href);
+    target.hash = beat || 'intro';
+    link.href = `${target.pathname}${target.search}${target.hash}`;
+    if (current) link.setAttribute('aria-current', 'page');
+    else link.removeAttribute('aria-current');
+    link.setAttribute('aria-label', `${site === 'jezero' ? 'Jezero crater, Perseverance' : 'Gale crater, Curiosity'}${current ? ', current site' : ', switch site'}`);
+  });
+}
 function fillT(str, v = {}) {
   const g = S.gale.rover;
   const base = { roverKm: g.distanceKm.toFixed(1), latestSol: num(g.latestSol), walkKm: (stops()[roverK()].routeDistM / 1000).toFixed(1) };
@@ -488,7 +501,7 @@ function card() {
     </ol>`;
     extra += `<label class="guide__name"><span>Your name, for the habitat radio</span><input id="callsign" type="text" maxlength="24" autocomplete="off" placeholder="EVA-1" value="${esc(S.name || '')}"></label>`;
     go = btn('next', 'Begin the walk') + (JZ ? '' : btn('opening', 'Watch the opening again', true));
-    S.win = JZ ? '' : winCrater();
+    S.win = JZ ? winJezero() : winCrater();
   } else if (id === 'plan') {
     kicker = 'Where is it safe to step?';
     title = 'Choose how to follow it.';
@@ -624,6 +637,31 @@ function winCrater() {
   return `<div class="guide__window guide__window--crater"><div class="gc__frame" style="width:${100 / z}%;height:${100 / z}%;left:${(-x0 * 100) / z}%;top:${(-y0 * 100) / z}%"><img src="${esc(v.images.color)}" alt="Gale crater in 3D, rendered in Blender from orbital elevation">
     <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">${water}<path class="gc__line" pathLength="1" d="${d}"/><circle class="gc__walk" cx="${(wx * W).toFixed(0)}" cy="${(wy * H).toFixed(0)}" r="14"/></svg></div>
     </div><p class="guide__wincap guide__wincap--below">Mount Sharp in 3D, rendered in Blender from MOLA + HRSC elevation (heights ×3). Blue: water minerals seen from orbit. Orange: Curiosity, 2012 to today.</p>`;
+}
+
+// Jezero gets its own context image and Perseverance track in the site intro.
+function winJezero() {
+  const view = S.mission.siteImages.wide;
+  const track = S.gale.traverse;
+  if (!view || !track || !track.length) return '';
+  const b = view.bounds;
+  const xy = ([lon, lat]) => [
+    (lon - b.west) / (b.east - b.west),
+    (b.north - lat) / (b.north - b.south),
+  ];
+  const points = track.filter((_, i) => i % 3 === 0);
+  if (points[points.length - 1] !== track[track.length - 1]) points.push(track[track.length - 1]);
+  const path = points.map((p, i) => {
+    const [x, y] = xy(p);
+    return `${i ? 'L' : 'M'}${x.toFixed(4)} ${y.toFixed(4)}`;
+  }).join('');
+  const [lx, ly] = xy(track[0]);
+  const [rx, ry] = xy(track[track.length - 1]);
+  const frameHeight = (view.height / view.width) / (9 / 16);
+  const frameTop = (1 - frameHeight) / 2;
+  return `<div class="guide__window guide__window--site"><div class="jz__frame" style="height:${(frameHeight * 100).toFixed(2)}%;top:${(frameTop * 100).toFixed(2)}%"><img src="${esc(view.url)}" alt="Jezero crater in a Mars Reconnaissance Orbiter CTX mosaic">
+    <svg viewBox="0 0 1 1" preserveAspectRatio="none" aria-hidden="true"><path class="jz__track" pathLength="1" d="${path}"/><circle class="jz__landing" cx="${lx.toFixed(4)}" cy="${ly.toFixed(4)}" r="0.008"/><circle class="jz__latest" cx="${rx.toFixed(4)}" cy="${ry.toFixed(4)}" r="0.008"/></svg></div>
+    <span class="jz__key"><i></i> Perseverance · landing to today</span></div><p class="guide__wincap guide__wincap--below">Jezero crater in context. Orange: Perseverance’s traverse from Octavia E. Butler Landing toward the crater rim. CTX mosaic: NASA/JPL-Caltech/MSSS/USGS.</p>`;
 }
 
 function prep3d(r) {
@@ -1338,7 +1376,7 @@ async function boot() {
   S.terrain = await Terrain.load(DATA + 'terrain.json', S.limits);
   document.body.dataset.site = SITE;
   if (S.mission.site.sheet) { $('sheet-a').textContent = S.mission.site.sheet[0].toUpperCase(); $('sheet-b').textContent = S.mission.site.sheet[1]; }
-  if (JZ) { const sl = $('site-link'); sl.href = './'; sl.innerHTML = '<span class="w">Jezero <sup>beta</sup> · </span>Gale'; sl.title = 'Back to the main walk, Gale crater'; }
+  syncSiteLinks();
   S.router = new Router(S.terrain, mission.suit);
   const dock = cellOf(stops()[0]);
   const tf = performance.now();
