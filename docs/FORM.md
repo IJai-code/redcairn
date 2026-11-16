@@ -104,7 +104,7 @@ SI coding assistants were used for scaffolding, data-retrieval scripts, code gen
 | NASA DONKI space weather | https://kauai.ccmc.gsfc.nasa.gov/DONKI/ |
 | Hydrous minerals, CRISM and OMEGA (Mars Trek) | https://trek.nasa.gov/mars/trekarcgis/rest/services/Hydrous_Mineral_Detections_OMEGA_CRISM_clon0/MapServer |
 | Earth seen from Mars, PIA17936 | https://science.nasa.gov/resource/bright-evening-star-seen-from-mars-is-earth/ |
-| Happy Birthday, Curiosity (NASA Goddard SVS 11331) | https://svs.gsfc.nasa.gov/11331/ |
+| Curiosity's first-anniversary SAM demonstration (NASA Goddard SVS 11331) | https://svs.gsfc.nasa.gov/11331/ |
 
 ## Space Agency Partner & Other Data
 

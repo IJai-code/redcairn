@@ -117,9 +117,9 @@ AI coding assistants were used to speed up:
 
 No AI-generated images, video, music or voices are used:
 - Blender drew every illustration from NASA elevation data.
-- The score is synthesised in code.
+- The score and original anniversary cue are synthesized in code.
 - The team recorded the radio voices.
-- The birthday tune is NASA Goddard's own 2013 recording.
+- No external NASA audio recording is used.
 
 No NASA logos or branding are used.
 
@@ -132,7 +132,7 @@ No NASA logos or branding are used.
 - Perseverance: traverse, waypoints and raw images; Ingenuity first-flight and rock-sample records
 - NASA DONKI space weather (solar particle events)
 - NASA Worldview (Earth namesakes of each cairn)
-- NASA Goddard SVS 11331: SAM playing "Happy Birthday" (2013)
+- NASA Goddard SVS 11331: Curiosity's first-anniversary SAM demonstration (2013); REDCAIRN uses only its own synthesized cue
 - MRO CRISM / Mars Express OMEGA hydrous mineral detections (via Mars Trek)
 
 ## Space agency partner and other data

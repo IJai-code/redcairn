@@ -27,14 +27,14 @@ Team: Ishaan Jha, Aayansh Raj, Vihaan Gupta, Namish Shrivastava. Score synthesis
 2. Close other tabs and set the window to 1920×1080 if you can (System Settings → Displays).
 3. Press **Cmd+Shift+5**, choose **Record Entire Screen** (or a 1920×1080 selection), Options → Microphone: None. Record each shot as its own clip; it is easier to edit.
 4. For each shot, paste the link from the table, wait 3 seconds for the map tiles to load, then do the action.
-5. Edit in **iMovie** (or CapCut): drop the clips in order, trim to the times above, add the captions as titles, the birthday audio at the start and the voice-over on top. Total must be **≤ 30.0 s**.
+5. Edit in **iMovie** (or CapCut): drop the clips in order, trim to the times above, add the captions as titles, the original REDCAIRN anniversary cue and the voice-over. Total must be **≤ 30.0 s**.
 6. Export **1080p MP4**. Upload to YouTube as **Unlisted** and put the link in the submission.
 
 **Tip:** the 3D window drives faster than the 7-second slot. Record the full drive and speed it up 1.5–2× in the edit.
 
-## The birthday audio
+## Original anniversary cue
 
-NASA published the tune. Download the video from **https://science.nasa.gov/resource/happy-birthday-curiosity/** and use the first 4 to 5 seconds of its audio. NASA media is generally free to use for education. Credit "NASA" in the end card or description, and do not use the NASA logo.
+The opening cue is synthesized in the app with Web Audio. It is original REDCAIRN sound design, not a NASA recording. Keep the credit as **“Original sound synthesized in REDCAIRN”** and do not add an external recording to the cut.
 
 ## Record the radio voices (about 10 minutes)
 
@@ -66,3 +66,16 @@ On screen, Curiosity's line is marked **real** (its first post from Mars, 6 Augu
 - [ ] Data attribution and AI use: copy from the app's **System architecture & data attribution** panel
 - [ ] No NASA logos anywhere (video end card included)
 - [ ] Test the live site once on a phone and once on a laptop, with the cache cleared
+
+## Guide lines to record (EVA-2, your voice)
+
+Each stop now has a line from EVA-2 explaining what happened there. They show as text now; record each one in the same way as before (half a second of silence at each end) and save it into `assets/audio/` with exactly this name, and it plays automatically.
+
+| File | Site · stop | Line |
+|---|---|---|
+| `13-eva2-boxwork.m4a` | Gale · cairn 2 | "These ridges are old cracks in the rock. Groundwater filled them with minerals, like cement. This is where the water went." |
+| `14-eva2-nodules.m4a` | Gale · cairn 3 | "See the small bumps in the rock? They mean the water stayed here longer than anyone expected." |
+| `15-eva2-ingenuity.m4a` | Jezero · overlook | "This is where it watched Ingenuity fly. The first flight on another world, right over there." |
+| `16-eva2-maaz.m4a` | Jezero · Máaz | "They expected lake mud here. It is lava. The lake came later, and soaked into it." |
+| `17-eva2-roubion.m4a` | Jezero · Roubion | "Its first drill hole. The rock crumbled, and the tube came up holding only air." |
+| `18-eva2-rochette.m4a` | Jezero · Rochette | "Two cores came out of this ridge. The first rock ever set aside to go home to Earth." |

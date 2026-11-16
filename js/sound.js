@@ -6,7 +6,7 @@
 //   radio    a click of static before the habitat speaks
 //   voice    a recorded line through a radio filter, when assets/audio has it
 //   alarm    two-tone warning for the solar storm
-//   film     wind and a low rumble under the opening; birthday(): the tune Curiosity vibrated in 2013
+//   film     wind, a low rumble, and an original synthesized anniversary signal
 
 export class Sound {
   constructor() {
@@ -294,28 +294,27 @@ export class Sound {
     if (this.scoreBus) { const g = this.scoreBus.gain; g.cancelScheduledValues(t); g.setTargetAtTime(this.on ? 0.95 * (this.scoreLevel ?? 1) : 0, t, 0.3); }
   }
 
-  // On 5 August 2013 Curiosity's sample lab (SAM) vibrated at the pitches of "Happy Birthday".
-  // This is that tune as a vibration would make it: a buzzy tone through a narrow band, not an instrument.
-  birthday() {
+  // A short, original radio-like anniversary signal. It is generated here and is not a NASA recording.
+  anniversary() {
     if (!this.ctx || !this.on) return;
-    const t0 = this.ctx.currentTime + 0.15, q = 0.4;
-    const N = { G4: 392, A4: 440, B4: 493.88, C5: 523.25, D5: 587.33 };
-    const tune = [['G4', 0.75], ['G4', 0.25], ['A4', 1], ['G4', 1], ['C5', 1], ['B4', 2], ['G4', 0.75], ['G4', 0.25], ['A4', 1], ['G4', 1], ['D5', 1], ['C5', 2.5]];
-    let t = t0;
-    for (const [n, d] of tune) { this.#buzz(N[n], t, d * q * 0.9); t += d * q; }
+    const t0 = this.ctx.currentTime + 0.15;
+    this.#chirp(610, 870, t0, 0.52, 0.11);
+    this.#chirp(930, 720, t0 + 0.48, 0.43, 0.08);
+    this.#chirp(520, 1040, t0 + 1.18, 0.82, 0.10);
   }
 
-  #buzz(f, start, dur) {
-    const ctx = this.ctx, o = ctx.createOscillator(), o2 = ctx.createOscillator(), bp = ctx.createBiquadFilter(), g = ctx.createGain();
-    o.type = 'square'; o.frequency.value = f;
-    o2.type = 'sawtooth'; o2.frequency.value = f * 1.006;
-    bp.type = 'bandpass'; bp.frequency.value = f * 2; bp.Q.value = 2.2;
+  #chirp(from, to, start, dur, vol) {
+    const ctx = this.ctx, o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(from, start);
+    o.frequency.exponentialRampToValueAtTime(to, start + dur * 0.72);
+    o.frequency.exponentialRampToValueAtTime(from * 0.82, start + dur);
     g.gain.setValueAtTime(0.0001, start);
-    g.gain.exponentialRampToValueAtTime(0.07, start + 0.025);
-    g.gain.setValueAtTime(0.07, start + dur * 0.75);
+    g.gain.exponentialRampToValueAtTime(vol, start + 0.025);
+    g.gain.setValueAtTime(vol, start + dur * 0.35);
     g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
-    o.connect(bp); o2.connect(bp); bp.connect(g).connect(this.master);
-    o.start(start); o2.start(start); o.stop(start + dur + 0.05); o2.stop(start + dur + 0.05);
+    o.connect(g).connect(this.master);
+    o.start(start); o.stop(start + dur + 0.05);
   }
 
   alarm() {

@@ -328,7 +328,7 @@ def p1(sc, frame, route, mission, rover, crew, cam):
 
 
 def p2(sc, frame, route, mission, rover, crew, cam):
-    """It played itself Happy Birthday. Once. The rover alone at dusk, low sun behind it."""
+    """Its sample lab marked the first anniversary with a short vibration sequence. The rover alone at dusk, low sun behind it."""
     w = wp(mission, "WP3")
     h = route_dir(frame, route, w["lon"], w["lat"])
     place(rover, frame, w["lon"], w["lat"], h)

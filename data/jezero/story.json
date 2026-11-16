@@ -113,6 +113,11 @@
   "stop-3": [
    {
     "who": "EVA-2",
+    "text": "Its first drill hole. The rock crumbled, and the tube came up holding only air.",
+    "audio": "assets/audio/17-eva2-roubion.m4a"
+   },
+   {
+    "who": "EVA-2",
     "text": "Turnaround. Leave something for whoever comes next.",
     "audio": "assets/audio/06-eva2-turnaround.m4a"
    }
@@ -136,6 +141,27 @@
     "who": "Habitat",
     "text": "Both suits at the hatch. Welcome home, {name}.",
     "audio": "assets/audio/10-habitat-home.m4a"
+   }
+  ],
+  "stop-1": [
+   {
+    "who": "EVA-2",
+    "text": "This is where it watched Ingenuity fly. The first flight on another world, right over there.",
+    "audio": "assets/audio/15-eva2-ingenuity.m4a"
+   }
+  ],
+  "stop-2": [
+   {
+    "who": "EVA-2",
+    "text": "They expected lake mud here. It is lava. The lake came later, and soaked into it.",
+    "audio": "assets/audio/16-eva2-maaz.m4a"
+   }
+  ],
+  "stop-4": [
+   {
+    "who": "EVA-2",
+    "text": "Two cores came out of this ridge. The first rock ever set aside to go home to Earth.",
+    "audio": "assets/audio/18-eva2-rochette.m4a"
    }
   ]
  },

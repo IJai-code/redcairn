@@ -203,6 +203,20 @@
     "text": "Habitat to EVA-1: we see you on its camera. You're standing right next to it.",
     "audio": "assets/audio/12-habitat-camera.m4a"
    }
+  ],
+  "stop-2": [
+   {
+    "who": "EVA-2",
+    "text": "These ridges are old cracks in the rock. Groundwater filled them with minerals, like cement. This is where the water went.",
+    "audio": "assets/audio/13-eva2-boxwork.m4a"
+   }
+  ],
+  "stop-3": [
+   {
+    "who": "EVA-2",
+    "text": "See the small bumps in the rock? They mean the water stayed here longer than anyone expected.",
+    "audio": "assets/audio/14-eva2-nodules.m4a"
+   }
   ]
  },
  "objective": "Today: walk the last 2.7 km of Curiosity’s tracks, reach the rover itself, and be home with air to spare."

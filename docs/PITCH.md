@@ -19,7 +19,7 @@ Curiosity has been alone on Mount Sharp since 2012: REDCAIRN is the survival map
 
 ## 30-second video (the demo we submit)
 
-The full kit (shot list with links, voice-over, birthday audio, radio lines to record, how to record and edit) is in [`VIDEO.md`](VIDEO.md); stills are in `video/`.
+The full kit (shot list with links, voice-over, original sound cue, radio lines to record, how to record and edit) is in [`VIDEO.md`](VIDEO.md); stills are in `video/`.
 
 ## 7-slide version (if we choose slides)
 

@@ -564,7 +564,7 @@ function card() {
     kicker = 'Back at the hatch';
     title = CARD('home') ? esc(CARD('home').title) : 'It walked this ground alone, so that you would not have to.';
     const mine = S.myStone ? ` Your stone is the ${ordinal(S.myStone)} on the last cairn.` : '';
-    body = CARD('home') ? fillT(esc(CARD('home').body), { mine }) : `You walked ${(stops()[roverK()].routeDistM / 1000).toFixed(1)} km to a machine that has been alone for fourteen years, and came home. It is still up there, where you left it.${mine} On 5 August 2013, alone in this crater, it played “Happy Birthday” to itself by shaking its sample lab (SAM) at the right pitches. It has done that once.`;
+    body = CARD('home') ? fillT(esc(CARD('home').body), { mine }) : `You walked ${(stops()[roverK()].routeDistM / 1000).toFixed(1)} km to a machine that has been alone for fourteen years, and came home. It is still up there, where you left it.${mine} On 5 August 2013, Curiosity used the motors in its sample lab (SAM) to mark its first anniversary. Once.`;
     extra = `<p class="guide__sol"><span>${JZ ? 'Perseverance, today' : 'Curiosity, today'}</span><b id="sol-now" class="prov" data-prov="sol">${solText()}</b><em>${JZ ? 'Landed 18 February 2021.' : 'Its prime mission was one Mars year: 669 sols.'}</em></p>`;
     extra += `<dl class="guide__answers">
       <div><dt>Did the route stay under the slope limit?</dt><dd>Yes in this terrain screen: the steepest modeled ground was ${S.plan.maxSlope.toFixed(0)}°, below the ${S.limits.noGo}° cutoff. Small obstacles and soil conditions are not resolved.</dd></div>
@@ -1032,7 +1032,7 @@ function mapStop(k) {
 // Five plates, one true line each. Every picture is a Blender render of the real ground (tools/blender_plates.py).
 const FILM = [
   ['p1', 'In August 2012, a rover landed alone in Gale crater, and began to climb.'],
-  ['p2', 'On its first birthday, it played itself “Happy Birthday”. Once.', 'birthday'],
+  ['p2', 'On its first anniversary, its sample lab vibrated a short sequence. Once.', 'anniversary'],
   ['p3', 'Sharp rock tore its wheels. It kept climbing.'],
   ['p4', 'One evening, it photographed Earth: a single point of light.'],
   ['p5', 'Fourteen years later, you land at the foot of its tracks.'],
@@ -1043,7 +1043,7 @@ const filmShots = () => (S.story.film && S.story.film.length ? S.story.film : FI
 const plateDir = () => ((S.mission.siteImages || {}).plates || 'assets/img/plates/');
 function playFilm(shots, done, ms = 3300) {
   const run = (S.filmRun = (S.filmRun || 0) + 1), el = $('film'), box = $('film-plates');
-  S.filmDone = () => { if (run !== S.filmRun) return; S.filmRun++; el.classList.remove('is-on'); setTimeout(() => { el.hidden = true; box.innerHTML = ''; }, 700); clearTimeout(S.filmT); if (S.sound) { S.sound.scene('world'); S.sound.score('walk', 0.85); } if (S.bday) { S.bday.stop(1.5); S.bday = null; } done(); };
+  S.filmDone = () => { if (run !== S.filmRun) return; S.filmRun++; el.classList.remove('is-on'); setTimeout(() => { el.hidden = true; box.innerHTML = ''; }, 700); clearTimeout(S.filmT); if (S.sound) { S.sound.scene('world'); S.sound.score('walk', 0.85); } done(); };
   box.innerHTML = '';
   el.hidden = false;
   void el.offsetWidth;
@@ -1054,15 +1054,14 @@ function playFilm(shots, done, ms = 3300) {
     if (i >= shots.length) return S.filmDone();
     const [id, line, cue] = shots[i++];
     if (S.sound && S.sound.on) {
-      if (cue === 'birthday') {
-        // NASA's own recording of SAM playing the tune (Goddard, 2013); the synthesized version only if it cannot load.
+      if (cue === 'anniversary') {
         S.sound.score('walk', 0.18);
-        S.sound.clip('assets/audio/sam-birthday.m4a', 0.95).then((h) => { if (h) S.bday = h; else S.sound.birthday(); });
-        $('film-credit').textContent = 'Sound: Curiosity’s SAM instrument playing “Happy Birthday”, recorded by NASA Goddard, 2013.';
+        S.sound.anniversary();
+        $('film-credit').textContent = 'Sound: an original anniversary signal synthesized in REDCAIRN.';
       }
       if (cue === 'radio') { S.sound.radio(); S.sound.score('walk', 1); }
     }
-    if (cue !== 'birthday' && $('film-credit').dataset.base) $('film-credit').textContent = $('film-credit').dataset.base;
+    if (cue !== 'anniversary' && $('film-credit').dataset.base) $('film-credit').textContent = $('film-credit').dataset.base;
     if (shown !== id) {
       const img = new Image();
       img.src = `${plateDir()}${id}.jpg`;
@@ -1104,7 +1103,6 @@ function filmGate(done) {
     if (!withSound && S.sound.on) setSound(false);
     if (withSound) {
       S.sound.setEnabled(true);
-      S.sound.preload('assets/audio/sam-birthday.m4a');
       $('btn-sound').setAttribute('aria-pressed', 'true');
       $('btn-sound').innerHTML = '<span class="w">Sound </span>on';
     }
@@ -1271,7 +1269,7 @@ function aboutHTML() {
     ['Radio: habitat and EVA-2', 'Imagined', 'Written for this walk; every such line is labelled imagined on screen'],
     ...(JZ ? [] : [
       ['Earth in the evening sky', 'Optical', 'PIA17936, Curiosity Mastcam, sol 529 (31 January 2014), NASA/JPL-Caltech/MSSS/TAMU'],
-      ['The birthday song', 'History, sound', 'NASA Goddard (SVS 11331), August 2013: the SAM instrument vibrating “Happy Birthday” on Curiosity’s first anniversary; the sound in the opening is that recording'],
+      ['Curiosity’s first-anniversary demonstration', 'Mission history', 'NASA Goddard SVS 11331 documents the 2013 SAM demonstration. The opening uses a new anniversary signal synthesized by REDCAIRN, not NASA audio.'],
     ]),
     ['Radio voices', 'Recorded', JZ ? 'Read by our team; mission quotes and imagined habitat dialogue are identified in context' : 'Read by our team; Curiosity’s line is its real first post, the rest are imagined and labelled so'],
     [`${RV()} mission clock`, 'Computed', 'Sols since landing (one sol = 88,775 s), counted live'],

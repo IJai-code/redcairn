@@ -34,7 +34,7 @@ Jezero is built by `tools/fetch_jezero_dtm.py`, `tools/fetch_jezero_ortho.py` an
 
 ## How it plays
 
-1. **The opening.** Five plates, each one true line: it landed alone in 2012; it played itself "Happy Birthday" once; rock tore its wheels and it kept climbing; it photographed Earth; fourteen years later, you land. Blender drew every plate from the real elevation data (`tools/blender_plates.py`). No AI images. You can skip straight to the map.
+1. **The opening.** Five plates, each one true line: it landed alone in 2012; its sample lab marked the first anniversary with a short vibration sequence; rock tore its wheels and it kept climbing; it photographed Earth; fourteen years later, you land. Blender drew every plate from the real elevation data (`tools/blender_plates.py`). No AI images. You can skip straight to the map.
 2. **The plan.** Mars Trek tiles, Curiosity's 14-year line, and three routes to the rover with slope thresholds shown on the terrain model.
 3. **Five cairns along its tracks**, on the real 1 m ground drawn live in ink, inside the real crater in 3D (MOLA + HRSC, about 65 km across), with Mount Sharp rising behind you. You always walk at a real suited pace; a long leg dissolves ("404 m later · 11 min on foot") and you walk the last steps in. The ground shows: contours every 2 m of real height, hachures where the ground needs care, stipple where hills shelter you from radiation. At each cairn you get one true moment from the mission, Curiosity's photo from that spot, and four live numbers: air, walk home, dose and time out.
 4. **Curiosity.** You reach it at its real position. Its newest raw image is fetched live. You can kneel at its torn wheel.
@@ -45,7 +45,7 @@ Point anywhere on the map for coordinates, elevation, slope and minutes to walk 
 
 ## Sound
 
-Sound comes on with your first click (unless you choose silence): an original ambient score generated in the browser (slow chords, a soft reverb, sparse high notes; darker in the storm, resolved at home), the thin wind, and the suit radio. The team recorded the radio voices; Curiosity's real first post from Mars is read in a ring-modulated, robotic voice, and every line carries a hiss of open-channel static. The opening plays NASA Goddard's own 2013 recording of SAM vibrating "Happy Birthday".
+Sound comes on with your first click (unless you choose silence): an original ambient score and anniversary signal generated in the browser, the thin wind, and the suit radio. The anniversary cue is original REDCAIRN sound design, synthesized with Web Audio; no NASA audio recording is used. The team recorded the radio voices; Curiosity's first post from Mars is read in a ring-modulated, robotic voice, and every line carries a hiss of open-channel static.
 
 ## Why it looks like this
 
