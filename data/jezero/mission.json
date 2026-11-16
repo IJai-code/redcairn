@@ -25,7 +25,7 @@
   "rationale": [
    "Jezero is where Perseverance landed in February 2021, inside a crater that once held a lake, beside a river delta.",
    "It has its own 1 m orbital elevation model and 25 cm photo (the maps Perseverance landed by), and a rover-driven track over the same ground.",
-   "Beta: built by the same scripts and engine as the Gale walk, to show the method works anywhere these four data sets exist."
+   "Built by the same scripts and engine as the Gale walk, to show the method works anywhere these four data sets exist."
   ],
   "explorationZoneProposals": [
    {
@@ -51,7 +51,6 @@
    "source": "usgs-geology",
    "service": "https://trek.nasa.gov/mars/trekarcgis/rest/services/SIM3292_Global_Geology/MapServer"
   },
-  "beta": true,
   "sheet": [
    "Jezero crater, Mars",
    "Crater floor, beside Séítah"
@@ -851,7 +850,7 @@
  ],
  "aiDisclosure": "AI coding assistants were used to accelerate scaffolding, data retrieval scripts, code generation and review. All positions, elevations, imagery and mission findings come from the public sources listed. Suit telemetry and space-weather scenarios are simulated and labelled as such.",
  "briefing": {
-  "kicker": "EVA-JZ · Jezero crater · beta",
+  "kicker": "EVA-JZ · Jezero crater",
   "title": "A rover walked this ground alone so that you would not have to.",
   "body": [
    "For fourteen years one machine climbed this mountain at a few metres a day. Every place it stopped, it left a record: where it stood, how far it tilted, what the rock was made of, what the sky was doing.",
@@ -883,7 +882,7 @@
   {
    "source": "m2020-raw",
    "name": "Perseverance raw images",
-   "role": "Perseverance's newest raw image, fetched live, and its Navcam photo at every stop of the second walk, Jezero (beta), which the same engine builds from Jezero's own maps."
+   "role": "Perseverance's newest raw image, fetched live, and its Navcam photo at every stop of the second walk, Jezero, which the same engine builds from Jezero's own maps."
   }
  ],
  "liveFeeds": {

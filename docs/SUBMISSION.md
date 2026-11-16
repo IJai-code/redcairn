@@ -55,7 +55,7 @@ In this model, the new line has 41% less estimated dose than the way you came. T
 | Site | Rover track walked | Walk | Elevation model vs rover reference heights |
 |---|---|---|---|
 | Gale crater, Mount Sharp | Curiosity, sols 4560–5073 | 2.71 km | 1.65 m RMS (573 points) |
-| Jezero crater floor (beta) | Perseverance, sols 13–180 | 1.86 km | 0.41 m RMS (248 points) |
+| Jezero crater floor | Perseverance, sols 13–180 | 1.86 km | 0.41 m RMS (248 points) |
 
 Gale uses 573 resampled rover-traverse elevations. Jezero pairs 248 route locations with nearby Perseverance waypoint elevations. Both RMS values remove the mean vertical datum offset first; the along-track comparisons do not validate every grid cell.
 

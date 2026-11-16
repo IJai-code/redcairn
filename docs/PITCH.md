@@ -70,6 +70,6 @@ Shortcuts: the root URL plays the opening; `#intro`, `#plan`, `#stop-0` to `#sto
 
 **"Is that Curiosity in the window?"** It is our team's rover model, standing in for Curiosity, and the window says so. The ground, the horizon and the track it follows are real.
 
-**"Would this work elsewhere?"** The Jezero beta already uses its own 1 m elevation model, HiRISE imagery and Perseverance traverse. Local MEDA weather is not integrated yet; Jezero's weather display uses Gale REMS only as context.
+**"Would this work elsewhere?"** The Jezero walk already uses its own 1 m elevation model, HiRISE imagery and Perseverance traverse. Local MEDA weather is not integrated yet; Jezero's weather display uses Gale REMS only as context.
 
 **"What did AI do?"** AI assistants helped write code and data scripts. The data, the site choice and every figure come from the public sources in the app's System architecture & data attribution panel.

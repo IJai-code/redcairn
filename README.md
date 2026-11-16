@@ -4,7 +4,7 @@
 REDCAIRN is an interactive Marswalk planning prototype: it combines rover traverses, orbital terrain and science layers, a modeled walk-home field, and a story you can explore at each stop. Slope colors are screening thresholds, not a safety certification; air, pace and radiation are planning scenarios.
 Every number is computed in your browser from NASA data, and tapping any number shows its source. Planners can download the whole EVA plan as GeoJSON.
 Jezero uses its own HiRISE image, elevation model and Perseverance traverse. This build does not yet integrate the local MEDA weather archive, so it displays Gale REMS as context and uses Curiosity RAD for an illustrative radiation scenario. Both are labeled as references, not Jezero measurements.
-**Live:** <https://ijai-code.github.io/redcairn/> · **Second site, Jezero (beta):** <https://ijai-code.github.io/redcairn/?site=jezero>
+**Live:** <https://ijai-code.github.io/redcairn/> · **Second site, Jezero:** <https://ijai-code.github.io/redcairn/?site=jezero>
 2026 NASA Space Apps, *Interplanetary Survival Guide: Martian Map*. An independent student project, not affiliated with or endorsed by NASA.
 
 ## Same engine, two craters
@@ -17,7 +17,7 @@ The method is not hand-tuned to one place. The same scripts and the same browser
 | Site | Rover track walked | Walk | Steepest | Elevation model vs rover reference heights | Cells routed |
 |---|---|---|---|---|---|
 | Gale crater, Mount Sharp | Curiosity, sols 4560–5073 | 2.71 km | 16.6° | **1.65 m RMS** (573 points) | 386,912 |
-| Jezero crater floor (beta) | Perseverance, sols 13–180 | 1.86 km | 10.1° | **0.41 m RMS** (248 points) | 378,963 |
+| Jezero crater floor | Perseverance, sols 13–180 | 1.86 km | 10.1° | **0.41 m RMS** (248 points) | 378,963 |
 
 The Gale comparison uses 573 resampled rover-traverse elevations. Jezero pairs 248 route locations with nearby Perseverance waypoint elevations. Both RMS values remove the mean vertical datum offset first; these along-track comparisons do not validate every elevation-model cell.
 
@@ -59,7 +59,7 @@ Most entries open as a dark dashboard. REDCAIRN opens as a story with a look of 
 | [USGS planetary geologic mapping](https://astrogeology-usgs.hub.arcgis.com/pages/interactive-maps-mars) | The **Rock units** layer on the map: Mount Sharp (Htu) inside the crater's impact unit (AHi) |
 | [Curiosity's proposed path up Mount Sharp](https://science.nasa.gov/resource/curiositys-proposed-path-up-mount-sharp/) | The intro beat and the "Curiosity's whole climb" layer: the 38.6 km route that plan became; our walk is its 2025–26 stretch |
 | [Worldview](https://worldview.earthdata.nasa.gov/) | Each cairn named after a place on Earth links to that place in Worldview |
-| [Perseverance raw images](https://mars.nasa.gov/mars2020/multimedia/raw-images/) | Perseverance's newest raw image, fetched live, and its Navcam photo at every stop of the **Jezero walk (beta)**, built by the same engine |
+| [Perseverance raw images](https://mars.nasa.gov/mars2020/multimedia/raw-images/) | Perseverance's newest raw image, fetched live, and its Navcam photo at every stop of the **Jezero walk**, built by the same engine |
 
 ## What is real and what is simulated
 

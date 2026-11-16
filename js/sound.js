@@ -13,6 +13,8 @@ export class Sound {
     this.on = false;
     this.ctx = null;
     this.mode = 'off';
+    this.live = new Set();     // every recorded line or clip now sounding, so a jump can silence them
+    this.gen = 0;              // bumped by hush(): a line still loading when you leave is never played
   }
 
   #init() {
@@ -66,7 +68,7 @@ export class Sound {
     storm: [[38, 45, 50, 53, 57], [34, 41, 46, 50, 53], [36, 43, 48, 51, 55], [38, 45, 49, 52, 57]],
     home: [[48, 55, 59, 62, 64], [41, 48, 55, 57, 64], [43, 50, 55, 59, 62], [48, 55, 62, 64, 71]],
   };
-  #pad(midi, t, dur, vol) {
+  #pad(midi, t, dur, vol, bus) {
     const ctx = this.ctx, f = 440 * Math.pow(2, (midi - 69) / 12);
     const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t);
     g.gain.exponentialRampToValueAtTime(vol, t + 2.6);
@@ -77,21 +79,24 @@ export class Sound {
       const og = ctx.createGain(); og.gain.value = v;
       o.connect(og).connect(g); o.start(t); o.stop(t + dur + 2);
     }
-    g.connect(this.scoreBus);
+    g.connect(bus || this.scoreBus);
   }
-  #bell(midi, t, vol) {
+  #bell(midi, t, vol, bus) {
     const ctx = this.ctx, f = 440 * Math.pow(2, (midi - 69) / 12), o = ctx.createOscillator(), g = ctx.createGain();
     o.type = 'sine'; o.frequency.value = f;
     g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 3.5);
-    o.connect(g).connect(this.scoreBus); o.start(t); o.stop(t + 3.6);
+    o.connect(g).connect(bus || this.scoreBus); o.start(t); o.stop(t + 3.6);
   }
   #tick() {
     if (!this.ctx || !this.on) return;
     const set = Sound.CHORDS[this.mood] || Sound.CHORDS.walk, chord = set[this.chordI++ % set.length];
     const t = this.ctx.currentTime + 0.05, dur = 8;
-    chord.forEach((m, i) => this.#pad(m, t, dur, i < 2 ? 0.05 : 0.032));
+    const layer = this.ctx.createGain(); layer.gain.value = 1; layer.connect(this.scoreBus);
+    this.layers = (this.layers || []).filter((l) => l.until > t);
+    this.layers.push({ g: layer, until: t + dur + 2.2 });
+    chord.forEach((m, i) => this.#pad(m, t, dur, i < 2 ? 0.05 : 0.032, layer));
     // two or three sparse high notes from the chord, two octaves up
-    for (let k = 0; k < 3; k++) if (Math.random() < 0.75) this.#bell(chord[2 + Math.floor(Math.random() * 3)] + 24, t + 1 + k * 2.3 + Math.random(), 0.022);
+    for (let k = 0; k < 3; k++) if (Math.random() < 0.75) this.#bell(chord[2 + Math.floor(Math.random() * 3)] + 24, t + 1 + k * 2.3 + Math.random(), 0.022, layer);
     clearTimeout(this.scoreT);
     this.scoreT = setTimeout(() => this.#tick(), dur * 1000);
   }
@@ -103,6 +108,12 @@ export class Sound {
     this.scoreBus.gain.setTargetAtTime(this.on ? 0.95 * level : 0, this.ctx.currentTime, 1.2);
     this.scoreLP.frequency.setTargetAtTime(mood === 'storm' ? 900 : 2400, this.ctx.currentTime, 1.5);
     if (this.chordI === undefined) this.chordI = 0;
+    if (changed && this.layers) {
+      // let the old chord go over a second and a half instead of sounding against the new one
+      const t = this.ctx.currentTime;
+      for (const l of this.layers) { l.g.gain.cancelScheduledValues(t); l.g.gain.setTargetAtTime(0, t, 0.5); }
+      this.layers = [];
+    }
     if (changed || !this.scoreT) { if (changed) this.chordI = 0; this.#tick(); }
   }
   // Voices sit on top: the score dips while someone is speaking.
@@ -190,11 +201,13 @@ export class Sound {
     try {
       let buf = this.vcache[url];
       if (buf === null) return;
+      const gen = this.gen;
       if (!buf) {
         const r = await fetch(url);
         if (!r.ok) { this.vcache[url] = null; return; }
         buf = this.vcache[url] = await this.ctx.decodeAudioData(await r.arrayBuffer());
       }
+      if (gen !== this.gen || !this.on) return;      // you moved on while it loaded
       const ctx = this.ctx, src = ctx.createBufferSource();
       src.buffer = buf;
       const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 380;
@@ -228,6 +241,9 @@ export class Sound {
       ns.buffer = this.noiseBuf; ns.loop = true; nf.type = 'bandpass'; nf.frequency.value = 2600; nf.Q.value = 0.5;
       ng.gain.setValueAtTime(0.0001, t - 0.1); ng.gain.exponentialRampToValueAtTime(0.05, t); ng.gain.setValueAtTime(0.05, t + buf.duration); ng.gain.exponentialRampToValueAtTime(0.0001, t + buf.duration + 0.25);
       ns.connect(nf).connect(ng).connect(this.master); ns.start(t - 0.1, Math.random()); ns.stop(t + buf.duration + 0.3);
+      const handle = { stop: () => { const n = ctx.currentTime; for (const x of [g, ng]) { x.gain.cancelScheduledValues(n); x.gain.setTargetAtTime(0, n, 0.04); } try { src.stop(n + 0.2); ns.stop(n + 0.2); } catch (e) { /* ended */ } } };
+      this.live.add(handle);
+      src.onended = () => this.live.delete(handle);
       this.#duck(t - 0.1, buf.duration + 0.3);
       this.#static(t + buf.duration, 0.16, 0.4);
     } catch (e) { this.vcache[url] = null; }
@@ -240,16 +256,21 @@ export class Sound {
     try {
       let buf = this.vcache[url];
       if (buf === null) return null;
+      const gen = this.gen;
       if (!buf) {
         const r = await fetch(url);
         if (!r.ok) { this.vcache[url] = null; return null; }
         buf = this.vcache[url] = await this.ctx.decodeAudioData(await r.arrayBuffer());
       }
+      if (gen !== this.gen || !this.on) return null;
       const ctx = this.ctx, src = ctx.createBufferSource(), g = ctx.createGain();
       src.buffer = buf; g.gain.value = gain;
       src.connect(g).connect(this.master);
       src.start(ctx.currentTime + 0.05);
-      return { stop: (fade = 1.2) => { const t = ctx.currentTime; g.gain.setTargetAtTime(0, t, fade / 3); try { src.stop(t + fade + 0.2); } catch (e) { /* already ended */ } } };
+      const handle = { stop: (fade = 1.2) => { const t = ctx.currentTime; g.gain.cancelScheduledValues(t); g.gain.setTargetAtTime(0, t, fade / 3); try { src.stop(t + fade + 0.2); } catch (e) { /* already ended */ } this.live.delete(handle); } };
+      this.live.add(handle);
+      src.onended = () => this.live.delete(handle);
+      return handle;
     } catch (e) { this.vcache[url] = null; return null; }
   }
 
@@ -259,6 +280,18 @@ export class Sound {
     this.vcache = this.vcache || {};
     if (this.vcache[url] !== undefined) return;
     try { const r = await fetch(url); this.vcache[url] = r.ok ? await this.ctx.decodeAudioData(await r.arrayBuffer()) : null; } catch (e) { this.vcache[url] = null; }
+  }
+
+  // Silence every line and clip now playing (or still loading), stop the motors, and put the score back at its level.
+  // Called whenever the story jumps, so nothing from the last scene talks over the next.
+  hush(voicesOnly = false) {
+    this.gen++;
+    for (const h of [...this.live]) h.stop(0.15);
+    this.live.clear();
+    if (!this.ctx || voicesOnly) return;
+    const t = this.ctx.currentTime;
+    this.motor.gain.cancelScheduledValues(t); this.motor.gain.setTargetAtTime(0, t, 0.1);
+    if (this.scoreBus) { const g = this.scoreBus.gain; g.cancelScheduledValues(t); g.setTargetAtTime(this.on ? 0.95 * (this.scoreLevel ?? 1) : 0, t, 0.3); }
   }
 
   // On 5 August 2013 Curiosity's sample lab (SAM) vibrated at the pitches of "Happy Birthday".

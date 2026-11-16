@@ -5,23 +5,21 @@ Stills of every shot are in `docs/video/` (1920×1080, rendered from the live bu
 
 ## The finished cut
 
-`docs/video/redcairn-30s.mp4` is the finished cut: 30.0 s, 1920×1080, 30 fps, AAC audio at about −14 LUFS. Upload it as is.
+`docs/video/redcairn-30s.mp4`: 30.0 s, 1920×1080, 30 fps, AAC at about −14 LUFS. Story first: hook → what it is → plan, walk, survive, check → second crater → close. The app's own text is hidden in every 3D shot, so only one caption is on screen at a time; screens of the app sit in a frame with the words beside them.
 
-| Time | Picture | Caption | Sound |
+| Time | Picture | Words | Sound |
 |---|---|---|---|
-| 0:00–0:07 | Blender plates: Mount Sharp, the torn wheels, you at the hatch | "A rover landed alone, and began to climb." / "Sharp rock tore its wheels. It kept climbing." / "You land. Your first walk: find it, and come home." | NASA Goddard's 2013 recording of SAM playing "Happy Birthday" |
-| 0:07–0:11 | The field map: HiRISE photo, slope for a suit, Curiosity's track, cursor readout | "Slope for a spacesuit, from NASA's 1 m elevation model. Point anywhere: height, slope, minutes to walk home." | Score in; radio: "Habitat to EVA-1 and EVA-2: route uploaded. Pick your line." |
-| 0:11–0:13 | Tapping a number opens its source | "Tap it: what it is, how it's computed, which NASA data it comes from." | |
-| 0:13–0:19 | Walking at a real suited pace, the labelled time-lapse over the detailed ground, then the meeting plate | "Walk Curiosity's real tracks, inside the real crater in 3D." | Radio: "There it is. Fourteen years, and it's still working." |
-| 0:19–0:25 | The real September 2017 storm: flash, three ways home, the new line | "The Sun flares. Three ways home…" / "The new line home: 41% less radiation than the way you came." | Drone; radio: "I'm with you. Your call." |
-| 0:25–0:27 | Jezero: Perseverance's whole track on the crater photo | "Jezero, built from Perseverance's own maps. Checked against the rover: 0.41 m." | Score resolves |
-| 0:27–0:30 | End card: you at the hatch with Mount Sharp rising in 3D behind you, the line, the URL, the data credits | "It walked this ground alone, so you wouldn't have to." | Radio: "Both suits at the hatch. Welcome home." |
+| 0:00–0:03 | Blender plate of Mount Sharp | "How would the first person on Mars plan a walk, and get home alive?" | Score |
+| 0:03–0:06 | You at the hatch | "REDCAIRN · an interactive map in your browser · Walk a real rover's tracks on Mars, and plan how to get home, with real NASA data." | |
+| 0:06–0:10 | Framed: the field map, HiRISE photo and slope for a suit, Curiosity's track | "1 · Plan · Where is it safe to step?" | Radio: "route uploaded. Pick your line." |
+| 0:10–0:13 | Walking Curiosity's tracks in the 3D crater | "2 · Walk" | |
+| 0:13–0:17 | Arrival at the rover, the meeting plate | "Reach Curiosity where it really is today, alone on Mars since 2012." | Radio: "There it is. Fourteen years, and it's still working." |
+| 0:17–0:22 | The real 2017 storm: flash, the new line home | "3 · Survive" / "41% less radiation" | Radio: "I'm with you. Your call." |
+| 0:22–0:25 | Framed: tapping "walk home" opens its NASA source card | "4 · Check · Tap any number to see its NASA source." | |
+| 0:25–0:27 | Jezero: Ingenuity at the overlook | "Same engine, a second crater" | |
+| 0:27–0:30 | End card: you and Mount Sharp, URL, team | "It walked this ground alone, so you wouldn't have to." | Radio: "Both suits at the hatch. Welcome home." |
 
-How it was made:
-- **Picture.** Every app shot was recorded from the real site in Chrome (frame by frame, CDP screencast). The plates are the Blender renders.
-- **Score.** Synthesised in code from sine partials, with no samples.
-- **Voices.** The team's recordings, through a radio filter: band-pass, compression, soft clipping and a hiss bed.
-- **AI.** No AI images, music or voices.
+Team: Ishaan Jha, Aayansh Raj, Vihaan Gupta, Namish Shrivastava. Score synthesised in code; voices read by the team; no AI images, music or voices.
 
 ## How to record (Mac)
 

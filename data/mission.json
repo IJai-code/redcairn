@@ -984,7 +984,7 @@
   {
    "source": "m2020-raw",
    "name": "Perseverance raw images",
-   "role": "Perseverance's newest raw image, fetched live, and its Navcam photo at every stop of the second walk, Jezero (beta), which the same engine builds from Jezero's own maps."
+   "role": "Perseverance's newest raw image, fetched live, and its Navcam photo at every stop of the second walk, Jezero, which the same engine builds from Jezero's own maps."
   }
  ],
  "liveFeeds": {

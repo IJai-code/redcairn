@@ -351,13 +351,14 @@ function guide(i, opts = {}) {
   const prev = S.lastBeat;
   S.lastBeat = id;
   if (prev !== id) document.body.toggleAttribute('data-sheet', false);
-  if (prev !== id) radio(id);
-  if (S.sound) { S.sound.scene(id === 'intro' ? 'film' : 'world'); S.sound.score(id === 'storm' && !S.choice ? 'storm' : id === 'home' ? 'home' : 'walk', id === 'intro' ? 1 : 0.85); }
-  if (id === `stop-${roverK()}` && prev === `stop-${roverK() - 1}` && !S.metOnce) {
-    S.metOnce = true;
-    const arr = S.story.arrival || ['p6', 'You found it. Fourteen years alone, and you are the first person to stand beside it.'];
-    setTimeout(() => { if (S.lastBeat === id) playFilm([arr], () => {}, 5200); }, 9500);
+  // A stop you walk to speaks when you get there, not as you set off; any other beat speaks at once.
+  const walkedTo = id.startsWith('stop-') && prev === `stop-${Number(id.slice(5)) - 1}`;
+  if (prev !== id) {
+    if (S.sound) S.sound.hush(true);
+    S.radioPending = walkedTo ? id : null;
+    radio(walkedTo ? '' : id);
   }
+  if (S.sound) { S.sound.scene(id === 'intro' ? 'film' : 'world'); S.sound.score(id === 'storm' && !S.choice ? 'storm' : id === 'home' ? 'home' : 'walk', id === 'intro' ? 1 : 0.85); }
   stage('map', id !== 'intro');
   document.body.toggleAttribute('data-world', id !== 'intro');
   document.body.toggleAttribute('data-details', false);
@@ -388,7 +389,7 @@ function guide(i, opts = {}) {
 }
 
 // ---------------------------------------------------------------- which site
-// ?site=jezero loads the second walk (beta): same engine and scripts, Jezero's own data.
+// ?site=jezero loads the second walk: same engine and scripts, Jezero's own data.
 const SITE = new URLSearchParams(location.search).get('site') === 'jezero' ? 'jezero' : 'gale';
 const DATA = SITE === 'jezero' ? 'data/jezero/' : 'data/';
 const JZ = SITE === 'jezero';
@@ -469,6 +470,8 @@ function setSound(on) {
   $('btn-sound').setAttribute('aria-pressed', String(on));
   $('btn-sound').innerHTML = `<span class="w">Sound </span>${on ? 'on' : 'off'}`;
   if (on) {
+    // warm every radio line, so a voice never starts late the first time it is heard
+    for (const lines of Object.values(S.story.radio || {})) if (Array.isArray(lines)) for (const L of lines) if (L.audio) S.sound.preload(L.audio);
     const id = beatIds()[S.beat || 0];
     S.sound.scene(document.body.dataset.step === 'walk' ? 'outside' : $('film').hidden ? 'world' : 'film');
     S.sound.score(id === 'storm' && !S.choice ? 'storm' : id === 'home' ? 'home' : 'walk', 0.85);
@@ -711,7 +714,7 @@ function roll(path, d0, d1, ms, cam, onMain) {
       if (f < 1) requestAnimationFrame(frame); else done(true);
     };
     requestAnimationFrame(frame);
-  }).then((ok) => { S.stage.camRate = 2.6; if (S.sound && ok) S.sound.roverMoving(false); return ok; });
+  }).then((ok) => { S.stage.camRate = 2.6; if (S.sound) S.sound.roverMoving(false); return ok; });
 }
 
 // Walk the suited figure along a path; the camera follows behind and to one side, and the map marker follows too.
@@ -840,7 +843,11 @@ function window3d(id, prev) {
       S.stage.setCairns(k - 1);
       const from = prevK === 0 ? 0 : Math.max(0, S.plan.out[S.plan.idx[prevK]].d - 3.5);
       walkTo(S.path, from, stand, 0, target, `${mins(Math.max(1, S.marks.arr[k].t - S.marks.dep[k - 1].t))} on foot`)
-        .then((ok) => { if (ok) { S.stage.setCairns(k === rk ? rk - 1 : k); settle(false); } });
+        .then((ok) => {
+          if (!ok) return;
+          S.stage.setCairns(k === rk ? rk - 1 : k); settle(false);
+          arrived(k);
+        });
     } else {
       S.stage.setCairns(k === rk ? rk - 1 : k);
       settle(true);
@@ -948,7 +955,7 @@ function mapPanel() {
       <p>After removing the average height offset, the elevation model differs from ${esc(RV())} reference heights by ${validation.rms} m RMS at ${validation.points} ${validation.method}; this does not validate every grid cell. Suit resources, pace and EVA dose are scenario estimates. Research and education prototype only.</p>
     </section>
     <section class="mapui__sec"><h3>${JZ ? 'Perseverance, today' : 'The other rover, today'}</h3>
-      <p>${JZ ? 'Perseverance is still driving, now high on the crater rim. Its newest raw image, fetched live.' : 'Perseverance is driving in Jezero crater, about 3,800 km from this walk. Its newest raw image, fetched live. The same engine builds a walk there from Jezero’s own maps: <a href="?site=jezero">open the Jezero walk (beta)</a>.'}</p>
+      <p>${JZ ? 'Perseverance is still driving, now high on the crater rim. Its newest raw image, fetched live.' : 'Perseverance is driving in Jezero crater, about 3,800 km from this walk. Its newest raw image, fetched live. The same engine builds a walk there from Jezero’s own maps: <a href="?site=jezero">open the Jezero walk</a>.'}</p>
       <figure class="mapui__live" id="map-live"></figure>
     </section>`;
   fillLive($('map-live'), true);
@@ -1105,6 +1112,17 @@ function filmGate(done) {
   };
 }
 
+// You have reached stop k on foot: its radio line now, and at the rover the meeting plate, once.
+function arrived(k) {
+  const id = `stop-${k}`, tk = S.token;
+  if (S.radioPending === id) { S.radioPending = null; radio(id); }
+  if (k === roverK() && !S.metOnce) {
+    S.metOnce = true;
+    const arr = S.story.arrival || ['p6', 'You found it. Fourteen years alone, and you are the first person to stand beside it.'];
+    setTimeout(() => { if (live(tk) && S.lastBeat === id) playFilm([arr], () => {}, 5200); }, 4200);
+  }
+}
+
 // Every part can be entered directly (nav, hash links). Each jump clears whatever the last one left behind.
 const HASHES = () => ['intro', 'plan', 'walk', 'storm', 'home', 'map', ...beatIds(), ...stops().map((_, k) => `ground-${k}`)];
 function jump(id) {
@@ -1112,7 +1130,9 @@ function jump(id) {
   S.stage.rate = 3.2;
   for (const el of [$('h-photo'), $('h-jobs')]) el.hidden = true;
   document.body.classList.remove('alarm', 'thud');
-  if (S.sound) S.sound.roverMoving(false);
+  if (S.sound) S.sound.hush();
+  if (S.bday) { S.bday.stop(0.4); S.bday = null; }
+  S.radioPending = null;
   S.stage.resetLook();
   const ids = beatIds();
   if (id.startsWith('ground-')) return groundAt(Number(id.slice(7)));
@@ -1262,7 +1282,7 @@ function aboutHTML() {
   ];
   const arch = [
     ['Public sources', ['Mars Trek orbital tiles (HiRISE, CTX, THEMIS, MOLA + HRSC)', 'USGS SIM 3292 geology', `${JZ ? 'Perseverance' : 'Curiosity'} traverse and raw images`, ...(JZ ? ['Curiosity REMS at Gale (context only; local Jezero MEDA weather archive is not integrated)', 'Curiosity RAD at Gale (ionizing-dose scenario proxy, not a Jezero measurement)', 'Perseverance MEDA archive (weather instrument; not yet integrated)'] : ['Curiosity REMS and RAD surface observations at Gale']), 'NASA DONKI space weather', 'NASA Worldview']],
-    ['Build, offline', ['Python scripts in tools/: fetch, clip, validate elevation against rover height samples at both sites', `${JZ ? 'This Jezero walk uses its own HiRISE image, stereo elevation model, and Perseverance traverse' : 'The same scripts build a second site from its own data: Jezero (beta)'}`, 'Blender, headless: Gale crater in 3D, the 360° horizon, the site photo, the rover split into body and wheels']],
+    ['Build, offline', ['Python scripts in tools/: fetch, clip, validate elevation against rover height samples at both sites', `${JZ ? 'This Jezero walk uses its own HiRISE image, stereo elevation model, and Perseverance traverse' : 'The same scripts build a second site from its own data: Jezero'}`, 'Blender, headless: Gale crater in 3D, the 360° horizon, the site photo, the rover split into body and wheels']],
     ['Static site', ['index.html, js/, data/*.json, a 1 m terrain grid, assets/', 'No server, no build step, hosted on GitHub Pages']],
     ['In your browser', ['Terrain engine: slope classes, sky shelter', 'Router: fastest, gentlest, rover-proven; minutes home from every patch of ground', 'Suit timeline: air, dose, time (simulated)', 'Leaflet map on live Mars Trek tiles; three.js ground view', 'Live: Perseverance’s newest raw image']],
   ];
@@ -1306,7 +1326,7 @@ function twoCraters() {
   if (!B.gale || !B.jezero) return '';
   const row = (name, rv, x, href) => `<tr><td><a href="${href}">${name}</a></td><td>${rv}</td>${'<td class="n">' + (x.r.evaLengthM / 1000).toFixed(2) + ' km</td>'}<td class="n">${x.r.maxAbsSlopeDeg}°</td><td class="n">${x.r.demVsRoverRmsResidualM} m</td><td class="n">${num(x.t.cols * x.t.rows)}</td></tr>`;
   return `<div class="tablewrap"><table class="numbers numbers--two"><thead><tr><th>Same engine, two craters</th><th>Rover track</th><th>Walk</th><th>Steepest</th><th>Model vs rover heights (RMS)</th><th>Cells routed</th></tr></thead><tbody>
-    ${row('Gale crater, Mount Sharp', 'Curiosity, sols 4560–5073', B.gale, './')}${row('Jezero crater floor (beta)', 'Perseverance, sols 13–180', B.jezero, '?site=jezero')}</tbody></table></div>
+    ${row('Gale crater, Mount Sharp', 'Curiosity, sols 4560–5073', B.gale, './')}${row('Jezero crater floor', 'Perseverance, sols 13–180', B.jezero, '?site=jezero')}</tbody></table></div>
     <p class="numbers__note">Same scripts, same router, same suit model; only the input data changes. Each site’s orbital elevation model is checked against the heights the rover itself measured on that ground.</p>`;
 }
 async function loadBoth() {
