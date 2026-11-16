@@ -5,7 +5,7 @@ Stills of every shot are in `docs/video/` (1920×1080, rendered from the live bu
 
 ## The finished cut
 
-`docs/video/redcairn-30s.mp4`: 30.0 s, 1920×1080, 30 fps, AAC at about −14 LUFS. Story first: hook → what it is → plan, walk, survive, check → second crater → close. The app's own text is hidden in every 3D shot, so only one caption is on screen at a time; screens of the app sit in a frame with the words beside them.
+`docs/video/redcairn-30s.mp4`: 29.0 s, 1920×1080, 30 fps, AAC at about −14 LUFS. The shorter export leaves a margin under the 30-second limit. Story first: hook → what it is → plan, walk, survive, check → second crater → close. The app's own text is hidden in every 3D shot, so only one caption is on screen at a time; screens of the app sit in a frame with the words beside them.
 
 | Time | Picture | Words | Sound |
 |---|---|---|---|
