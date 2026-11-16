@@ -27,17 +27,17 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const FOLLOW_M = 11;   // how far behind the rover you walk
 
 const LAYERS = [
-  { id: 'slope', name: 'Slope', note: 'Green safe in a suit · amber take care · red too steep', from: 'HiRISE 1 m elevation (MRO), via Mars Trek' },
+  { id: 'slope', name: 'Slope', note: 'Below 15° threshold · 15–20° caution · over 20° exceeds this screen', from: 'HiRISE stereo elevation model · MRO' },
   { id: 'shield', name: 'Shelter', note: 'Purple: hills hide part of the sky, so less radiation', from: 'Curiosity RAD + elevation model' },
   { id: 'home', name: 'Way home', note: 'Each white line: five more minutes from the rover', from: 'Routing on the elevation model' },
   { id: 'rocks', name: 'Rock', note: 'Blue: boxwork, where groundwater flowed · orange: salty layers', from: 'Curiosity drill and laser' },
   { id: 'height', name: 'Height', note: 'Blue low to white high: 77 m of climb', from: 'HiRISE 1 m elevation' },
-  { id: 'track', name: 'Rover tracks', note: 'Every drive Curiosity made here', from: 'Curiosity traverse' },
+  { id: 'track', name: 'Rover tracks', note: 'The rover’s drives across this site', from: 'Curiosity traverse' },
 ];
 // The planning map's layers, grouped by the kind of data, each with the mission it came from.
 const MAP_LAYERS = [
   ['Optical', [['hirise', 'Photo from orbit', 'HiRISE (a 25 cm camera) · Mars Reconnaissance Orbiter', 'always'], ['ctx', 'Wide photo from orbit', 'CTX · Mars Reconnaissance Orbiter', 'always']]],
-  ['Topographic', [['slope', 'Slope for a spacesuit', 'HiRISE 1 m elevation · MRO'], ['relief', 'Shaded relief', 'HiRISE 1 m elevation · MRO'], ['mola', 'Height of the land', 'MOLA · Mars Global Surveyor + HRSC · Mars Express']]],
+  ['Topographic', [['slope', 'Slope threshold screen', 'HiRISE 1 m elevation · MRO'], ['relief', 'Shaded relief', 'HiRISE 1 m elevation · MRO'], ['mola', 'Height of the land', 'MOLA · Mars Global Surveyor + HRSC · Mars Express']]],
   ['Thermal', [['thermal', 'Night-time ground temperature', 'THEMIS · Mars Odyssey']]],
   ['Spectral', [['minerals', 'Minerals formed in water', 'CRISM · MRO and OMEGA · Mars Express']]],
   ['Geologic', [['geology', 'Rock units', 'USGS Geologic Map of Mars (SIM 3292)']]],
@@ -49,7 +49,7 @@ const MAP_LAYERS = [
 
 // What each layer's colours mean, shown beside it while the story has it on.
 const LEGEND = {
-  slope: [['#e0a11b', '15–20°: take care'], ['#d7402f', 'over 20°: too steep'], ['', 'unpainted: safe in a suit']],
+  slope: [['#e0a11b', '15–20°: caution range'], ['#d7402f', 'over 20°: exceeds slope limit'], ['', 'unpainted: below 15° in this model']],
   relief: [['#8a7f70', 'lit from the north-west, so slopes read as shadow']],
   mola: [['#3b6fb6', 'low'], ['#5fae5a', ''], ['#e8c547', ''], ['#d0573a', 'high']],
   thermal: [['#e8e2d6', 'bright: rock that holds heat at night'], ['#4a4540', 'dark: dust and sand']],
@@ -201,10 +201,10 @@ function readout(st) {
   $('h-home').textContent = homeSec < 40 ? 'here' : mins(homeSec / 60);
   $('h-dose').textContent = st.dose.toFixed(2);
   const wx = S.conditions.weather;
-  $('h-met').textContent = `${clock(st.t)} outside · ${wx.airMinC}° to ${wx.airMaxC}° C, ${num(wx.pressurePa)} Pa (REMS)`;
+  $('h-met').textContent = `${clock(st.t)} outside · ${wx.airMinC}° to ${wx.airMaxC}° C, ${num(wx.pressurePa)} Pa (${JZ ? 'Gale REMS proxy' : 'Gale REMS'})`;
   document.body.dataset.level = spare < 20 ? 'stop' : spare < 60 ? 'care' : '';
   const cell = cellOf(st), sl = S.terrain.slope[cell], cls = S.terrain.cls[cell];
-  $('h-slope').textContent = `${sl.toFixed(0)}° ${['safe', 'care', 'too steep'][cls]}`;
+  $('h-slope').textContent = `${sl.toFixed(0)}° ${['below threshold', 'caution', 'over limit'][cls]}`;
   $('h-slope').dataset.cls = cls;
   if (S.mm) S.mm.you(st.lon, st.lat);
 }
@@ -305,7 +305,7 @@ function pointAt(lon, lat) {
   let t = `<b>${Math.abs(lat).toFixed(5)}° ${lat < 0 ? 'S' : 'N'}, ${Math.abs(lon).toFixed(5)}° ${lon < 0 ? 'W' : 'E'}</b>`;
   if (S.terrain.contains(lon, lat)) {
     const i = cellOf({ lon, lat }), c = S.terrain.cls[i], h = S.homeField.cost[i];
-    t += `<span>${num(Math.round(S.terrain.z[i]))} m elevation · slope ${Math.floor(S.terrain.slope[i])}°, <i data-cls="${c}">${['safe', 'care', 'too steep'][c]}</i> · ${Number.isFinite(h) ? (h < 40 ? 'at the hatch' : `${mins(h / 60)} walk home`) : 'no safe way home'}</span>`;
+    t += `<span>${num(Math.round(S.terrain.z[i]))} m elevation · slope ${Math.floor(S.terrain.slope[i])}°, <i data-cls="${c}">${['below threshold', 'caution', 'over limit'][c]}</i> · ${Number.isFinite(h) ? (h < 40 ? 'at the hatch' : `${mins(h / 60)} walk home`) : 'no route within mapped area'}</span>`;
   }
   el.innerHTML = t;
   el.hidden = false;
@@ -416,12 +416,12 @@ function fillT(str, v = {}) {
 const PROV = {
   air: { what: 'Oxygen left above the 30-minute reserve', how: 'Suit timeline: 8 h of oxygen, used faster uphill (+4% per degree). The suit is a planning assumption, labelled simulated.', src: null },
   home: { what: 'Minutes to walk back to the hatch from here', how: 'Fastest path over every 2 m cell of the 1 m HiRISE elevation model (Dijkstra), at a suited walking pace that slows with slope (Tobler’s hiking function × 0.6).', src: 'trek-gale-dem' },
-  dose: { what: 'Radiation dose so far, in millisieverts', how: '0.67 mSv per day, the dose rate Curiosity’s RAD measured on the surface at Gale, less the shelter the terrain gives (sky hidden by hills, half-credited).', src: 'hassler-2014' },
+  dose: { what: 'Radiation dose so far, in millisieverts', how: '0.67 mSv per day, the dose rate Curiosity’s RAD measured on the surface at Gale, less the modeled terrain shielding (half of the hidden sky is credited). On Jezero this is a planning proxy, not a local measurement.', src: 'hassler-2014' },
   time: { what: 'Time outside so far', how: 'Walking time from the pace model plus the planned stop at each cairn.', src: null },
   route: { what: 'Round trip: time, distance, steepest ground', how: 'Each route is routed over the 1 m elevation model; the rover-proven route follows Curiosity’s own track.', src: 'msl-traverse' },
-  storm: { what: 'Time to the hatch and dose during the storm', how: 'The real solar particle event of September 2017 at its measured peak: about 3× normal dose rate (RAD). Shelter credits half of the sky a ridge hides.', src: 'zeitlin-2018' },
+  storm: { what: 'Time to the hatch and dose during the storm', how: 'Curiosity RAD measured the September 2017 solar particle event at Gale at about 3× normal dose rate. The scenario replays that peak; Jezero uses it as a proxy, not a local observation. Shelter credits half of the sky a ridge hides.', src: 'zeitlin-2018' },
   sol: { what: 'Curiosity’s mission clock', how: 'Sols since landing; one sol is 88,775 seconds.', src: 'msl-traverse' },
-  slope: { what: 'Steepest ground on the route', how: 'Slope over 10 m along the route, from the 1 m HiRISE elevation model; the suit limit is 20°.', src: 'trek-gale-dem' },
+  slope: { what: 'Steepest modeled ground on the route', how: 'Slope over a 10 m baseline from the site’s 1 m elevation model. The screen marks 15–20° as caution and over 20° as outside its threshold; this is not a suit limit or EVA clearance.', src: 'trek-gale-dem' },
 };
 const prov = (key, html) => `<span class="prov" role="button" tabindex="0" data-prov="${key}" title="Where does this number come from?">${html}</span>`;
 function showProv(el) {
@@ -492,9 +492,9 @@ function card() {
       extra = `<p class="guide__walkers"><b>${num(c)}</b> ${c === 1 ? 'person has' : 'people have'} walked this map${me ? ', you among them' : ' before you'}. Each left a stone on the last cairn.</p>`;
     }
     if (CARD('intro')) { kicker = CARD('intro').kicker; title = esc(CARD('intro').title); }
-    body = CARD('intro') ? fillT(esc(CARD('intro').body)) : `That orange line is Curiosity: ${g.distanceKm.toFixed(1)} km up Mount Sharp in fourteen years, and it is still climbing. Your first walk on Mars is to follow the last ${(stops()[roverK()].routeDistM / 1000).toFixed(1)} km of its tracks, find it, and come home. This map answers the three questions on the way: <b>where is it safe to step, what is worth stopping for, and can I get home?</b>`;
+    body = CARD('intro') ? fillT(esc(CARD('intro').body)) : `That orange line is Curiosity: ${g.distanceKm.toFixed(1)} km up Mount Sharp in fourteen years, and it is still climbing. Your first walk on Mars is to follow the last ${(stops()[roverK()].routeDistM / 1000).toFixed(1)} km of its tracks, find it, and come home. This map answers three questions: <b>what does the terrain model flag, what is worth stopping for, and can I get home?</b>`;
     extra += `<ol class="guide__how">
-      <li><b>Plan</b><span>Pick a route. Green ground is safe in a spacesuit, amber needs care, red is too steep.</span></li>
+      <li><b>Plan</b><span>Pick a route. Green is below the slope threshold, amber needs review, red exceeds the model limit.</span></li>
       <li><b>Walk</b><span>Follow ${JZ ? 'Perseverance’s' : 'Curiosity’s'} real tracks, cairn by cairn. Drag the view to look around.</span></li>
       <li><b>Check</b><span>Tap any underlined number to see where it comes from. <b>Field map</b> shows every layer.</span></li>
       <li><b>Get home</b><span>When the Sun flares, choose your way back with air to spare.</span></li>
@@ -503,10 +503,12 @@ function card() {
     go = btn('next', 'Begin the walk') + (JZ ? '' : btn('opening', 'Watch the opening again', true));
     S.win = JZ ? winJezero() : winCrater();
   } else if (id === 'plan') {
-    kicker = 'Where is it safe to step?';
+    kicker = 'What does the slope model flag?';
     title = 'Choose how to follow it.';
-    body = `${fillT(esc(S.story.objective))} Green ground is safe in a spacesuit, amber needs care, red is too steep (over ${S.limits.noGo}°). The rover’s own track is longer, but every metre of it has been driven, and orbit cannot see rocks smaller than a metre.`;
-    extra = `<div class="guide__routes">${ROUTES.map((rr) => { const x = routes[rr.id]; return `<button type="button" class="mroute" data-route="${rr.id}" aria-pressed="${rr.id === S.pick}"><b>${esc(rr.name)}</b><span>${prov('route', `${mins(x.tl.end.t)} · ${(x.plan.outD * 2 / 1000).toFixed(1)} km · steepest ${x.plan.maxSlope.toFixed(0)}°`)}</span></button>`; }).join('')}</div>`;
+    body = `${fillT(esc(S.story.objective))} Green means below ${S.limits.caution}° in this terrain model; amber is ${S.limits.caution}–${S.limits.noGo}°; red exceeds ${S.limits.noGo}°. This is a slope screen, not a full hazard check. The rover’s own track is longer, but every metre of it has been driven; orbital data cannot resolve rocks smaller than a metre.`;
+    const validation = validationEvidence();
+    extra = `<aside class="guide__model-note" role="note"><b>Model limits</b><p>After removing the average height offset, the elevation model differs from ${esc(RV())} reference heights by ${validation.rms} m RMS at ${validation.points} ${validation.method}. That checks sampled locations, not every map cell. Loose soil, small rocks, hidden edges, crew condition and suit limits are not modeled. Air, pace and radiation are planning scenarios. This is a research and education prototype, not operational route clearance.</p></aside>`;
+    extra += `<div class="guide__routes">${ROUTES.map((rr) => { const x = routes[rr.id]; return `<button type="button" class="mroute" data-route="${rr.id}" aria-pressed="${rr.id === S.pick}"><b>${esc(rr.name)}</b><span>${prov('route', `${mins(x.tl.end.t)} · ${(x.plan.outD * 2 / 1000).toFixed(1)} km · steepest ${x.plan.maxSlope.toFixed(0)}°`)}</span></button>`; }).join('')}</div>`;
     go = btn('next', 'Start at the hatch') + btn('plandl', 'Download the EVA plan<small>GeoJSON, for any GIS</small>', true) + btn('prev', 'Back', true);
     S.win = win3d('Your view from the hatch, at true scale: the HiRISE photo on its 1 m elevation model, slope painted on. Drag to look around.');
   } else if (id.startsWith('stop-')) {
@@ -533,7 +535,7 @@ function card() {
       : 'Your view, walking its tracks at true scale. Its wheel tracks run on ahead. Drag to look around.', true);
   } else if (id === 'storm') {
     const o = stormOptionsFor(R());
-    kicker = 'Drill · the real storm of September 2017';
+    kicker = JZ ? 'Drill · Gale storm reference · Jezero proxy' : 'Drill · the real storm of September 2017';
     if (!S.choice) {
       title = 'The Sun just flared. How do you get home?';
       body = CARD('storm') ? fillT(esc(CARD('storm').body)) : `You and EVA-2 are beside Curiosity, ${(stops()[roverK()].routeDistM / 1000).toFixed(1)} km from the hatch. The real storm of September 2017 is replayed here: Curiosity measured the dose rate rising to about three times normal. The map has drawn three ways back on the real terrain. Purple shows where hills hide part of the sky.`;
@@ -546,7 +548,7 @@ function card() {
     } else {
       const x = o[S.choice];
       title = S.verdict;
-      body = S.choice === 'shelter' ? `A ridge hides only part of the sky. On Mars, the best shelter is the rover and the habitat, so the fastest safe way home wins.` : S.choice === 'trail' ? `The ground you know is safe, but longer means more time under the storm. The map’s new line was ${Math.round((1 - o.direct.dose / o.trail.dose) * 100)}% less dose.` : `The map knew the way home from every point before the storm began. That is what it is for.`;
+      body = S.choice === 'shelter' ? `A ridge hides only part of the sky. On Mars, the best shelter is the rover and the habitat, so the route with the lowest modeled dose wins this comparison.` : S.choice === 'trail' ? `The return route you know takes longer in this scenario. The map’s new line was ${Math.round((1 - o.direct.dose / o.trail.dose) * 100)}% lower dose in the model.` : `The map computed a return route from every point before the storm began. That is what it is for.`;
       extra = `<dl class="guide__nums"><div><dt>To the hatch</dt><dd>${mins(x.min)}</dd></div><div><dt>Storm dose</dt><dd>${x.dose.toFixed(2)} mSv</dd></div></dl>`;
       go = btn('next', 'Go home') + btn('restorm', 'Choose again', true);
       S.win = win3d(S.choice === 'shelter' ? 'To the ridge, two hours under the storm, then home. The rover stays behind.' : 'Home, on the line you chose. The rover stays behind.');
@@ -561,9 +563,9 @@ function card() {
     body = CARD('home') ? fillT(esc(CARD('home').body), { mine }) : `You walked ${(stops()[roverK()].routeDistM / 1000).toFixed(1)} km to a machine that has been alone for fourteen years, and came home. It is still up there, where you left it.${mine} On 5 August 2013, alone in this crater, it played “Happy Birthday” to itself by shaking its sample lab (SAM) at the right pitches. It has done that once.`;
     extra = `<p class="guide__sol"><span>${JZ ? 'Perseverance, today' : 'Curiosity, today'}</span><b id="sol-now" class="prov" data-prov="sol">${solText()}</b><em>${JZ ? 'Landed 18 February 2021.' : 'Its prime mission was one Mars year: 669 sols.'}</em></p>`;
     extra += `<dl class="guide__answers">
-      <div><dt>Where was it safe to step?</dt><dd>Everywhere on the route: the steepest ground was ${S.plan.maxSlope.toFixed(0)}°, under the suit’s ${S.limits.noGo}° limit.</dd></div>
+      <div><dt>Did the route stay under the slope limit?</dt><dd>Yes in this terrain screen: the steepest modeled ground was ${S.plan.maxSlope.toFixed(0)}°, below the ${S.limits.noGo}° cutoff. Small obstacles and soil conditions are not resolved.</dd></div>
       <div><dt>What was worth stopping for?</dt><dd>${JZ ? `${nCairns()} cairns, ${jobs} jobs, the first flight on another world, and the first rock kept for Earth.` : `${nCairns()} cairns, ${jobs} jobs, rock from both sides of the line where this part of Mars began to dry, and the rover itself.`}</dd></div>
-      <div><dt>Did you get home?</dt><dd>Yes, both of you, with ${mins(end.o2 - reserve())} of air left after ${mins(end.t)} outside, and ${end.dose.toFixed(2)} mSv: ${((end.dose / career) * 100).toFixed(2)}% of a NASA career limit.</dd></div></dl>`;
+      <div><dt>Did you get home?</dt><dd>Yes, both of you, with ${mins(end.o2 - reserve())} of air left after ${mins(end.t)} outside. Modeled dose: ${end.dose.toFixed(2)} mSv${JZ ? ' using Gale radiation data as a Jezero proxy' : ''}. The ${((end.dose / career) * 100).toFixed(2)}% career-limit comparison is illustrative, not a medical or operational dose assessment.</dd></div></dl>`;
     go = btn('again', 'Walk it again') + btn('card', 'Save your result card', true) + btn('free', 'Explore every layer', true);
     S.win = win3d(CARD('homeWin') || 'From the hatch, looking up the mountain. It is up there.');
   }
@@ -897,11 +899,22 @@ function touchWheel(immediate) {
 }
 
 const nmFix = (s) => (JZ ? s.replace('Curiosity’s wheel tracks here', 'Perseverance’s wheel tracks here').replace('Curiosity’s whole climb, 2012 to today', 'Perseverance, 2021 to today').replace('Curiosity · its proposed path up Mount Sharp', 'Perseverance traverse').replace('Curiosity traverse', 'Perseverance traverse') : s);
+const sourceFix = (s) => (JZ ? s.replace('Curiosity RAD + elevation model', 'Curiosity RAD at Gale (proxy) + elevation model').replace('HiRISE 1 m elevation · MRO', 'HiRISE stereo DTM · Mars 2020 landing map (USGS)').replace('HiRISE stereo elevation model · MRO', 'HiRISE stereo DTM · Mars 2020 landing map (USGS)').replace('HiRISE 1 m elevation', 'HiRISE stereo DTM · Mars 2020 landing map (USGS)') : s);
 const layerOk = (id) => !(JZ && id === 'rocks');
+function validationEvidence() {
+  const summary = S.route.summary;
+  const points = summary.roverHeightPoints ?? S.route.eva.length;
+  return {
+    rms: Number(summary.demVsRoverRmsResidualM).toFixed(2),
+    points: num(points),
+    method: JZ ? 'route locations paired with nearby Perseverance waypoint elevations' : 'resampled points along Curiosity’s localized traverse',
+  };
+}
 function mapPanel() {
   const w = S.conditions.weather, sw = S.conditions.spaceWeather || {}, routes = computeRoutes();
+  const validation = validationEvidence();
   const free = document.body.hasAttribute('data-free');
-  const all = MAP_LAYERS.flatMap(([kind, items]) => items.filter((i) => !i[3] && layerOk(i[0])).map((i) => [kind, i[0], nmFix(i[1]), nmFix(i[2])]));
+  const all = MAP_LAYERS.flatMap(([kind, items]) => items.filter((i) => !i[3] && layerOk(i[0])).map((i) => [kind, i[0], nmFix(i[1]), sourceFix(nmFix(i[2]))]));
   const legend = (id) => (LEGEND[id] || []).map(([c, t]) => `<span class="lg">${c ? `<i style="background:${c}"></i>` : '<i class="lg--none"></i>'}${esc(JZ ? t.replace('August 2012', 'February 2021') : t)}</span>`).join('');
   // During the story: only what is on the map now, with what its colours mean. Every layer waits in the free map.
   const story = `<section class="mapui__sec"><h3>On the map now</h3>
@@ -910,18 +923,23 @@ function mapPanel() {
     </section>`;
   const full = `<div class="mapui__views">${['walk', 'mountain', 'crater'].map((v) => `<button type="button" data-view="${v}">${esc(S.mission.views[v].label)}</button>`).join('')}</div>
     <section class="mapui__sec"><h3>Layers</h3>
-      ${MAP_LAYERS.map(([kind, items]) => `<div class="mlayer__group"><span>${esc(kind)}</span>${items.filter((i) => layerOk(i[0])).map(([lid, name, from, always]) => `<button type="button" class="mlayer" data-maplayer="${lid}" aria-pressed="${always ? 'true' : S.mapOn.has(lid)}" ${always ? 'disabled' : ''}><b>${esc(nmFix(name))}</b><small>${esc(nmFix(from))}</small></button>${!always && S.mapOn.has(lid) ? `<p class="mlayer__legend">${legend(lid)}</p>` : ''}`).join('')}</div>`).join('')}
+      ${MAP_LAYERS.map(([kind, items]) => { const available = items.filter((i) => layerOk(i[0])); return available.length ? `<div class="mlayer__group"><span>${esc(kind)}</span>${available.map(([lid, name, from, always]) => `<button type="button" class="mlayer" data-maplayer="${lid}" aria-pressed="${always ? 'true' : S.mapOn.has(lid)}" ${always ? 'disabled' : ''}><b>${esc(nmFix(name))}</b><small>${esc(sourceFix(nmFix(from)))}</small></button>${!always && S.mapOn.has(lid) ? `<p class="mlayer__legend">${legend(lid)}</p>` : ''}`).join('')}</div>` : ''; }).join('')}
     </section>
     <section class="mapui__sec"><h3>Route</h3>
       ${ROUTES.map((rr) => { const x = routes[rr.id]; return `<button type="button" class="mroute" data-route="${rr.id}" aria-pressed="${rr.id === S.pick}"><b>${esc(rr.name)}</b><span>${prov('route', `${mins(x.tl.end.t)} · ${(x.plan.outD * 2 / 1000).toFixed(1)} km · steepest ${x.plan.maxSlope.toFixed(0)}°`)}</span></button>`; }).join('')}
     </section>`;
   $('mapui').innerHTML = `
-    <header class="mapui__head"><p class="mapui__kicker">${free ? 'Every layer' : 'Layers and data'}</p><p>${MAP_LAYERS.length - 1} kinds of data from seven Mars missions, at walking scale. Point anywhere on the map for height, slope and the walk home.</p></header>
+    <header class="mapui__head"><p class="mapui__kicker">${free ? 'Every layer' : 'Layers and data'}</p><p>Orbital maps, rover observations and terrain analysis. Point anywhere on the map for height, modeled slope and the walk home.</p></header>
     ${free ? full : story}
-    <section class="mapui__sec"><h3>Conditions today</h3>
-      <p><b>Weather</b> ${w.airMinC}° to ${w.airMaxC}° C, ${num(w.pressurePa)} Pa, sky ${esc(String(w.sky).toLowerCase())} · Curiosity REMS, sol ${num(w.sol)} (${esc(day(w.earthDate))})${JZ ? ', at Gale: the live weather feed we use' : ''}</p>
-      <p><b>Radiation</b> ${S.mission.hazards.radiation.backgroundMSvPerDay} mSv per day at the surface · Curiosity RAD</p>
+    <section class="mapui__sec"><h3>${JZ ? 'Environmental reference · Gale' : 'Environmental inputs · Gale'}</h3>
+      <p><b>Weather</b> ${w.airMinC}° to ${w.airMaxC}° C, ${num(w.pressurePa)} Pa, sky ${esc(String(w.sky).toLowerCase())} · Curiosity REMS, sol ${num(w.sol)} (${esc(day(w.earthDate))})${JZ ? ' · context only; local MEDA weather data are not integrated' : ' · measured at Gale'}</p>
+      <p><b>Radiation baseline</b> ${S.mission.hazards.radiation.backgroundMSvPerDay} mSv per day · Curiosity RAD measured at Gale${JZ ? ' · used for the Jezero scenario, not a Jezero dose measurement' : ''}</p>
       ${sw.sepCount != null ? `<p><b>Space weather</b> ${sw.sepCount} solar energetic particle events logged by NASA DONKI, ${esc(day(sw.from))} to ${esc(day(sw.to))}; latest ${esc(day(sw.latestSep))}. Not every one reaches Mars.</p>` : ''}
+    </section>
+    <section class="mapui__sec mapui__limits" aria-label="Model limits and validation">
+      <h3>What the model checks</h3>
+      <p>Colours show slope thresholds only: below ${S.limits.caution}°, ${S.limits.caution}–${S.limits.noGo}°, and above ${S.limits.noGo}°. They do not certify a route or detect loose soil, small rocks, hidden edges, or crew and suit limits.</p>
+      <p>After removing the average height offset, the elevation model differs from ${esc(RV())} reference heights by ${validation.rms} m RMS at ${validation.points} ${validation.method}; this does not validate every grid cell. Suit resources, pace and EVA dose are scenario estimates. Research and education prototype only.</p>
     </section>
     <section class="mapui__sec"><h3>${JZ ? 'Perseverance, today' : 'The other rover, today'}</h3>
       <p>${JZ ? 'Perseverance is still driving, now high on the crater rim. Its newest raw image, fetched live.' : 'Perseverance is driving in Jezero crater, about 3,800 km from this walk. Its newest raw image, fetched live. The same engine builds a walk there from Jezero’s own maps: <a href="?site=jezero">open the Jezero walk (beta)</a>.'}</p>
@@ -1204,37 +1222,39 @@ function vars() {
 function aboutHTML() {
   const m = S.mission, src = (id) => m.sources.find((s) => s.id === id);
   const rows = [
-    ...MAP_LAYERS.flatMap(([kind, items]) => items.map(([, name, from]) => [`Map layer: ${name}`, kind, `${from}${['hirise', 'ctx', 'mola', 'thermal', 'geology'].some((x) => items.find((i) => i[1] === name && i[0] === x)) ? ', tiles from Mars Trek' : ''}`])),
+    ...MAP_LAYERS.flatMap(([kind, items]) => items.filter(([id]) => layerOk(id)).map(([, name, from]) => [`Map layer: ${nmFix(name)}`, kind, `${sourceFix(nmFix(from))}${['hirise', 'ctx', 'mola', 'thermal', 'geology'].some((x) => items.find((i) => i[1] === name && i[0] === x)) ? ', tiles from Mars Trek' : ''}`])),
     ['Space weather', 'Heliophysics', `NASA DONKI (Space Weather Database of Notifications, Knowledge, Information), ${S.conditions.spaceWeather ? `${S.conditions.spaceWeather.sepCount} solar particle events, ${S.conditions.spaceWeather.from} to ${S.conditions.spaceWeather.to}` : 'not loaded'}`],
     ['Earth namesakes at the cairns', 'Optical, Earth', 'NASA Worldview satellite imagery'],
-    ['Gale crater in 3D, in the intro', 'Topographic + optical', 'Mars Global Surveyor MOLA and Mars Express HRSC elevation, Viking colour, via Mars Trek; rendered in Blender'],
+    [JZ ? 'Jezero crater context image and track' : 'Gale crater in 3D, in the intro', 'Topographic + optical', JZ ? 'NASA/JPL-Caltech/MSSS/USGS CTX mosaic, with Perseverance traverse overlaid' : 'Mars Global Surveyor MOLA and Mars Express HRSC elevation, Viking colour, via Mars Trek; rendered in Blender'],
     ['Rock units', 'Geologic', 'USGS SIM 3292 Geologic Map of Mars'],
     ['Water minerals from orbit', 'Spectral', 'MRO CRISM and Mars Express OMEGA, via Mars Trek'],
-    ['Curiosity’s 14-year track', 'Ground truth', `Curiosity traverse and odometry, to sol ${num(S.gale.rover.latestSol)}`],
-    ['The ground you walk on', 'Optical + topographic', 'MRO HiRISE photo (about 33 cm per pixel) on the HiRISE 1 m elevation model, via Mars Trek, at true scale'],
-    ['The horizon', 'Topographic + optical', 'MOLA + HRSC elevation and Viking colour, rendered as a 360° panorama from the dock in Blender'],
-    ['The crater around you, in 3D', 'Topographic', 'MOLA + HRSC blended elevation via Mars Trek, about 65 km across at true scale, aligned to the 1 m model (tools/build_midfield.py)'],
+    [`${RV()} traverse`, 'Ground truth', `${RV()} traverse and odometry, to sol ${num(S.gale.rover.latestSol)}`],
+    ['The ground you walk on', 'Optical + topographic', JZ ? 'NASA/JPL-Caltech/MSSS/USGS HiRISE image and 1 m stereo elevation model from the Mars 2020 landing map (USGS)' : 'MRO HiRISE photo (about 33 cm per pixel) on the HiRISE 1 m elevation model, via Mars Trek, at true scale'],
+    ...(JZ ? [] : [['The horizon', 'Topographic + optical', 'MOLA + HRSC elevation and Viking colour, rendered as a 360° panorama from the dock in Blender']]),
+    [JZ ? 'Jezero around you, in 3D' : 'The crater around you, in 3D', 'Topographic', JZ ? 'Jezero context imagery and terrain view; elevation view is a research prototype' : 'MOLA + HRSC blended elevation via Mars Trek, about 65 km across at true scale, aligned to the 1 m model (tools/build_midfield.py)'],
     ['The EVA plan file', 'Computed', 'GeoJSON: the chosen route, every stop with arrival time, air, dose and walk home, and the storm options'],
-    ...LAYERS.map((l) => [`Visor layer: ${l.name}`, l.note, l.from]),
-    ['Photo at each cairn', 'Optical, from the ground', 'Curiosity navigation cameras, from that spot'],
-    ['Radio: Curiosity', 'Quoted, real', 'Its first post from Mars, @MarsCuriosity, 6 August 2012 (sol 0)'],
+    ...LAYERS.filter((l) => !(JZ && l.id === 'rocks')).map((l) => [`Visor layer: ${l.name}`, l.note, sourceFix(nmFix(l.from))]),
+    ['Photo at each cairn', 'Optical, from the ground', `${RV()} navigation cameras, from that spot`],
+    ...(JZ ? [] : [['Radio: Curiosity', 'Quoted, real', 'Its first post from Mars, @MarsCuriosity, 6 August 2012 (sol 0)']]),
     ['Radio: habitat and EVA-2', 'Imagined', 'Written for this walk; every such line is labelled imagined on screen'],
-    ['Earth in the evening sky', 'Optical', 'PIA17936, Curiosity Mastcam, sol 529 (31 January 2014), NASA/JPL-Caltech/MSSS/TAMU'],
-    ['The birthday song', 'History, sound', 'NASA Goddard (SVS 11331), August 2013: the SAM instrument vibrating “Happy Birthday” on Curiosity’s first anniversary; the sound in the opening is that recording'],
-    ['Radio voices', 'Recorded', 'Read by our team; Curiosity’s line is its real first post, the rest are imagined and labelled so'],
-    ['Curiosity’s mission clock', 'Computed', 'Sols since landing (one sol = 88,775 s), counted live'],
-    ['Storm drill', 'Radiation, space weather', 'Curiosity RAD, the real solar particle event of 10–11 September 2017, replayed at its measured peak of about 3× background (Zeitlin et al. 2018)'],
-    ['Weather in the visor', 'Atmospheric', `Curiosity REMS, sol ${num(S.conditions.weather.sol)}`],
-    ['The rover in the 3D window', '3D model', 'Our team’s rover model, standing in for Curiosity; decimated in Blender; wheels turn with distance, the body tilts to the real ground'],
+    ...(JZ ? [] : [
+      ['Earth in the evening sky', 'Optical', 'PIA17936, Curiosity Mastcam, sol 529 (31 January 2014), NASA/JPL-Caltech/MSSS/TAMU'],
+      ['The birthday song', 'History, sound', 'NASA Goddard (SVS 11331), August 2013: the SAM instrument vibrating “Happy Birthday” on Curiosity’s first anniversary; the sound in the opening is that recording'],
+    ]),
+    ['Radio voices', 'Recorded', JZ ? 'Read by our team; mission quotes and imagined habitat dialogue are identified in context' : 'Read by our team; Curiosity’s line is its real first post, the rest are imagined and labelled so'],
+    [`${RV()} mission clock`, 'Computed', 'Sols since landing (one sol = 88,775 s), counted live'],
+    ['Storm drill', 'Radiation, space weather', `Curiosity RAD at Gale: the real solar particle event of 10–11 September 2017, replayed at its measured peak of about 3× background (Zeitlin et al. 2018)${JZ ? '; used as a Jezero scenario proxy, not a Jezero observation' : ''}`],
+    ['Weather in the visor', 'Atmospheric', `Curiosity REMS at Gale, sol ${num(S.conditions.weather.sol)}${JZ ? '; shown as context because Jezero MEDA weather data are not yet integrated' : ''}`],
+    ['The rover in the 3D window', '3D model', `Our team’s rover model, standing in for ${RV()}; decimated in Blender; wheels turn with distance, the body tilts to the real ground`],
     ['Coordinates under the cursor', 'Topographic + computed', 'Latitude and longitude; on the walk site, HiRISE 1 m elevation, slope and REDCAIRN walk-home time'],
   ];
   const arch = [
-    ['Public sources', ['Mars Trek tiles and elevation (HiRISE, CTX, THEMIS, MOLA + HRSC)', 'USGS SIM 3292 geology', 'Curiosity traverse, raw images, REMS, RAD', 'NASA DONKI space weather', 'NASA Worldview', 'Perseverance raw images']],
-    ['Build, offline', ['Python scripts in tools/: fetch, clip, validate (elevation vs rover heights, both sites)', 'The same scripts build a second site from its own data: Jezero (beta)', 'Blender, headless: Mount Sharp in 3D, the 360° horizon, the site photo, the rover split into body and wheels']],
+    ['Public sources', ['Mars Trek orbital tiles (HiRISE, CTX, THEMIS, MOLA + HRSC)', 'USGS SIM 3292 geology', `${JZ ? 'Perseverance' : 'Curiosity'} traverse and raw images`, ...(JZ ? ['Curiosity REMS at Gale (context only; local Jezero MEDA weather archive is not integrated)', 'Curiosity RAD at Gale (ionizing-dose scenario proxy, not a Jezero measurement)', 'Perseverance MEDA archive (weather instrument; not yet integrated)'] : ['Curiosity REMS and RAD surface observations at Gale']), 'NASA DONKI space weather', 'NASA Worldview']],
+    ['Build, offline', ['Python scripts in tools/: fetch, clip, validate elevation against rover height samples at both sites', `${JZ ? 'This Jezero walk uses its own HiRISE image, stereo elevation model, and Perseverance traverse' : 'The same scripts build a second site from its own data: Jezero (beta)'}`, 'Blender, headless: Gale crater in 3D, the 360° horizon, the site photo, the rover split into body and wheels']],
     ['Static site', ['index.html, js/, data/*.json, a 1 m terrain grid, assets/', 'No server, no build step, hosted on GitHub Pages']],
     ['In your browser', ['Terrain engine: slope classes, sky shelter', 'Router: fastest, gentlest, rover-proven; minutes home from every patch of ground', 'Suit timeline: air, dose, time (simulated)', 'Leaflet map on live Mars Trek tiles; three.js ground view', 'Live: Perseverance’s newest raw image']],
   ];
-  const routes = computeRoutes(), o = stormOptionsFor(R()), sm = S.route.summary, g = S.gale.rover, t = S.terrain;
+  const routes = computeRoutes(), o = stormOptionsFor(R()), sm = S.route.summary, validation = validationEvidence(), g = S.gale.rover, t = S.terrain;
   const cell = (v) => `<td class="n">${v}</td>`;
   const numbers = `
     <section><h3>The numbers</h3>
@@ -1243,27 +1263,27 @@ function aboutHTML() {
       <div class="tablewrap"><table class="numbers">
         <tbody>
           <tr><th colspan="3">Is the ground model right?</th></tr>
-          <tr><td>Elevation model vs ${RV()}’s own heights, along the route</td>${cell(`${sm.demVsRoverRmsResidualM} m RMS`)}<td>${sm && S.route.eva.length} points over ${(sm.evaLengthM / 1000).toFixed(2)} km</td></tr>
+          <tr><td>Elevation model vs ${RV()} reference heights, along the route</td>${cell(`${validation.rms} m RMS`)}<td>${validation.points} ${esc(validation.method)} over ${(sm.evaLengthM / 1000).toFixed(2)} km</td></tr>
           <tr><td>Elevation model</td>${cell('1 m')}<td>HiRISE stereo DEM ${JZ ? '(Mars 2020 landing map, USGS)' : 'via Mars Trek'}, gridded at ${t.meta.cellMX.toFixed(1)} m: ${num(t.cols)} × ${num(t.rows)} = ${num(t.size)} cells</td></tr>
-          <tr><td>${RV()}’s track on the walk</td>${cell(`${(sm.evaLengthM / 1000).toFixed(2)} km`)}<td>${sm.slopeClassCounts.safe} of ${sm.slopeClassCounts.safe + sm.slopeClassCounts.caution + sm.slopeClassCounts.nogo} samples safe for a suit; steepest ${sm.maxAbsSlopeDeg}°</td></tr>
+          <tr><td>${RV()}’s track on the walk</td>${cell(`${(sm.evaLengthM / 1000).toFixed(2)} km`)}<td>${sm.slopeClassCounts.safe} of ${sm.slopeClassCounts.safe + sm.slopeClassCounts.caution + sm.slopeClassCounts.nogo} sampled points fall below the ${S.limits.caution}° slope threshold; steepest ${sm.maxAbsSlopeDeg}°. This is not a suit-safety clearance.</td></tr>
           <tr><th colspan="3">Three routes to the rover (round trip)</th></tr>
           ${ROUTES.map((rr) => { const x = routes[rr.id]; return `<tr><td>${esc(rr.name)}</td>${cell(mins(x.tl.end.t))}<td>${(x.plan.outD * 2 / 1000).toFixed(1)} km · steepest ${x.plan.maxSlope.toFixed(0)}° · ${x.tl.end.dose.toFixed(2)} mSv · ${mins(x.tl.end.o2 - reserve())} of air left</td></tr>`; }).join('')}
-          <tr><th colspan="3">The real storm of September 2017, from the rover (peak ×3, measured by RAD)</th></tr>
+          <tr><th colspan="3">${JZ ? 'Jezero storm scenario (Gale RAD proxy)' : 'The real storm of September 2017 at Gale (Curiosity RAD)'}</th></tr>
           <tr><td>The map’s new line home</td>${cell(`${o.direct.dose.toFixed(2)} mSv`)}<td>${mins(o.direct.min)} to the hatch</td></tr>
           <tr><td>The way you came</td>${cell(`${o.trail.dose.toFixed(2)} mSv`)}<td>${mins(o.trail.min)} to the hatch</td></tr>
-          <tr><td>Shelter behind the best ridge for ${STORM_HOURS} h, then home</td>${cell(`${o.shelter.dose.toFixed(2)} mSv`)}<td>the ridge blocks ${o.shelter.blocked}% (Curiosity measured 4% at Murray Buttes)</td></tr>
+          <tr><td>Shelter behind the best ridge for ${STORM_HOURS} h, then home</td>${cell(`${o.shelter.dose.toFixed(2)} mSv`)}<td>the model credits ${o.shelter.blocked}% shielding${JZ ? '; shielding effectiveness is calibrated to Gale observations' : ' (Curiosity measured 4% at Murray Buttes)'}</td></tr>
           <tr><th colspan="3">Radiation and the mission</th></tr>
-          <tr><td>Surface dose rate at Gale</td>${cell(`${S.mission.hazards.radiation.backgroundMSvPerDay} mSv/day`)}<td>Curiosity RAD (Hassler et al. 2014)</td></tr>
+          <tr><td>${JZ ? 'Gale surface dose rate (Jezero proxy)' : 'Surface dose rate at Gale'}</td>${cell(`${S.mission.hazards.radiation.backgroundMSvPerDay} mSv/day`)}<td>Curiosity RAD (Hassler et al. 2014)</td></tr>
           <tr><td>${RV()}, to sol ${num(g.latestSol)}</td>${cell(`${g.distanceKm.toFixed(1)} km`)}<td>${num(g.climbM)} m ${g.climbM >= 0 ? 'climbed' : 'descended'} since landing</td></tr>
           <tr><td>Walk-home time computed for</td>${cell(num(t.size))}<td>patches of ground, in ${S.fieldMs ? `${S.fieldMs} ms` : 'well under a second'} in your browser</td></tr>
         </tbody></table></div>
     </section>`;
   return `${numbers}
     <section><h3>System architecture</h3><ol class="arch">${arch.map(([h, items]) => `<li><b>${esc(h)}</b><ul>${items.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></li>`).join('')}</ol></section>
-    <section><h3>The challenge</h3><p>NASA Space Apps 2026, <b>Interplanetary Survival Guide: Martian Map</b>: a layered, hyper-local map a Mars astronaut could use to plan and walk a Marswalk safely, doing science on the way. REDCAIRN is that map, built on Mars Trek’s own tiles: it walks you cairn by cairn along the line the Curiosity rover drove first, answers where it is safe to step, what is worth stopping for and whether you can get home, and lets you stand at any cairn in 3D, at true scale, with the same data on your helmet visor. An independent student project, not affiliated with or endorsed by NASA.</p></section>
+    <section><h3>The challenge</h3><p>NASA Space Apps 2026, <b>Interplanetary Survival Guide: Martian Map</b>, asks for a layered, hyper-local map to support Marswalk planning and science. REDCAIRN follows ${esc(RV())}’s traverse cairn by cairn, combines orbital maps with rover observations, and lets you inspect the route in map, visor and 3D views. Slope colors are screening thresholds; they do not certify a route as safe. ${JZ ? 'Jezero uses its own surface maps and Perseverance traverse. Local MEDA weather readings are not integrated, so Gale REMS appears only as context. The radiation drill uses Gale RAD data as an illustrative scenario proxy, not a Jezero measurement.' : 'The Gale walk uses Curiosity observations and is checked against rover height samples along the traverse.'} An independent student project, not affiliated with or endorsed by NASA.</p></section>
     <section><h3>The five resources we were given</h3><ul>${m.anchorResources.map((a) => `<li><b><a href="${esc(src(a.source).url)}" target="_blank" rel="noopener">${esc(a.name)}</a></b> ${esc(a.role)}</li>`).join('')}</ul></section>
     <section><h3>Every layer, its data, its mission</h3><div class="tablewrap"><table><thead><tr><th>What you see</th><th>Data</th><th>Source</th></tr></thead><tbody>${rows.map((r) => `<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td><td>${esc(r[2])}</td></tr>`).join('')}</tbody></table></div></section>
-    <section><h3>Real and simulated</h3><p><b>Real:</b> the ground and its height at true scale, the slopes, the routes’ terrain, the horizon, the rover track and photos, the rock findings, the water minerals, the geologic units, the normal radiation rate and the measured effect of terrain on it. Our elevation model matches the rover’s own elevations to ${esc(S.route.summary.demVsRoverRmsResidualM)} m along the route.</p><p><b>Simulated:</b> the suit (air, pace), you, and the time compression of the walk. Small rocks, gravel and wind ripples near the walker are drawn for scale because HiRISE cannot resolve anything under a metre. Long legs of the walk play as a labelled time-lapse. The storm is the real September 2017 event at its measured peak; only its timing (it reaches you at the rover) is staged. The crater view stretches heights ×3; the walk is true scale.</p></section>
+    <section><h3>Real and simulated</h3><p><b>Real:</b> ${JZ ? 'Jezero terrain, imagery and Perseverance traverse. Jezero MEDA weather readings are available in the PDS archive but are not integrated in this build; the displayed weather is Gale REMS context.' : 'Gale terrain, Curiosity traverse, imagery, weather and radiation observations.'} After removing the average height offset, the elevation model differs from rover reference heights by ${validation.rms} m RMS at ${validation.points} ${esc(validation.method)}; this does not validate every map cell.</p><p><b>Simulated:</b> the suit (air, pace), dose timeline, terrain shielding estimate, you, and the time compression of the walk. Slope screening does not model loose soil, small rocks, hidden edges, or crew and suit limits. Small rocks, gravel and wind ripples near the walker are visual scale references. The storm uses Curiosity’s September 2017 event at Gale; ${JZ ? 'the dose scenario and its timing at Jezero are illustrative proxies.' : 'its timing at the rover is staged.'} The crater view stretches heights ×3; the walk is true scale.</p></section>
     <section><h3>How it is built</h3><p>Scripts fetch public mission data. Blender, run headless from scripts, renders Gale crater in 3D through one camera with Curiosity’s track projected into it, renders the 360° horizon from the dock, builds the site photo, and turns the rover model into a light web model with separate wheels. Your browser computes slope, sky shelter, three routes, the walk-home time for ${num(S.terrain.size)} patches of ground and the suit timeline. No server, no build step.</p></section>
     <section><h3>All sources</h3><div class="tablewrap"><table><tbody>${m.sources.map((s) => `<tr><td><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)}</a></td><td>${esc(s.org)}</td><td>${esc(s.use)}</td></tr>`).join('')}</tbody></table></div></section>
     <section><h3>How AI was used</h3><p>${esc(m.aiDisclosure)}</p></section>`;

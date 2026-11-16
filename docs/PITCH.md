@@ -11,10 +11,10 @@ Curiosity has been alone on Mount Sharp since 2012: REDCAIRN is the survival map
 
 | Criterion | What proves it, on screen |
 |---|---|
-| Impact | The map knows the walk home from every point (point anywhere: elevation, slope, minutes home); when the Sun flares it draws three ways home on the real terrain and costs each in minutes and dose |
+| Impact | The map exposes a modeled walk-home field across the terrain; the storm drill compares three return options by modeled time and dose |
 | Creativity | A survival map with a destination and a character: the rover that went first. An opening film of illustrations drawn by Blender from the real elevation data, no AI images |
-| Validity | 1 m elevation model checked against the rover's own heights (Gale 1.65 m RMS over 2.7 km; Jezero 0.41 m RMS); same engine builds a second crater from its own data; routes, air, dose computed live; simulated values and imagined radio lines labelled |
-| Relevance | Mars Trek tiles and elevation, USGS geology, Curiosity's planned path and real track, Worldview, Perseverance raw images; eight kinds of data from seven missions; NASA DONKI space weather |
+| Validity | The 1 m elevation models are compared with rover reference heights along each route (Gale 1.65 m RMS at 573 resampled track points; Jezero 0.41 m at 248 route locations paired with waypoint heights); slope thresholds are explicitly a screen, and suit/dose values are labeled as scenarios |
+| Relevance | Mars Trek and USGS terrain, Curiosity and Perseverance tracks and images, orbital science layers, NASA DONKI space weather, and NASA Worldview; Jezero's Gale weather and radiation references are disclosed |
 | Presentation | One true line per plate; one card, one map, one panel; a story anyone can follow |
 
 ## 30-second video (the demo we submit)
@@ -54,21 +54,22 @@ Shortcuts: the root URL plays the opening; `#intro`, `#plan`, `#stop-0` to `#sto
 | Routes (round trip) | Rover-proven 5.3 km, 4 h 39 · Fastest 3.6 km, 3 h 59 · Gentlest 3.7 km, 4 h 02 |
 | Storm from the rover (real Sept 2017, ×3) | New line 35 min, 0.05 mSv · Way you came 57 min, 0.08 mSv · Shelter 2 h then home, 0.18 mSv |
 | Best terrain shelter | blocks 10% of the dose |
-| Elevation model vs rover | 1.65 m RMS along the route |
+| Gale elevation model vs rover reference heights | 1.65 m RMS at 573 resampled track points (datum offset removed) |
+| Jezero elevation model vs rover reference heights | 0.41 m RMS at 248 route locations paired with nearby waypoint elevations |
 | Normal radiation at Gale | 0.67 mSv per day (Curiosity RAD) |
 
 ## Questions judges may ask
 
 **"Is the horizon real?"** Yes, in the 3D window and the ground view. Blender builds Gale crater at true scale from the Mars Trek MOLA + HRSC elevation under Viking colour, stands a camera 1.7 m above the dock and renders a 360° panorama. We checked it against the elevation data: the horizon is 10° high to the east, where Mount Sharp is.
 
-**"Is the radiation real?"** The everyday rate and terrain shielding were measured by Curiosity. The storm is the real September 2017 event at its measured peak (about 3× background, Zeitlin et al. 2018). Only its timing is staged.
+**"Is the radiation real?"** Curiosity measured the Gale background rate and terrain shielding. Its RAD also measured the September 2017 solar particle event at Gale. The app stages a drill from that event; Jezero uses Gale RAD as an illustrative scenario proxy, not a local dose measurement.
 
-**"What's simulated?"** The suit, you, the walk's time compression, the storm's strength, and small rocks scattered for scale (HiRISE can't see anything under about a metre).
+**"What's simulated?"** Suit resources, pace, route time, dose and terrain shielding estimates, you, and the walk's time compression. The model does not resolve loose soil, small rocks, hidden edges, or crew and suit limits. Jezero MEDA weather data are not integrated in this build.
 
 **"How did you use Blender?"** Headless scripts in `tools/`: the opening's illustrated plates (the real elevation model drawn as ink contours and flat tones, with the rover and a suited figure at real waypoints), Mount Sharp in 3D through one camera with Curiosity's track projected into it (the intro), the 360° horizon behind the 3D window, the site photo the rover drives on, and our rover model split into body and six wheels so they turn in the browser.
 
 **"Is that Curiosity in the window?"** It is our team's rover model, standing in for Curiosity, and the window says so. The ground, the horizon and the track it follows are real.
 
-**"Would this work elsewhere?"** The engine needs an elevation model and a photo. Jezero, with Perseverance's track and photos, is next.
+**"Would this work elsewhere?"** The Jezero beta already uses its own 1 m elevation model, HiRISE imagery and Perseverance traverse. Local MEDA weather is not integrated yet; Jezero's weather display uses Gale REMS only as context.
 
 **"What did AI do?"** AI assistants helped write code and data scripts. The data, the site choice and every figure come from the public sources in the app's System architecture & data attribution panel.

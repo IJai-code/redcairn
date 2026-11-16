@@ -110,7 +110,7 @@
    "classes": [
     {
      "id": "safe",
-     "label": "Safe",
+     "label": "Below slope threshold",
      "rule": "< 15°",
      "color": "#3ddc84"
     },
@@ -138,11 +138,12 @@
     "note": "GET only; sends no CORS header, so sample at build time and ship the result as static data."
    },
    "validation": {
-    "method": "Orbital DEM compared with rover localisation at 324 points along the EVA route",
-    "datumOffsetM": 17.16,
-    "rmsResidualM": 0.99
+    "method": "Orbital DTM compared with nearby Perseverance waypoint elevations at EVA route locations; mean datum offset removed before calculating RMS",
+    "points": 248,
+    "datumOffsetM": -0.1,
+    "rmsResidualM": 0.41
    },
-   "source": "trek-gale-dem"
+   "source": "usgs-jezero-dtm"
   },
   "minerals": {
    "label": "Mineral / science targets",
@@ -252,7 +253,7 @@
     ],
     "why": "Perseverance touched down here on 18 February 2021.",
     "layer": "slope",
-    "teach": "Green is easy walking in a suit. Amber needs care. Red is too steep."
+    "teach": "The colours classify slope only. Green is below 15°, amber is 15°–20°, and red exceeds 20°. Other hazards are not mapped."
    }
   },
   {
@@ -308,7 +309,7 @@
     ],
     "why": "Perseverance watched Ingenuity fly from here.",
     "layer": "slope",
-    "teach": "Flat ground: the slope map stays green."
+    "teach": "The modeled ground here is below the 15° slope threshold. Loose soil, rocks and other hazards are not mapped."
    }
   },
   {
@@ -541,7 +542,7 @@
      "low": 2,
      "high": 3
     },
-    "response": "Recalculate the fastest safe return to the dock and flag terrain shielding on the way.",
+    "response": "Recalculate the fastest modeled return under the scenario's terrain and consumable assumptions, and flag terrain shielding on the way.",
     "source": "zeitlin-2018",
     "peakMultiplierUsed": 3
    },
@@ -832,6 +833,13 @@
    "org": "NASA",
    "url": "https://science.nasa.gov/mission/mars-2020-perseverance/",
    "use": "Landing site and mission facts"
+  },
+  {
+   "id": "m2020-meda",
+   "title": "Mars 2020 MEDA calibrated weather data",
+   "org": "NASA Planetary Data System Atmospheres Node",
+   "url": "https://pds-atmospheres.nmsu.edu/data_and_services/atmospheres_data/PERSEVERANCE/meda.html",
+   "use": "Perseverance's local weather archive; available but not yet integrated in this prototype"
   },
   {
    "id": "m20-ctx",

@@ -1,8 +1,9 @@
 # REDCAIRN: Finding Curiosity
 
 **Could you walk 2.7 km across Mars to a rover that has been alone since 2012, and get home before the Sun turns on you?**
-REDCAIRN is the layered survival map that gets you there: slope for a spacesuit, air, radiation and the way home from every 2 m of real ground.
+REDCAIRN is an interactive Marswalk planning prototype: it combines rover traverses, orbital terrain and science layers, a modeled walk-home field, and a story you can explore at each stop. Slope colors are screening thresholds, not a safety certification; air, pace and radiation are planning scenarios.
 Every number is computed in your browser from NASA data, and tapping any number shows its source. Planners can download the whole EVA plan as GeoJSON.
+Jezero uses its own HiRISE image, elevation model and Perseverance traverse. This build does not yet integrate the local MEDA weather archive, so it displays Gale REMS as context and uses Curiosity RAD for an illustrative radiation scenario. Both are labeled as references, not Jezero measurements.
 **Live:** <https://ijai-code.github.io/redcairn/> · **Second site, Jezero (beta):** <https://ijai-code.github.io/redcairn/?site=jezero>
 2026 NASA Space Apps, *Interplanetary Survival Guide: Martian Map*. An independent student project, not affiliated with or endorsed by NASA.
 
@@ -10,10 +11,12 @@ Every number is computed in your browser from NASA data, and tapping any number 
 
 The method is not hand-tuned to one place. The same scripts and the same browser engine build each walk from four public inputs: a 1 m orbital elevation model, a 25 cm orbital photo, a rover's own track and its photos. Each elevation model is checked against the heights the rover itself measured on that ground.
 
-| Site | Rover track walked | Walk | Steepest | Elevation model vs rover heights | Cells routed |
+| Site | Rover track walked | Walk | Steepest | Elevation model vs rover reference heights | Cells routed |
 |---|---|---|---|---|---|
 | Gale crater, Mount Sharp | Curiosity, sols 4560–5073 | 2.71 km | 16.6° | **1.65 m RMS** (573 points) | 386,912 |
 | Jezero crater floor (beta) | Perseverance, sols 13–180 | 1.86 km | 10.1° | **0.41 m RMS** (248 points) | 378,963 |
+
+The Gale comparison uses 573 resampled rover-traverse elevations. Jezero pairs 248 route locations with nearby Perseverance waypoint elevations. Both RMS values remove the mean vertical datum offset first; these along-track comparisons do not validate every elevation-model cell.
 
 Jezero is built by `tools/fetch_jezero_dtm.py`, `tools/fetch_jezero_ortho.py` and `tools/build_jezero.py`. They read only the needed window out of the 1.8 GB and 3.4 GB Mars 2020 landing maps with HTTP range requests.
 
@@ -29,7 +32,7 @@ Jezero is built by `tools/fetch_jezero_dtm.py`, `tools/fetch_jezero_ortho.py` an
 ## How it plays
 
 1. **The opening.** Five plates, each one true line: it landed alone in 2012; it played itself "Happy Birthday" once; rock tore its wheels and it kept climbing; it photographed Earth; fourteen years later, you land. Blender drew every plate from the real elevation data (`tools/blender_plates.py`). No AI images. You can skip straight to the map.
-2. **The plan.** Mars Trek tiles, Curiosity's 14-year line, and three routes to the rover drawn on slope for a suit.
+2. **The plan.** Mars Trek tiles, Curiosity's 14-year line, and three routes to the rover with slope thresholds shown on the terrain model.
 3. **Five cairns along its tracks**, on the real 1 m ground drawn live in ink, inside the real crater in 3D (MOLA + HRSC, about 65 km across), with Mount Sharp rising behind you. Each leg is walked at a real suited pace, with long legs as a labelled time-lapse. The ground shows: contours every 2 m of real height, hachures where the ground needs care, stipple where hills shelter you from radiation. At each cairn you get one true moment from the mission, Curiosity's photo from that spot, and four live numbers: air, walk home, dose and time out.
 4. **Curiosity.** You reach it at its real position. Its newest raw image is fetched live. You can kneel at its torn wheel.
 5. **The storm.** The real September 2017 solar storm arrives. You choose between three ways home on the real terrain.
@@ -57,9 +60,9 @@ Most entries open as a dark dashboard. REDCAIRN opens as a story with a look of 
 
 ## What is real and what is simulated
 
-**Real:** the ground, its height and slope, the route (the rover's own track), the photographs, the rock findings, the weather report, the normal radiation rate and the measured effect of terrain on it, the water-mineral detections, the geologic units, and every date and figure about the machines. The 1 m elevation model agrees with the rover's own elevations to 1.65 m RMS along the 2.7 km route.
+**Real:** the ground imagery and elevation, rover traverses and photographs, rock findings, weather and radiation observations at Gale, water-mineral detections, geologic units, and mission facts. The 1 m elevation model differs from rover reference elevations by 1.65 m RMS at 573 resampled Gale traverse points and 0.41 m RMS at 248 Jezero route locations paired with nearby waypoint elevations, after removing the mean datum offset. These comparisons do not validate every map cell.
 
-**Simulated, and labelled in the app:** the suit (air, battery, pace), you, the time compression of the walk, the storm's timing (the real September 2017 event, at its measured peak of about 3× background, is replayed as you leave the rover), and the rocks smaller than a metre scattered for scale, since HiRISE cannot resolve them. The walk is at true scale; the Blender crater render in the intro stretches heights ×3.
+**Simulated, and labelled in the app:** the suit (air, battery, pace), dose timeline, terrain-shielding estimate, you, and the time compression of the walk. The storm drill replays Curiosity's September 2017 Gale event; at Jezero, Gale weather and radiation are contextual proxies. The slope screen does not model loose soil, small rocks, hidden edges, crew condition or suit limits. The walk is at true scale; the Blender crater render in the intro stretches heights ×3.
 
 ## Run locally
 

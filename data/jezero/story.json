@@ -33,7 +33,7 @@
   "walk": {
    "kicker": "The plan",
    "title": "1.5 km out. Five stops. Home with air to spare.",
-   "line": "Green ground is safe in a suit, amber needs care, red is too steep. The route is the rover's own track."
+   "line": "Green is below the 15° slope screen, amber needs review, and red exceeds the 20° threshold. The route follows Perseverance's own track."
   },
   "storm": {
    "kicker": "Simulated drill · solar storm",
@@ -143,10 +143,10 @@
   "intro": {
    "kicker": "Beta · second site · same engine",
    "title": "Jezero crater: where Perseverance landed.",
-   "body": "This is the second walk, built by the same scripts from Jezero’s own maps: the 1 m elevation model and 25 cm photo Perseverance used to land, and the track it drove. The orange line is Perseverance, {roverKm} km in {latestSol} sols. Your walk follows its first {walkKm} km, from where it landed to the first rock it kept."
+   "body": "Follow {walkKm} km on Jezero’s local 1 m terrain model and Perseverance track. MEDA weather is not integrated; Gale REMS is context and Gale RAD drives an illustrative radiation scenario. Slope colors are not safety clearance."
   },
   "storm": {
-   "body": "You and EVA-2 are at Rochette, {walkKm} km from the hatch. The real solar storm of September 2017 is replayed here, as Curiosity measured it at Gale (Perseverance carries no particle-radiation detector). The map has drawn three ways back on Jezero’s real terrain."
+   "body": "You and EVA-2 are at Rochette, {walkKm} km from the hatch. Curiosity RAD measured the September 2017 solar particle event at Gale; this drill replays it as an illustrative Jezero dose scenario, not a local measurement. The map has drawn three ways back on Jezero’s terrain."
   },
   "home": {
    "title": "It came here to leave something for us.",

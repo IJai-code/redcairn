@@ -33,7 +33,7 @@
     "walk": {
       "kicker": "The plan",
       "title": "1.5 km out. Five stops. Home with air to spare.",
-      "line": "Green ground is safe in a suit, amber needs care, red is too steep. The route is the rover's own track."
+      "line": "Green is below the 15° slope screen, amber needs review, and red exceeds the 20° threshold. The route follows the rover's own track."
     },
     "storm": {
       "kicker": "Simulated drill · solar storm",
@@ -62,7 +62,7 @@
         "slope"
       ],
       "q": "Can my suit handle a real hill?",
-      "a": "Yes, with care. Curiosity tilted 17° here and your suit’s limit is 20°. Home is seven minutes away, so this is the safest place to find out.",
+      "a": "The model flags 17° here: within its caution band and below its 20° cutoff. It cannot assess soil, loose rocks, or suit and crew conditions. Home is seven minutes behind you.",
       "moment": "On this slope, the rover tilted 17° and kept going.",
       "sub": "Its wheels have been punctured and torn by sharp rock since 2013. It climbed this anyway. Your suit’s limit is 20°, and home is seven minutes behind you: the place to learn how a pressurised suit handles a real hill."
     },

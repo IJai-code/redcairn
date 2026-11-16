@@ -10,13 +10,13 @@ REDCAIRN: Finding Curiosity
 
 ## Summary (≈ 200 words)
 
-Could you walk 2.7 km across Mars to a rover that has been alone since 2012, and get home before the Sun turns on you? REDCAIRN is a layered, hyper-local survival map for the first crewed Marswalk. It answers the three questions an astronaut has to settle before stepping out: where is it safe to step, what is worth stopping for, and can I get home?
+Could you walk 2.7 km across Mars to a rover that has been alone since 2012, and get home before the Sun turns on you? REDCAIRN is a layered, hyper-local Marswalk planning prototype. It helps explore three questions: what does the terrain model flag, what is worth stopping for, and can I get home? Its slope screen is not a safety certification.
 
-You follow the last 2.7 km of Curiosity's real tracks on Mount Sharp, cairn by cairn, to the rover itself. Underneath is NASA data at walking scale. The 1 m HiRISE elevation model gives slope for a spacesuit. Curiosity's RAD gives the radiation rate, with the terrain's own shelter. Eleven Mars Trek layers cover optical, thermal, spectral, geologic and chemical data. The map also knows the walk home from each of 386,912 patches of ground, computed in your browser in about 0.2 seconds.
+You follow the last 2.7 km of Curiosity's real tracks on Mount Sharp, cairn by cairn, to the rover itself. Underneath is NASA data at walking scale. The 1 m HiRISE elevation model screens slope; Curiosity's RAD informs an illustrative radiation scenario. Eleven map layers cover optical, thermal, spectral, geologic and chemical data. The map computes a modeled walk-home field across 386,912 terrain patches in your browser.
 
-Then the real September 2017 solar storm arrives, and the map has already drawn three ways home. The new line takes 0.05 mSv; the way you came takes 0.08 mSv.
+Then a scenario replays Curiosity RAD's measurements from the real September 2017 solar particle event, and the map draws three modeled ways home. In this scenario, the new line is 0.05 mSv; the way you came is 0.08 mSv. These dose estimates are not operational guidance.
 
-The same engine builds a second crater, Jezero, from Perseverance's own maps. Every number shows its source when you tap it.
+The same engine builds a second walk at Jezero from its own HiRISE terrain and imagery and Perseverance's traverse. Local MEDA weather readings are not integrated yet, so the Jezero display uses Gale REMS for context and Gale RAD for an illustrative radiation scenario. The app labels these sources and shows number provenance when tapped.
 
 ## Project demonstration
 
@@ -33,9 +33,9 @@ Code: https://github.com/IJai-code/redcairn
 
 A map for a Marswalk has to work at the scale of a person on foot, not an orbiter. REDCAIRN turns NASA's orbital and rover data into a plan you can walk:
 
-- **Where is it safe to step?** Slope for a spacesuit comes from the 1 m HiRISE elevation model: green for safe, amber for 15–20° and needing care, red for over 20° and too steep. There are three routes to the rover: rover-proven (every metre already driven), fastest and gentlest. Point anywhere on the map for elevation, slope and minutes to walk home.
+- **What does the terrain model flag?** The 1 m elevation model classifies slope: below 15°, a 15–20° caution band, and above the 20° screen. This is not a human EVA safety clearance; the model cannot assess loose soil, small rocks, hidden edges, crew condition or suit limits. Three routes show rover-proven, fastest and gentlest terrain-model options. Point anywhere for elevation, modeled slope and route time home.
 - **What is worth stopping for?** Five cairns at Curiosity's real stops. Each has one true moment from the mission, Curiosity's own Navcam photo from that spot, the rock it found there, and the place on Earth it is named after, shown in NASA Worldview.
-- **Can I get home?** A suit timeline (air, dose, time out) runs at every step, and the walk-home field covers all 386,912 patches of ground. When the Sun flares, the map draws three ways home on the real terrain and costs each one.
+- **Can I get home?** A simulated suit timeline (air, dose, time out) runs along each route, and the walk-home field covers 386,912 Gale terrain patches. A storm drill compares three modeled routes and their estimated time and dose.
 - **Take the plan with you.** One click downloads the EVA plan as GeoJSON: the route, every stop with arrival time, air, dose and walk home, and the storm options, ready for QGIS or ArcGIS.
 
 ### Worked case: the real solar storm of September 2017
@@ -48,26 +48,28 @@ Curiosity's RAD measured the 10–11 September 2017 solar particle event at abou
 | The way you came | 57 min | 0.08 mSv |
 | Shelter behind the best ridge for 2 h, then home | 2 h 51 min | 0.18 mSv |
 
-The new line takes 41% less dose than the way you came. Sheltering loses, because a ridge hides only 10% of the sky here; Curiosity measured just 4% shielding at Murray Buttes. On Mars, the best shelter is the habitat, so the fastest safe way home wins. The whole walk costs 0.13 mSv, 0.02% of NASA's career limit, with 3 h of air to spare.
+In this model, the new line has 41% less estimated dose than the way you came. The terrain-shielding estimate is calibrated to Curiosity's Gale observations, including 4% measured shielding at Murray Buttes. This comparison is an illustrative scenario, not a recommendation for a real EVA. The whole Gale walk models 0.13 mSv and 3 h of air remaining; the career-limit percentage is context only, not a medical assessment.
 
 ### Same engine, two craters
 
-| Site | Rover track walked | Walk | Elevation model vs the rover's own heights |
+| Site | Rover track walked | Walk | Elevation model vs rover reference heights |
 |---|---|---|---|
 | Gale crater, Mount Sharp | Curiosity, sols 4560–5073 | 2.71 km | 1.65 m RMS (573 points) |
 | Jezero crater floor (beta) | Perseverance, sols 13–180 | 1.86 km | 0.41 m RMS (248 points) |
+
+Gale uses 573 resampled rover-traverse elevations. Jezero pairs 248 route locations with nearby Perseverance waypoint elevations. Both RMS values remove the mean vertical datum offset first; the along-track comparisons do not validate every grid cell.
 
 The second walk is built by the same scripts. It goes from where Perseverance landed, past where Ingenuity first flew, to Rochette, where it sealed its first rock cores for Earth. Its terrain comes from the Mars 2020 landing maps (1 m DTM, 25 cm HiRISE orthomosaic). Our scripts read just the walk's window out of these 1.8 GB and 3.4 GB files using HTTP range requests.
 
 ### How it works
 
 - **Build (offline, reproducible).**
-  - Python scripts in `tools/` (standard library only) fetch the rover traverses and waypoints, the 1 m elevation models, imagery, weather, space weather and geology. They clip and grid the data, and check every elevation model against the rover's own heights.
+  - Python scripts in `tools/` (standard library only) fetch rover traverses and waypoints, elevation models, imagery, weather, space weather and geology. They clip and grid the data, and compare route elevations with rover reference heights.
   - Blender, run headless from scripts, draws the opening plates and the 360° ink horizon from the real elevation data.
 - **In the browser (no server).**
   - A terrain engine computes slope classes and sky shelter (how much of the sky hills hide, which reduces radiation).
   - A Dijkstra router plans the three routes and computes the walk-home field.
-  - A suit simulation tracks air, dose and time.
+  - A planning simulation estimates air, pace, dose and time; it does not certify routes or model all terrain hazards.
   - The map is Leaflet on live Mars Trek tiles; the ground view is three.js, an ink-drawn true-scale view of the real 1 m ground and HiRISE photo, set inside the real crater in 3D (MOLA + HRSC elevation, about 65 km across).
   - Sound is generated with Web Audio, with the team's recorded radio voices.
 - **Live.**
@@ -76,7 +78,7 @@ The second walk is built by the same scripts. It goes from where Perseverance la
 
 ### Why it matters
 
-The first crew on Mars will plan every walk against slope, air and radiation, with the habitat as the only real shelter. REDCAIRN shows what that map looks like at walking scale. It is built entirely from public data a crew could have today, and its numbers can be checked: tap any of them for what it is, how it is computed and its source. Nothing is hand-tuned to one site: give it an elevation model, a photo and a rover's track, and it builds the walk.
+The first crew on Mars will plan walks against slope, life support and radiation, with the habitat as the only dependable shelter. REDCAIRN explores what a map like that could look like at walking scale. It is built from public planetary data; values and assumptions are exposed in the app. The terrain screen and simulated suit values are for research and education, not operational planning. The same engine builds two site-specific walks from elevation, imagery and rover tracks.
 
 ### What is real and what is simulated
 
@@ -85,9 +87,9 @@ The first crew on Mars will plan every walk against slope, air and radiation, wi
 - the routes' terrain and the rover tracks
 - every photo
 - the rock findings and the water minerals
-- the radiation rate and the measured effect of terrain on it
-- the September 2017 storm's measured peak
-- the weather report
+- Gale's Curiosity RAD radiation observations and measured terrain-shielding observations
+- the September 2017 storm's measured Gale peak, used in a staged scenario
+- Gale's Curiosity REMS weather report
 - every date and figure about the rovers
 
 **Simulated, and labelled in the app:**
@@ -95,6 +97,8 @@ The first crew on Mars will plan every walk against slope, air and radiation, wi
 - you
 - the walk's time compression
 - the storm's timing (it reaches you at the rover)
+- route-time, suit-resource, dose and terrain-shielding estimates
+- the use of Gale REMS weather and RAD radiation as context for the Jezero site; local MEDA data are not integrated
 - rocks under 1 m scattered for scale
 
 On the suit radio, Curiosity's first post from Mars is marked *real*; every other line is marked *imagined*.

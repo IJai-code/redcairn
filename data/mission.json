@@ -126,7 +126,7 @@
    "classes": [
     {
      "id": "safe",
-     "label": "Safe",
+     "label": "Below slope threshold",
      "rule": "< 15°",
      "color": "#3ddc84"
     },
@@ -154,9 +154,10 @@
     "note": "GET only; sends no CORS header, so sample at build time and ship the result as static data."
    },
    "validation": {
-    "method": "Orbital DEM compared with rover localisation at 324 points along the EVA route",
-    "datumOffsetM": 17.16,
-    "rmsResidualM": 0.99
+    "method": "Orbital DEM compared with resampled rover traverse elevations at 573 route points; mean datum offset removed before calculating RMS",
+    "points": 573,
+    "datumOffsetM": 18.31,
+    "rmsResidualM": 1.65
    },
    "source": "trek-gale-dem"
   },
@@ -332,7 +333,7 @@
     ],
     "why": "No science stop yet. This is where you learn how a pressurised suit handles a real hill, while home is still seven minutes away.",
     "layer": "slope",
-    "teach": "The colours show how steep the ground is. Green is easy walking in a suit. Amber needs care. Red is too steep to cross."
+    "teach": "The colours classify slope only. Green is below 15°, amber is 15°–20°, and red exceeds 20°. Other hazards are not mapped."
    }
   },
   {
@@ -584,7 +585,7 @@
     ],
     "why": "This salty, layered rock formed as Mars lost its water. You have now walked from the wet chapter of the story to the dry one. Time to turn for home.",
     "layer": "slope",
-    "teach": "Look back down the map: the whole walk is green. The rover already proved this ground."
+    "teach": "Most sampled points on the traverse are below the 15° slope threshold. The rover crossed this ground, but that is not a human EVA safety clearance."
    }
   },
   {
@@ -705,7 +706,7 @@
      "low": 2,
      "high": 3
     },
-    "response": "Recalculate the fastest safe return to the dock and flag terrain shielding on the way.",
+    "response": "Recalculate the fastest modeled return under the scenario's terrain and consumable assumptions, and flag terrain shielding on the way.",
     "source": "zeitlin-2018",
     "peakMultiplierUsed": 3
    },
