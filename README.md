@@ -9,6 +9,9 @@ Jezero uses its own HiRISE image, elevation model and Perseverance traverse. Thi
 
 ## Same engine, two craters
 
+Both walks open the same way: a short film of plates drawn by Blender from that site's own 1 m elevation model (`tools/blender_plates.py --site jezero`). Each crater keeps its own inks: Gale's warm sulfate slopes, Jezero's darker basalt floor.
+
+
 The method is not hand-tuned to one place. The same scripts and the same browser engine build each walk from four public inputs: a 1 m orbital elevation model, a 25 cm orbital photo, a rover's own track and its photos. Each elevation model is checked against the heights the rover itself measured on that ground.
 
 | Site | Rover track walked | Walk | Steepest | Elevation model vs rover reference heights | Cells routed |
@@ -33,7 +36,7 @@ Jezero is built by `tools/fetch_jezero_dtm.py`, `tools/fetch_jezero_ortho.py` an
 
 1. **The opening.** Five plates, each one true line: it landed alone in 2012; it played itself "Happy Birthday" once; rock tore its wheels and it kept climbing; it photographed Earth; fourteen years later, you land. Blender drew every plate from the real elevation data (`tools/blender_plates.py`). No AI images. You can skip straight to the map.
 2. **The plan.** Mars Trek tiles, Curiosity's 14-year line, and three routes to the rover with slope thresholds shown on the terrain model.
-3. **Five cairns along its tracks**, on the real 1 m ground drawn live in ink, inside the real crater in 3D (MOLA + HRSC, about 65 km across), with Mount Sharp rising behind you. Each leg is walked at a real suited pace, with long legs as a labelled time-lapse. The ground shows: contours every 2 m of real height, hachures where the ground needs care, stipple where hills shelter you from radiation. At each cairn you get one true moment from the mission, Curiosity's photo from that spot, and four live numbers: air, walk home, dose and time out.
+3. **Five cairns along its tracks**, on the real 1 m ground drawn live in ink, inside the real crater in 3D (MOLA + HRSC, about 65 km across), with Mount Sharp rising behind you. You always walk at a real suited pace; a long leg dissolves ("404 m later · 11 min on foot") and you walk the last steps in. The ground shows: contours every 2 m of real height, hachures where the ground needs care, stipple where hills shelter you from radiation. At each cairn you get one true moment from the mission, Curiosity's photo from that spot, and four live numbers: air, walk home, dose and time out.
 4. **Curiosity.** You reach it at its real position. Its newest raw image is fetched live. You can kneel at its torn wheel.
 5. **The storm.** The real September 2017 solar storm arrives. You choose between three ways home on the real terrain.
 6. **Home.** The three questions are answered with your numbers, and its mission clock is still ticking. Save a **result card** of your walk.

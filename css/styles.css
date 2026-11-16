@@ -719,12 +719,11 @@ body[data-world][data-stage="map"] .sections .site-switch__option[aria-current="
 .numbers__note { font-size: 12.5px; color: var(--soft); margin: 0 0 18px; }
 
 
-/* Time-lapse marker: shown whenever a leg runs faster than walking pace */
-.tlapse { position: fixed; z-index: 16; left: 14px; top: 122px; padding: 6px 10px 6px 26px; font: 500 12px/1 var(--mono, ui-monospace, monospace); letter-spacing: .08em; text-transform: uppercase; color: #2b160f; background: rgba(246,234,214,.92); border: 1px solid rgba(43,22,15,.45); opacity: 0; transform: translateY(-4px); transition: opacity .35s, transform .35s; pointer-events: none; }
-.tlapse::before { content: ""; position: absolute; left: 10px; top: 50%; width: 8px; height: 8px; margin-top: -4px; border-radius: 50%; background: #b5511c; animation: tlblink 1s steps(2) infinite; }
-.tlapse.is-on { opacity: 1; transform: none; }
-@keyframes tlblink { 50% { opacity: .25; } }
-@media (max-width: 760px) { .tlapse { top: auto; bottom: calc(52vh + 8px); } }
+/* The cut on a long leg: the picture dissolves to paper, says how far you walked, and comes back for the arrival */
+.cut { position: fixed; inset: 0; z-index: 14; display: grid; place-content: center; justify-items: center; gap: 8px; background: rgba(243,230,207,.97); color: #2b160f; opacity: 0; pointer-events: none; transition: opacity .5s ease; }
+.cut.is-on { opacity: 1; }
+.cut b { font: 450 clamp(30px, 4vw, 52px)/1.1 var(--serif); letter-spacing: -.01em; }
+.cut span { font: 500 12px/1 var(--mono, ui-monospace, monospace); letter-spacing: .12em; text-transform: uppercase; color: #8a5a3c; }
 
 /* The intro's four steps: what to do, in the order you will do it */
 .guide__how { list-style: none; counter-reset: how; margin: 14px 0 6px; padding: 0; display: grid; gap: 8px; }

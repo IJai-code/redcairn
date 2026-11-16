@@ -23,10 +23,19 @@ ARGS = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 PREVIEW = "--preview" in ARGS
 ONLY = ARGS[ARGS.index("--only") + 1].split(",") if "--only" in ARGS else None
 STL = os.path.expanduser("~/Downloads/rover_v8_ultra_detailed.stl")
-OUT = bs.path("assets", "img", "plates")
+SITE = "jezero" if "--site" in ARGS and ARGS[ARGS.index("--site") + 1] == "jezero" else "gale"
+if SITE == "jezero":
+    os.environ["REDCAIRN_DATA"] = "data/jezero"
+    bs.DATA = "data/jezero"
+OUT = bs.path("assets", "img", "plates") if SITE == "gale" else bs.path("assets", "img", "jezero", "plates")
 
 # Palette: dusty Martian ground in three flat tones, ink, and two skies.
 INK = (0.13, 0.07, 0.05, 1)
+GROUND_JZ = {    # Jezero's floor: darker basalt under reddish dust
+    "day":   [(0.17, 0.11, 0.09), (0.47, 0.30, 0.22), (0.74, 0.58, 0.45)],
+    "dusk":  [(0.12, 0.07, 0.07), (0.38, 0.22, 0.17), (0.80, 0.52, 0.36)],
+    "night": [(0.03, 0.03, 0.05), (0.08, 0.08, 0.11), (0.20, 0.17, 0.20)],
+}
 GROUND = {
     "day":   [(0.36, 0.17, 0.10), (0.70, 0.38, 0.22), (0.90, 0.60, 0.40)],
     "dusk":  [(0.20, 0.09, 0.09), (0.55, 0.27, 0.18), (0.95, 0.56, 0.32)],
@@ -231,13 +240,13 @@ def freestyle(sc):
 
 def build(mood):
     sc = bs.fresh_scene()
-    mission = bs.load_json("data", "mission.json")
-    route = bs.load_json("data", "route.json")
+    mission = bs.load_json(*bs.DATA.split("/"), "mission.json")
+    route = bs.load_json(*bs.DATA.split("/"), "route.json")
     meta, z = bs.load_terrain()
     frame = bs.Frame(meta, z, mission)
     ground = bs.collection(sc, "Ground")
     figs = bs.collection(sc, "Figures")
-    terr = bs.terrain_mesh("Terrain", frame, 1, toon_material("Ground " + mood, GROUND[mood], contours=True))
+    terr = bs.terrain_mesh("Terrain", frame, 1, toon_material("Ground " + mood, (GROUND_JZ if SITE == "jezero" else GROUND)[mood], contours=True))
     bs.link(sc, terr, ground)
     body = toon_material("Rover body", [(0.10, 0.10, 0.11), (0.45, 0.43, 0.40), (0.88, 0.85, 0.79)])
     rover = import_rover(sc, body, body)
@@ -404,8 +413,131 @@ PLATES = [
     ("p6", "dusk", 250, p6),
 ]
 
+
+
+# ---------------------------------------------------------------- Jezero (the second walk)
+def ingenuity(sc, at):
+    """Ingenuity at true size: a 14 cm body, two 1.2 m rotors, four legs, a solar panel on the mast."""
+    import bmesh
+    mat = toon_material("Helicopter", [(0.10, 0.09, 0.09), (0.45, 0.43, 0.40), (0.85, 0.82, 0.76)])
+    parts = []
+    def box(name, sx, sy, sz, loc):
+        me = bpy.data.meshes.new(name); bm = bmesh.new(); bmesh.ops.create_cube(bm, size=1.0); bm.to_mesh(me); bm.free()
+        o = bs.link(sc, bpy.data.objects.new(name, me)); o.scale = (sx, sy, sz); o.location = at + Vector(loc); o.data.materials.append(mat); parts.append(o)
+    box("Heli body", 0.14, 0.14, 0.14, (0, 0, 0.0))
+    box("Rotor low", 1.2, 0.07, 0.012, (0, 0, 0.16))
+    box("Rotor high", 0.07, 1.2, 0.012, (0, 0, 0.24))
+    box("Mast", 0.02, 0.02, 0.26, (0, 0, 0.2))
+    box("Panel", 0.18, 0.12, 0.008, (0, 0, 0.34))
+    for dx, dy in ((1, 1), (1, -1), (-1, 1), (-1, -1)):
+        box("Leg", 0.012, 0.012, 0.36, (dx * 0.17, dy * 0.17, -0.2))
+    figs = bpy.data.collections.get("Figures")
+    for o in parts:
+        for c in list(o.users_collection):
+            c.objects.unlink(o)
+        figs.objects.link(o)
+
+
+def j1(sc, frame, route, mission, rover, crew, cam):
+    """February 2021: a rover lands in a crater that once held a lake. High over the landing site, looking west."""
+    w = wp(mission, "DOCK")
+    h = route_dir(frame, route, w["lon"], w["lat"])
+    place(rover, frame, w["lon"], w["lat"], h)
+    off(crew)
+    t = frame.xyz(w["lon"], w["lat"])
+    cam.data.lens = 30
+    cam_at(cam, frame, t.x + 34, t.y + 14, 9)
+    look(cam, on_ground(frame, t.x - 120, t.y - 30, 12))
+
+
+def j2(sc, frame, route, mission, rover, crew, cam):
+    """It carried a helicopter. From this overlook it watched the first flight on another world."""
+    w = wp(mission, "WP1")
+    h = math.radians(5)                                # facing east, toward the airfield
+    place(rover, frame, w["lon"], w["lat"], h)
+    off(crew)
+    t = frame.xyz(w["lon"], w["lat"])
+    heli = t + Vector((24, 3, 0))
+    heli.z = ground_z(frame, heli.x, heli.y) + 3.0
+    ingenuity(sc, heli)
+    cam.data.lens = 40
+    cam_at(cam, frame, t.x - 9, t.y - 4.5, 1.5)
+    look(cam, Vector((t.x + 12, t.y + 1.5, heli.z - 0.6)))
+
+
+def j3(sc, frame, route, mission, rover, crew, cam):
+    """Its first sample crumbled; the tube kept only air. It tried again. Close on the wheels at Roubion."""
+    w = wp(mission, "WP3")
+    h = route_dir(frame, route, w["lon"], w["lat"])
+    place(rover, frame, w["lon"], w["lat"], h)
+    off(crew)
+    t = frame.xyz(w["lon"], w["lat"], 0.3)
+    cam.data.lens = 28
+    cam_at(cam, frame, t.x + math.cos(h + 0.75) * 6.0, t.y + math.sin(h + 0.75) * 6.0, 0.9)
+    look(cam, t + Vector((math.cos(h) * 0.6, math.sin(h) * 0.6, 0.75)))
+
+
+def j4(sc, frame, route, mission, rover, crew, cam):
+    """It sealed pieces of Mars in tubes, for someone to carry home. Night at Rochette, Earth low in the west."""
+    w = wp(mission, "PERSEVERANCE")
+    h = math.radians(170)
+    place(rover, frame, w["lon"], w["lat"], h)
+    rover.data.materials[0] = toon_material("Rover at night", [(0.01, 0.01, 0.015), (0.04, 0.04, 0.05), (0.12, 0.11, 0.12)])
+    off(crew)
+    t = frame.xyz(w["lon"], w["lat"])
+    cam.data.lens = 30
+    cam_at(cam, frame, t.x + 8.5, t.y - 1.0, 1.3)
+    look(cam, cam.location + Vector((-1.0, 0.08, 0.10)))
+    import bmesh
+    earth = bpy.data.meshes.new("Earth")
+    bm = bmesh.new(); bmesh.ops.create_uvsphere(bm, u_segments=12, v_segments=8, radius=1.0); bm.to_mesh(earth); bm.free()
+    eo = bs.link(sc, bpy.data.objects.new("Earth", earth))
+    eo.data.materials.append(flat("Earth light", (0.80, 0.90, 1.0), 40.0))
+    eo.location = cam.location + Vector((-1.0, 0.30, 0.24)).normalized() * 900
+    eo.scale = (2.6,) * 3
+
+
+def j5(sc, frame, route, mission, rover, crew, cam):
+    """Five years later, you land where it did. The suited figure at the hatch, looking along its first tracks."""
+    w = wp(mission, "DOCK")
+    h = route_dir(frame, route, w["lon"], w["lat"])
+    off(rover)
+    t = frame.xyz(w["lon"], w["lat"])
+    crew.location = t
+    crew.rotation_euler = (0, 0, h - math.pi / 2)
+    cam.data.lens = 35
+    back = h + math.pi
+    cam_at(cam, frame, t.x + math.cos(back) * 6.5 + math.cos(h + 1.57) * 1.6, t.y + math.sin(back) * 6.5 + math.sin(h + 1.57) * 1.6, 1.9)
+    look(cam, on_ground(frame, t.x + math.cos(h) * 40, t.y + math.sin(h) * 40, 3.0))
+
+
+def j6(sc, frame, route, mission, rover, crew, cam):
+    """Rochette at dusk: you stand on the ridge where it drilled its first cores. The rover has moved on; the place is yours."""
+    w = wp(mission, "PERSEVERANCE")
+    h = route_dir(frame, route, w["lon"], w["lat"])
+    off(rover)
+    base = frame.xyz(w["lon"], w["lat"])
+    crew.location = base
+    crew.rotation_euler = (0, 0, math.radians(200) - math.pi / 2)
+    cam.data.lens = 32
+    side = Vector((math.cos(h + math.pi / 2), math.sin(h + math.pi / 2), 0))
+    fwd = Vector((math.cos(h), math.sin(h), 0))
+    c = base + fwd * 6.0 + side * 3.5
+    cam_at(cam, frame, c.x, c.y, 1.8)
+    look(cam, base + Vector((0, 0, 1.2)) - fwd * 8)
+
+
+JZ_PLATES = [
+    ("j1", "day", 250, j1),
+    ("j2", "dusk", 260, j2),
+    ("j3", "day", 230, j3),
+    ("j4", "night", 300, j4),
+    ("j5", "day", 245, j5),
+    ("j6", "dusk", 250, j6),
+]
+
 if __name__ == "__main__":
-    for pid, mood, az, fn in PLATES:
+    for pid, mood, az, fn in (JZ_PLATES if SITE == "jezero" else PLATES):
         if ONLY and pid not in ONLY:
             continue
         plate(pid, mood, az, fn)

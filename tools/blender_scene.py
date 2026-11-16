@@ -39,9 +39,12 @@ def load_json(*parts):
 
 
 # ---------------------------------------------------------------- data
+DATA = os.environ.get("REDCAIRN_DATA", "data")     # "data/jezero" for the second site
+
+
 def load_terrain():
-    meta = load_json("data", "terrain.json")
-    z = np.fromfile(path("data", "terrain.bin"), dtype="<i2").astype(np.float32)
+    meta = load_json(*DATA.split("/"), "terrain.json")
+    z = np.fromfile(path(*DATA.split("/"), "terrain.bin"), dtype="<i2").astype(np.float32)
     z = meta["baseElevM"] + z.reshape(meta["rows"], meta["cols"]) / meta["unitsPerMetre"]
     return meta, z
 

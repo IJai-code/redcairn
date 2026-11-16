@@ -946,6 +946,41 @@
     "south": 17.581391027725086
    },
    "credit": "MRO CTX orthomosaic of Jezero, Mars 2020 science team (Mangold et al. 2021), NASA/JPL-Caltech/MSSS/USGS"
-  }
+  },
+  "plates": "assets/img/jezero/plates/"
+ },
+ "siteStyle": {
+  "t0": "#3a2925",
+  "t1": "#86604c",
+  "t2": "#c4a083",
+  "paper": "#ece2d3",
+  "rocks": [
+   [
+    0.14,
+    0.13,
+    0.13
+   ],
+   [
+    0.21,
+    0.19,
+    0.18
+   ],
+   [
+    0.29,
+    0.25,
+    0.23
+   ],
+   [
+    0.38,
+    0.33,
+    0.3
+   ],
+   [
+    0.47,
+    0.41,
+    0.36
+   ]
+  ],
+  "note": "Jezero floor: darker basaltic rock and grey-brown stones under reddish dust (Perseverance Mastcam-Z/Navcam); Gale keeps the warm sulfate-slope palette."
  }
 }

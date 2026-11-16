@@ -70,7 +70,7 @@
    "title": "Máaz",
    "q": "Is this lake mud?",
    "moment": "They expected lake mud. They found lava.",
-   "sub": "The floor of Jezero turned out to be volcanic rock, later touched by water. The team named it Máaz, the Navajo word for Mars. Your suit’s slope limit is 20°; here the ground barely tilts.",
+   "sub": "The floor of Jezero turned out to be volcanic rock, later touched by water. The team named it Máaz, the Navajo word for Mars. The map flags anything over 20°; here the ground barely tilts.",
    "layers": [
     "slope"
    ]
@@ -141,9 +141,9 @@
  },
  "cards": {
   "intro": {
-   "kicker": "Beta · second site · same engine",
-   "title": "Jezero crater: where Perseverance landed.",
-   "body": "Follow {walkKm} km on Jezero’s local 1 m terrain model and Perseverance track. MEDA weather is not integrated; Gale REMS is context and Gale RAD drives an illustrative radiation scenario. Slope colors are not safety clearance."
+   "kicker": "Second site · same engine",
+   "title": "Jezero: the lakebed where Perseverance landed.",
+   "body": "In 2021 Perseverance landed on the floor of an ancient lake and began sealing rock in tubes for Earth. Follow its first {walkKm} km: from where it landed, past where a helicopter first flew, to the first rock it kept. Built from Jezero’s own 1 m terrain model and Perseverance’s track; weather and radiation borrow Gale’s measurements, and say so."
   },
   "storm": {
    "body": "You and EVA-2 are at Rochette, {walkKm} km from the hatch. Curiosity RAD measured the September 2017 solar particle event at Gale; this drill replays it as an illustrative Jezero dose scenario, not a local measurement. The map has drawn three ways back on Jezero’s terrain."
@@ -161,5 +161,41 @@
    "label": "Perseverance, today",
    "note": "Landed 18 February 2021."
   }
- }
+ },
+ "gate": {
+  "plate": "j5",
+  "title": "Perseverance’s First Tracks",
+  "sub": "A survival map for a walk on Jezero’s ancient lakebed"
+ },
+ "film": [
+  [
+   "j1",
+   "In February 2021, a rover landed in Jezero: a crater that held a lake 3.5 billion years ago."
+  ],
+  [
+   "j2",
+   "It carried a helicopter. From this spot it watched the first powered flight on another world."
+  ],
+  [
+   "j3",
+   "Its first sample crumbled. The tube sealed with nothing but air. It drilled again."
+  ],
+  [
+   "j4",
+   "It sealed pieces of Mars in tubes, for someone to carry home."
+  ],
+  [
+   "j5",
+   "Five years later, you land where it did."
+  ],
+  [
+   "j5",
+   "Walk its first tracks, to the first rock it kept.",
+   "radio"
+  ]
+ ],
+ "arrival": [
+  "j6",
+  "Here it kept its first piece of Mars. The rover has moved on; the tubes are waiting to come home."
+ ]
 }

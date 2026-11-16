@@ -1,209 +1,209 @@
 {
-  "schema": "redcairn.story/2",
-  "note": "Every chapter is one headline and one sentence. Values in {braces} are filled from the data files at run time.",
-  "missions": [
-    "Viking",
-    "Mars Global Surveyor",
-    "Mars Express",
-    "Mars Reconnaissance Orbiter",
-    "Curiosity",
-    "Perseverance"
+ "schema": "redcairn.story/2",
+ "note": "Every chapter is one headline and one sentence. Values in {braces} are filled from the data files at run time.",
+ "missions": [
+  "Viking",
+  "Mars Global Surveyor",
+  "Mars Express",
+  "Mars Reconnaissance Orbiter",
+  "Curiosity",
+  "Perseverance"
+ ],
+ "chapters": {
+  "mars": {
+   "kicker": "Interplanetary Survival Guide: Martian Map",
+   "title": "Your first walk on Mars.",
+   "line": "Six missions mapped this ground before you arrived. REDCAIRN turns what they saw into a guide you can walk."
+  },
+  "crater": {
+   "kicker": "Where · Gale crater",
+   "title": "A mountain inside a crater.",
+   "line": "Gale is 154 km across. Mount Sharp rises {mountainKm} km from its floor. You will walk on its lower slopes."
+  },
+  "water": {
+   "kicker": "Why · seen from orbit",
+   "title": "Orbiters saw water here first.",
+   "line": "Blue dots: minerals that only form in water, found from orbit by CRISM and OMEGA. That is why we came."
+  },
+  "rover": {
+   "kicker": "Who went first",
+   "title": "A rover tested the ground for you.",
+   "line": "Curiosity drove {roverKm} km and climbed {roverClimb} m in fourteen years. The white end of its line is your walk."
+  },
+  "walk": {
+   "kicker": "The plan",
+   "title": "1.5 km out. Five stops. Home with air to spare.",
+   "line": "Green is below the 15° slope screen, amber needs review, and red exceeds the 20° threshold. The route follows the rover's own track."
+  },
+  "storm": {
+   "kicker": "Simulated drill · solar storm",
+   "title": "The Sun just flared.",
+   "line": "REDCAIRN redraws the way home: {directMin} instead of {trailMin}, with {less}% less radiation. No hill here blocks more than {shelter}%. Go now."
+  },
+  "home": {
+   "kicker": "Back at the rover",
+   "title": "Home, with {airLeft} of air.",
+   "line": "Curiosity is still out there, {roverAheadM} m past your turnaround, climbing. It walked this ground alone so that you would not have to."
+  }
+ },
+ "stops": {
+  "DOCK": {
+   "title": "The hatch",
+   "line": "Check your suit and radio. Every step from here is on ground a rover already crossed.",
+   "q": "Where do I start, and can I trust this ground?",
+   "a": "Right here, beside the rover that brought you. Every step ahead is on ground Curiosity has already crossed.",
+   "moment": "Its tracks start at your door.",
+   "sub": "Curiosity crossed this rock in June 2025 and kept climbing. The team named it Altadena, for their own neighbourhood beside the lab, which burned in the Eaton Fire that January. The rover is 2.7 km up the slope. Follow its tracks."
+  },
+  "WP1": {
+   "title": "The steep part",
+   "line": "Curiosity tilted 17° here. Learn how your suit handles a real slope while home is seven minutes away.",
+   "layers": [
+    "slope"
+   ],
+   "q": "Can my suit handle a real hill?",
+   "a": "The model flags 17° here: within its caution band and below its 20° cutoff. It cannot assess soil, loose rocks, or suit and crew conditions. Home is seven minutes behind you.",
+   "moment": "On this slope, the rover tilted 17° and kept going.",
+   "sub": "Its wheels have been punctured and torn by sharp rock since 2013. It climbed this anyway. The map flags anything over 20°, and home is seven minutes behind you: the place to learn how a pressurised suit handles a real hill."
+  },
+  "WP2": {
+   "title": "Monte Grande: the boxwork",
+   "line": "Ridges of rock cemented by water that once flowed underground. Drill the ridge top and the hollow below it.",
+   "layers": [
+    "rocks"
+   ],
+   "q": "Where did the water go?",
+   "a": "Into the cracks. It left minerals that set like cement, and wind wore the softer rock away, leaving ridges. Core the ridge and the hollow to see what the water carried.",
+   "moment": "“Go big or go home,” the team wrote, here.",
+   "sub": "They drilled the hollow and the ridge top ten metres apart and named them for a desert valley and Bolivia’s highest peak. Water once flowed through these cracks and set like cement. Core both and see what it carried."
+  },
+  "WP3": {
+   "title": "The last ridges",
+   "line": "Look for pea-sized bumps in the rock: another fingerprint of groundwater.",
+   "layers": [
+    "track"
+   ],
+   "q": "How long did the water last?",
+   "a": "Longer than anyone expected. These pea-sized nodules are another groundwater fingerprint, and they suggest the water lingered.",
+   "moment": "The rover’s last week among the ridges. It photographed them one by one, then left.",
+   "sub": "You get to put a hand on one. Look for pea-sized nodules: proof the groundwater lasted longer than anyone expected."
+  },
+  "WP4": {
+   "title": "The line in the rock",
+   "line": "The ridges stop, salty layers begin. Sample both sides of the moment this part of Mars began to dry.",
+   "layers": [
+    "rocks"
+   ],
+   "q": "When did this part of Mars start to dry?",
+   "a": "At this line. Water-altered ridges end and layered, salty rock begins. Sample both sides of it.",
+   "moment": "“Bye-Bye Boxwork,” the team called that week.",
+   "sub": "The rover crossed this line in a single drive. You can stand with a boot on each side: water underground behind you, a planet drying out ahead. Take rock from both."
+  },
+  "WP5": {
+   "title": "The last cairn",
+   "line": "Rock cracked like dried mud. Look back: every white line is five more minutes from home.",
+   "layers": [
+    "home"
+   ],
+   "q": "How far is it now?",
+   "a": "Yes. Look back: the whole walk is green, and every white line is five more minutes from the rover. Collect, then turn.",
+   "moment": "Its last stop among the cairns. It is 1.2 km above you now.",
+   "sub": "The rover drilled this salty rock twice. It formed as Mars lost its water. Above you, its tracks keep climbing toward where it is today."
+  },
+  "CURIOSITY": {
+   "title": "Curiosity",
+   "moment": "You found it.",
+   "sub": "Sol 5,073. It has been alone on this mountain for fourteen years, and you are the first person to stand beside it. Its wheels are torn. Its mast is still turned up the slope.",
+   "layers": [
+    "track"
+   ],
+   "q": "Can we both get home?"
+  }
+ },
+ "radio": {
+  "_note": "Lines heard on the suit radio, one at a time. 'real' lines are quoted from the source named; every other line is imagined and says so on screen. 'audio' is played through the radio filter if the file exists.",
+  "intro": [
+   {
+    "who": "Curiosity",
+    "when": "sol 0 · 6 August 2012",
+    "text": "I'm safely on the surface of Mars. GALE CRATER I AM IN YOU!!!",
+    "real": "its first post from Mars, @MarsCuriosity",
+    "audio": "assets/audio/01-curiosity-landing.m4a"
+   }
   ],
-  "chapters": {
-    "mars": {
-      "kicker": "Interplanetary Survival Guide: Martian Map",
-      "title": "Your first walk on Mars.",
-      "line": "Six missions mapped this ground before you arrived. REDCAIRN turns what they saw into a guide you can walk."
-    },
-    "crater": {
-      "kicker": "Where · Gale crater",
-      "title": "A mountain inside a crater.",
-      "line": "Gale is 154 km across. Mount Sharp rises {mountainKm} km from its floor. You will walk on its lower slopes."
-    },
-    "water": {
-      "kicker": "Why · seen from orbit",
-      "title": "Orbiters saw water here first.",
-      "line": "Blue dots: minerals that only form in water, found from orbit by CRISM and OMEGA. That is why we came."
-    },
-    "rover": {
-      "kicker": "Who went first",
-      "title": "A rover tested the ground for you.",
-      "line": "Curiosity drove {roverKm} km and climbed {roverClimb} m in fourteen years. The white end of its line is your walk."
-    },
-    "walk": {
-      "kicker": "The plan",
-      "title": "1.5 km out. Five stops. Home with air to spare.",
-      "line": "Green is below the 15° slope screen, amber needs review, and red exceeds the 20° threshold. The route follows the rover's own track."
-    },
-    "storm": {
-      "kicker": "Simulated drill · solar storm",
-      "title": "The Sun just flared.",
-      "line": "REDCAIRN redraws the way home: {directMin} instead of {trailMin}, with {less}% less radiation. No hill here blocks more than {shelter}%. Go now."
-    },
-    "home": {
-      "kicker": "Back at the rover",
-      "title": "Home, with {airLeft} of air.",
-      "line": "Curiosity is still out there, {roverAheadM} m past your turnaround, climbing. It walked this ground alone so that you would not have to."
-    }
-  },
-  "stops": {
-    "DOCK": {
-      "title": "The hatch",
-      "line": "Check your suit and radio. Every step from here is on ground a rover already crossed.",
-      "q": "Where do I start, and can I trust this ground?",
-      "a": "Right here, beside the rover that brought you. Every step ahead is on ground Curiosity has already crossed.",
-      "moment": "Its tracks start at your door.",
-      "sub": "Curiosity crossed this rock in June 2025 and kept climbing. The team named it Altadena, for their own neighbourhood beside the lab, which burned in the Eaton Fire that January. The rover is 2.7 km up the slope. Follow its tracks."
-    },
-    "WP1": {
-      "title": "The steep part",
-      "line": "Curiosity tilted 17° here. Learn how your suit handles a real slope while home is seven minutes away.",
-      "layers": [
-        "slope"
-      ],
-      "q": "Can my suit handle a real hill?",
-      "a": "The model flags 17° here: within its caution band and below its 20° cutoff. It cannot assess soil, loose rocks, or suit and crew conditions. Home is seven minutes behind you.",
-      "moment": "On this slope, the rover tilted 17° and kept going.",
-      "sub": "Its wheels have been punctured and torn by sharp rock since 2013. It climbed this anyway. Your suit’s limit is 20°, and home is seven minutes behind you: the place to learn how a pressurised suit handles a real hill."
-    },
-    "WP2": {
-      "title": "Monte Grande: the boxwork",
-      "line": "Ridges of rock cemented by water that once flowed underground. Drill the ridge top and the hollow below it.",
-      "layers": [
-        "rocks"
-      ],
-      "q": "Where did the water go?",
-      "a": "Into the cracks. It left minerals that set like cement, and wind wore the softer rock away, leaving ridges. Core the ridge and the hollow to see what the water carried.",
-      "moment": "“Go big or go home,” the team wrote, here.",
-      "sub": "They drilled the hollow and the ridge top ten metres apart and named them for a desert valley and Bolivia’s highest peak. Water once flowed through these cracks and set like cement. Core both and see what it carried."
-    },
-    "WP3": {
-      "title": "The last ridges",
-      "line": "Look for pea-sized bumps in the rock: another fingerprint of groundwater.",
-      "layers": [
-        "track"
-      ],
-      "q": "How long did the water last?",
-      "a": "Longer than anyone expected. These pea-sized nodules are another groundwater fingerprint, and they suggest the water lingered.",
-      "moment": "The rover’s last week among the ridges. It photographed them one by one, then left.",
-      "sub": "You get to put a hand on one. Look for pea-sized nodules: proof the groundwater lasted longer than anyone expected."
-    },
-    "WP4": {
-      "title": "The line in the rock",
-      "line": "The ridges stop, salty layers begin. Sample both sides of the moment this part of Mars began to dry.",
-      "layers": [
-        "rocks"
-      ],
-      "q": "When did this part of Mars start to dry?",
-      "a": "At this line. Water-altered ridges end and layered, salty rock begins. Sample both sides of it.",
-      "moment": "“Bye-Bye Boxwork,” the team called that week.",
-      "sub": "The rover crossed this line in a single drive. You can stand with a boot on each side: water underground behind you, a planet drying out ahead. Take rock from both."
-    },
-    "WP5": {
-      "title": "The last cairn",
-      "line": "Rock cracked like dried mud. Look back: every white line is five more minutes from home.",
-      "layers": [
-        "home"
-      ],
-      "q": "How far is it now?",
-      "a": "Yes. Look back: the whole walk is green, and every white line is five more minutes from the rover. Collect, then turn.",
-      "moment": "Its last stop among the cairns. It is 1.2 km above you now.",
-      "sub": "The rover drilled this salty rock twice. It formed as Mars lost its water. Above you, its tracks keep climbing toward where it is today."
-    },
-    "CURIOSITY": {
-      "title": "Curiosity",
-      "moment": "You found it.",
-      "sub": "Sol 5,073. It has been alone on this mountain for fourteen years, and you are the first person to stand beside it. Its wheels are torn. Its mast is still turned up the slope.",
-      "layers": [
-        "track"
-      ],
-      "q": "Can we both get home?"
-    }
-  },
-  "radio": {
-    "_note": "Lines heard on the suit radio, one at a time. 'real' lines are quoted from the source named; every other line is imagined and says so on screen. 'audio' is played through the radio filter if the file exists.",
-    "intro": [
-      {
-        "who": "Curiosity",
-        "when": "sol 0 · 6 August 2012",
-        "text": "I'm safely on the surface of Mars. GALE CRATER I AM IN YOU!!!",
-        "real": "its first post from Mars, @MarsCuriosity",
-        "audio": "assets/audio/01-curiosity-landing.m4a"
-      }
-    ],
-    "plan": [
-      {
-        "who": "Habitat",
-        "text": "Habitat to EVA-1 and EVA-2: route uploaded. Pick your line.",
-        "audio": "assets/audio/02-habitat-route.m4a"
-      }
-    ],
-    "stop-0": [
-      {
-        "who": "Habitat",
-        "text": "Habitat to EVA-1, EVA-2: you are clear. Follow its tracks.",
-        "audio": "assets/audio/03-habitat-clear.m4a"
-      }
-    ],
-    "stop-1": [
-      {
-        "who": "EVA-2",
-        "text": "Seventeen degrees. It made it on torn wheels. We'll make it on boots.",
-        "audio": "assets/audio/04-eva2-slope.m4a"
-      }
-    ],
-    "stop-4": [
-      {
-        "who": "EVA-2",
-        "text": "One boot on each side. Wet Mars behind us, dry Mars ahead.",
-        "audio": "assets/audio/05-eva2-line.m4a"
-      }
-    ],
-    "stop-5": [
-      {
-        "who": "EVA-2",
-        "text": "Turnaround. Leave something for whoever comes next.",
-        "audio": "assets/audio/06-eva2-turnaround.m4a"
-      }
-    ],
-    "storm": [
-      {
-        "who": "Habitat",
-        "text": "Habitat to EVA-1: solar particle event inbound. Leave the rover. Bring EVA-2 home.",
-        "audio": "assets/audio/07-habitat-storm.m4a"
-      },
-      {
-        "who": "EVA-2",
-        "text": "I'm with you. Your call.",
-        "audio": "assets/audio/08-eva2-yourcall.m4a"
-      }
-    ],
-    "storm-chosen": [
-      {
-        "who": "EVA-2",
-        "text": "Right behind you.",
-        "audio": "assets/audio/09-eva2-behind.m4a"
-      }
-    ],
-    "home": [
-      {
-        "who": "Habitat",
-        "text": "Both suits at the hatch. Welcome home, {name}.",
-        "audio": "assets/audio/10-habitat-home.m4a"
-      }
-    ],
-    "stop-6": [
-      {
-        "who": "EVA-2",
-        "text": "There it is. Fourteen years, and it's still working.",
-        "audio": "assets/audio/11-eva2-found.m4a"
-      },
-      {
-        "who": "Habitat",
-        "text": "Habitat to EVA-1: we see you on its camera. You're standing right next to it.",
-        "audio": "assets/audio/12-habitat-camera.m4a"
-      }
-    ]
-  },
-  "objective": "Today: walk the last 2.7 km of Curiosity’s tracks, reach the rover itself, and be home with air to spare."
+  "plan": [
+   {
+    "who": "Habitat",
+    "text": "Habitat to EVA-1 and EVA-2: route uploaded. Pick your line.",
+    "audio": "assets/audio/02-habitat-route.m4a"
+   }
+  ],
+  "stop-0": [
+   {
+    "who": "Habitat",
+    "text": "Habitat to EVA-1, EVA-2: you are clear. Follow its tracks.",
+    "audio": "assets/audio/03-habitat-clear.m4a"
+   }
+  ],
+  "stop-1": [
+   {
+    "who": "EVA-2",
+    "text": "Seventeen degrees. It made it on torn wheels. We'll make it on boots.",
+    "audio": "assets/audio/04-eva2-slope.m4a"
+   }
+  ],
+  "stop-4": [
+   {
+    "who": "EVA-2",
+    "text": "One boot on each side. Wet Mars behind us, dry Mars ahead.",
+    "audio": "assets/audio/05-eva2-line.m4a"
+   }
+  ],
+  "stop-5": [
+   {
+    "who": "EVA-2",
+    "text": "Turnaround. Leave something for whoever comes next.",
+    "audio": "assets/audio/06-eva2-turnaround.m4a"
+   }
+  ],
+  "storm": [
+   {
+    "who": "Habitat",
+    "text": "Habitat to EVA-1: solar particle event inbound. Leave the rover. Bring EVA-2 home.",
+    "audio": "assets/audio/07-habitat-storm.m4a"
+   },
+   {
+    "who": "EVA-2",
+    "text": "I'm with you. Your call.",
+    "audio": "assets/audio/08-eva2-yourcall.m4a"
+   }
+  ],
+  "storm-chosen": [
+   {
+    "who": "EVA-2",
+    "text": "Right behind you.",
+    "audio": "assets/audio/09-eva2-behind.m4a"
+   }
+  ],
+  "home": [
+   {
+    "who": "Habitat",
+    "text": "Both suits at the hatch. Welcome home, {name}.",
+    "audio": "assets/audio/10-habitat-home.m4a"
+   }
+  ],
+  "stop-6": [
+   {
+    "who": "EVA-2",
+    "text": "There it is. Fourteen years, and it's still working.",
+    "audio": "assets/audio/11-eva2-found.m4a"
+   },
+   {
+    "who": "Habitat",
+    "text": "Habitat to EVA-1: we see you on its camera. You're standing right next to it.",
+    "audio": "assets/audio/12-habitat-camera.m4a"
+   }
+  ]
+ },
+ "objective": "Today: walk the last 2.7 km of Curiosity’s tracks, reach the rover itself, and be home with air to spare."
 }

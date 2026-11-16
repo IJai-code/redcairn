@@ -44,8 +44,8 @@
     <div class="film__go"><button type="button" class="link" data-a="filmskip">Skip</button></div>
     <div class="film__gate">
       <p class="film__mark">Redcairn</p>
-      <h1>Finding Curiosity</h1>
-      <p class="film__sub">A survival map for the first walk on Mars</p>
+      <h1 id="film-title">Finding Curiosity</h1>
+      <p class="film__sub" id="film-sub">A survival map for the first walk on Mars</p>
       <div class="film__start"><button type="button" class="act" data-a="filmsound">Begin, with sound<small>a 25-second opening</small></button><button type="button" class="act act--alt" data-a="filmmap">Straight to the map<small>skip the opening</small></button></div>
       <button type="button" class="link film__quiet" data-a="filmquiet">Without sound</button>
     </div>
@@ -102,7 +102,7 @@
     <div class="about__body" id="about-body"></div>
   </dialog>
 
-  <div class="tlapse" id="tlapse" aria-hidden="true"></div>
+  <div class="cut" id="cut" aria-live="polite"></div>
   <div class="loading" id="loading"><span id="boot-text">Loading Mars…</span></div>
   <noscript><p style="padding:96px 24px;color:#f0e7d9">REDCAIRN needs JavaScript to draw Mars.</p></noscript>
   <script type="module" src="js/app.js"></script>

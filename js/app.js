@@ -355,7 +355,8 @@ function guide(i, opts = {}) {
   if (S.sound) { S.sound.scene(id === 'intro' ? 'film' : 'world'); S.sound.score(id === 'storm' && !S.choice ? 'storm' : id === 'home' ? 'home' : 'walk', id === 'intro' ? 1 : 0.85); }
   if (id === `stop-${roverK()}` && prev === `stop-${roverK() - 1}` && !S.metOnce) {
     S.metOnce = true;
-    setTimeout(() => { if (S.lastBeat === id) playFilm([['p6', 'You found it. Fourteen years alone, and you are the first person to stand beside it.']], () => {}, 5200); }, 9500);
+    const arr = S.story.arrival || ['p6', 'You found it. Fourteen years alone, and you are the first person to stand beside it.'];
+    setTimeout(() => { if (S.lastBeat === id) playFilm([arr], () => {}, 5200); }, 9500);
   }
   stage('map', id !== 'intro');
   document.body.toggleAttribute('data-world', id !== 'intro');
@@ -500,7 +501,7 @@ function card() {
       <li><b>Get home</b><span>When the Sun flares, choose your way back with air to spare.</span></li>
     </ol>`;
     extra += `<label class="guide__name"><span>Your name, for the habitat radio</span><input id="callsign" type="text" maxlength="24" autocomplete="off" placeholder="EVA-1" value="${esc(S.name || '')}"></label>`;
-    go = btn('next', 'Begin the walk') + (JZ ? '' : btn('opening', 'Watch the opening again', true));
+    go = btn('next', 'Begin the walk') + btn('opening', 'Watch the opening again', true);
     S.win = JZ ? winJezero() : winCrater();
   } else if (id === 'plan') {
     kicker = 'What does the slope model flag?';
@@ -715,69 +716,74 @@ function roll(path, d0, d1, ms, cam, onMain) {
 
 // Walk the suited figure along a path; the camera follows behind and to one side, and the map marker follows too.
 // Positions are set every frame so it holds at any frame rate; only the camera's turning is smoothed, in real time.
-// Walk the suited figure along a path. Each leg starts and ends at a real suited walking pace (about 1.3 m/s,
-// a long Mars stride); on a long leg the middle runs as a time-lapse, labelled on screen, while the camera rises
-// behind the walker to keep the ground readable. The gait is driven by distance, its cadence capped at a real one.
-const WALK_V = 1.3, STRIDE = 2.7;
-function speedShape(f, a) {
-  const up = smoothstep(0.2, 0.46, f), down = 1 - smoothstep(0.54, 0.8, f);
-  const ends = smoothstep(0, 0.04, f) * (1 - smoothstep(0.96, 1, f));          // start from a stand, stop at the cairn
-  return Math.max(0.0001, (a + (1 - a) * up * down) * (0.25 + 0.75 * ends));
-}
+// Walk the suited figure along a path, always at a real suited walking pace with a real stride: nobody glides.
+// A long leg is told the way a film tells it: you set off, the picture dissolves ("340 m later · 6 min on foot"),
+// and you arrive on foot for the last few steps. The camera follows close behind, turning gently with the path.
+const WALK_V = 1.35, STRIDE = 2.3, LEAD = 5.5;
 function smoothstep(e0, e1, x) { const t = Math.max(0, Math.min(1, (x - e0) / (e1 - e0))); return t * t * (3 - 2 * t); }
-function walkTo(path, d0, d1, ms, lookAt) {
-  const t = S.token, L = Math.abs(d1 - d0), T = ms / 1000, sgn = Math.sign(d1 - d0) || 1;
-  // Peak speed so that the ends run at WALK_V: L/T = mean of the shape × vp.
-  const N = 240, cum = new Float32Array(N + 1);
-  let vp = Math.max(WALK_V, L / T), a = 1;
-  for (let it = 0; it < 6; it++) {
-    a = Math.min(1, WALK_V / vp);
-    let acc = 0; cum[0] = 0;
-    for (let i = 1; i <= N; i++) { acc += speedShape((i - 0.5) / N, a) / N; cum[i] = acc; }
-    vp = L / T / acc;
-  }
-  const cumAt = (f) => { const x = f * N, i = Math.min(N - 1, Math.floor(x)); return (cum[i] + (cum[i + 1] - cum[i]) * (x - i)) / cum[N]; };
-  const start = performance.now();
-  let yawS = null, lastT = start, phase = S.gaitPhase || 0, prevD = d0, gaitA = 0;
+function walkTo(path, d0, d1, ms, lookAt, label) {
+  const t = S.token, L = Math.abs(d1 - d0), sgn = Math.sign(d1 - d0) || 1;
+  const cut = L > LEAD * 2 + 6;
+  // the stretches actually walked on screen
+  const legs = cut ? [[d0, d0 + sgn * LEAD], [d1 - sgn * LEAD, d1]] : [[d0, d1]];
+  let phase = S.gaitPhase || 0, yawS = null;
   S.spin = 0;
   S.stage.camRate = 7;
-  return new Promise((done) => {
+  const walkPart = ([a, b], last) => new Promise((done) => {
+    const len = Math.abs(b - a), dir = Math.sign(b - a) || 1, T = Math.max(0.6, len / WALK_V), start = performance.now();
+    let lastT = start, prevD = a, gaitA = S.gaitA || 0;
     const frame = (now) => {
-      if (!live(t)) { timeLapse(0); return done(false); }
-      const f = Math.max(0, Math.min(1, (now - start) / ms));
-      const d = d0 + sgn * L * cumAt(f), p = path.at(d);
+      if (!live(t)) return done(false);
+      const f = Math.max(0, Math.min(1, (now - start) / 1000 / T));
+      // start from a stand and stop at the cairn; walk at a steady pace between
+      const e = last ? (f < 0.85 ? f / 0.925 : 0.85 / 0.925 + (1 - Math.pow(1 - (f - 0.85) / 0.15, 2)) * 0.075 / 0.925) : f;
+      const d = a + dir * len * Math.min(1, e), p = path.at(d);
       const dtr = Math.max(0.001, (now - lastT) / 1000); lastT = now;
       const v = Math.abs(d - prevD) / dtr; prevD = d;
-      let yaw = path.dir(d);
-      if (sgn < 0) yaw += Math.PI;
-      if (lookAt && f > 0.85) { const q = lookAt(); const w = smoothstep(0.85, 1, f); const ty = Math.atan2(q.z - p.z, q.x - p.x); yaw += Math.atan2(Math.sin(ty - yaw), Math.cos(ty - yaw)) * w; }
+      let yaw = path.dir(d) + (sgn < 0 ? Math.PI : 0);
+      if (last && lookAt && f > 0.7) { const q = lookAt(); const w = smoothstep(0.7, 1, f); const ty = Math.atan2(q.z - p.z, q.x - p.x); yaw += Math.atan2(Math.sin(ty - yaw), Math.cos(ty - yaw)) * w; }
       yawS = yawS == null ? yaw : yawS + Math.atan2(Math.sin(yaw - yawS), Math.cos(yaw - yawS)) * (1 - Math.exp(-2.2 * dtr));
-      // gait: real cadence, real stride; it eases out as the walker slows to a stop
-      gaitA += (smoothstep(0.05, 0.7, v) * (f < 1 ? 1 : 0) - gaitA) * (1 - Math.exp(-6 * dtr));
-      phase += (Math.min(v, WALK_V * 1.5) * dtr / STRIDE) * Math.PI * 2;
+      gaitA += (smoothstep(0.1, 0.9, v) - gaitA) * (1 - Math.exp(-7 * dtr));
+      phase += (v * dtr / STRIDE) * Math.PI * 2;
+      S.gaitA = gaitA;
       S.stage.placeFigure(p.x, p.z, yaw, phase, true, gaitA);
-      // the camera: close behind at walking pace, higher and further back during the time-lapse
-      const fast = smoothstep(WALK_V * 1.6, WALK_V * 9, v);
-      chaseCam(p, yawS, { side: 26 + fast * 8, dist: 9 + fast * 30, polar: 77 - fast * 17 }, true);
-      timeLapse(v / WALK_V);
+      chaseCam(p, yawS, { side: 26, dist: 9, polar: 77 }, true);
       S.map.setCrew(lonOfX(p.x), latOfZ(p.z));
-      if (f < 1) requestAnimationFrame(frame); else { S.gaitPhase = phase; timeLapse(0); settle(p, yaw); done(true); }
+      if (f < 1) requestAnimationFrame(frame); else done(true);
     };
     requestAnimationFrame(frame);
-  }).then((ok) => { S.stage.camRate = 2.6; return ok; });
+  });
+  const dissolve = (onDark) => new Promise((done) => {
+    const el = $('cut');
+    el.innerHTML = `<b>${num(Math.round(L - LEAD * 2))} m later</b>${label ? `<span>${esc(label)}</span>` : ''}`;
+    el.classList.add('is-on');
+    setTimeout(() => { if (live(t)) onDark(); }, 550);
+    setTimeout(() => { el.classList.remove('is-on'); done(live(t)); }, 1700);
+  });
+  return (async () => {
+    let ok = await walkPart(legs[0], !cut);
+    if (ok && cut) {
+      ok = await dissolve(() => {
+        // jump the walker and the camera together while the picture is dark
+        const p = path.at(legs[1][0]), yaw = path.dir(legs[1][0]) + (sgn < 0 ? Math.PI : 0);
+        yawS = yaw;
+        S.stage.placeFigure(p.x, p.z, yaw, phase, true, S.gaitA || 0);
+        chaseCam(p, yaw, { side: 26, dist: 9, polar: 77 }, true);
+        S.stage.snapCam && S.stage.snapCam();
+      });
+      if (ok) ok = await walkPart(legs[1], true);
+    }
+    S.gaitPhase = phase;
+    if (ok) { const p = path.at(d1); settle(p, path.dir(d1) + (sgn < 0 ? Math.PI : 0)); }
+    S.stage.camRate = 2.6;
+    return ok;
+  })();
 }
 // After the last step the legs come together over half a second instead of snapping.
 function settle(p, yaw) {
-  const t0 = performance.now(), ph = S.gaitPhase || 0, tk = S.token;
-  const f = (now) => { if (!live(tk)) return; const k = Math.min(1, (now - t0) / 450); S.stage.placeFigure(p.x, p.z, yaw, ph, true, 0.35 * (1 - k)); if (k < 1) requestAnimationFrame(f); };
+  const t0 = performance.now(), ph = S.gaitPhase || 0, tk = S.token, a0 = S.gaitA || 0.3;
+  const f = (now) => { if (!live(tk)) return; const k = Math.min(1, (now - t0) / 500); S.gaitA = a0 * (1 - k); S.stage.placeFigure(p.x, p.z, yaw, ph, true, S.gaitA); if (k < 1) requestAnimationFrame(f); };
   requestAnimationFrame(f);
-}
-// "Time-lapse ×N" while a leg runs faster than walking pace: the compression is shown, never hidden.
-function timeLapse(x) {
-  const el = $('tlapse'); if (!el) return;
-  const on = x > 1.6;
-  if (on) el.textContent = `Time-lapse ×${x < 10 ? x.toFixed(0) : Math.round(x / 5) * 5}`;
-  el.classList.toggle('is-on', on);
 }
 
 // Curiosity waits at its real latest position, at the end of the route, facing on up the slope.
@@ -833,7 +839,7 @@ function window3d(id, prev) {
       // Walk the leg. The cairn ahead is not there yet: it rises as you arrive.
       S.stage.setCairns(k - 1);
       const from = prevK === 0 ? 0 : Math.max(0, S.plan.out[S.plan.idx[prevK]].d - 3.5);
-      walkTo(S.path, from, stand, clamp(3200 + (stand - from) * 9, 4500, k === rk ? 10000 : 8500), target)
+      walkTo(S.path, from, stand, 0, target, `${mins(Math.max(1, S.marks.arr[k].t - S.marks.dep[k - 1].t))} on foot`)
         .then((ok) => { if (ok) { S.stage.setCairns(k === rk ? rk - 1 : k); settle(false); } });
     } else {
       S.stage.setCairns(k === rk ? rk - 1 : k);
@@ -857,7 +863,7 @@ function window3d(id, prev) {
     } else {
       const x = o[S.choice], path = worldPath(x.line);
       S.stage.drawReturn(x.line);
-      walkTo(path, 0, path.length, clamp(path.length * 4, 6000, 12000));
+      walkTo(path, 0, path.length, 0, null, `${mins(x.min)} to the hatch, under the storm`);
     }
     S.map.setCrew(wp.lon, wp.lat);
     return;
@@ -1025,6 +1031,9 @@ const FILM = [
   ['p5', 'Fourteen years later, you land at the foot of its tracks.'],
   ['p5', 'It is still up there. Go and find it.', 'radio'],
 ];
+// Each site can tell its own opening (story.json "film"), drawn from its own ground (tools/blender_plates.py --site).
+const filmShots = () => (S.story.film && S.story.film.length ? S.story.film : FILM);
+const plateDir = () => ((S.mission.siteImages || {}).plates || 'assets/img/plates/');
 function playFilm(shots, done, ms = 3300) {
   const run = (S.filmRun = (S.filmRun || 0) + 1), el = $('film'), box = $('film-plates');
   S.filmDone = () => { if (run !== S.filmRun) return; S.filmRun++; el.classList.remove('is-on'); setTimeout(() => { el.hidden = true; box.innerHTML = ''; }, 700); clearTimeout(S.filmT); if (S.sound) { S.sound.scene('world'); S.sound.score('walk', 0.85); } if (S.bday) { S.bday.stop(1.5); S.bday = null; } done(); };
@@ -1049,7 +1058,7 @@ function playFilm(shots, done, ms = 3300) {
     if (cue !== 'birthday' && $('film-credit').dataset.base) $('film-credit').textContent = $('film-credit').dataset.base;
     if (shown !== id) {
       const img = new Image();
-      img.src = `assets/img/plates/${id}.jpg`;
+      img.src = `${plateDir()}${id}.jpg`;
       img.alt = '';
       img.className = 'film__plate';
       box.appendChild(img);
@@ -1066,7 +1075,7 @@ function playFilm(shots, done, ms = 3300) {
   };
   S.filmNext = step;
   // warm the cache so plates never pop in
-  shots.forEach(([id]) => { const im = new Image(); im.src = `assets/img/plates/${id}.jpg`; });
+  shots.forEach(([id]) => { const im = new Image(); im.src = `${plateDir()}${id}.jpg`; });
   if (S.sound && S.sound.on) { S.sound.scene('film'); S.sound.score('walk', 1); }
   step();
 }
@@ -1077,7 +1086,10 @@ function filmGate(done) {
   el.hidden = false;
   void el.offsetWidth;
   el.classList.add('is-on', 'is-gate');
-  $('film-plates').innerHTML = '<img class="film__plate is-in" src="assets/img/plates/p5.jpg" alt="">';
+  const gate = S.story.gate || {};
+  $('film-plates').innerHTML = `<img class="film__plate is-in" src="${plateDir()}${gate.plate || 'p5'}.jpg" alt="">`;
+  if (gate.title) $('film-title').textContent = gate.title;
+  if (gate.sub) $('film-sub').textContent = gate.sub;
   $('film-line').textContent = '';
   S.filmGate = (withSound) => {
     el.classList.remove('is-gate');
@@ -1089,7 +1101,7 @@ function filmGate(done) {
       $('btn-sound').setAttribute('aria-pressed', 'true');
       $('btn-sound').innerHTML = '<span class="w">Sound </span>on';
     }
-    playFilm(FILM, done);
+    playFilm(filmShots(), done);
   };
 }
 
@@ -1436,7 +1448,7 @@ async function boot() {
         const f = $('film'); f.classList.remove('is-on', 'is-gate'); setTimeout(() => { f.hidden = true; }, 500);
         return guide(0);
       }
-      if (id === 'opening') return playFilm(FILM, () => guide(0));
+      if (id === 'opening') return playFilm(filmShots(), () => guide(0));
       if (id === 'provclose') { $('provbox').hidden = true; return; }
       if (id === 'card') return shareCard();
       if (id === 'plandl') return downloadPlan();
@@ -1529,7 +1541,6 @@ async function boot() {
   addEventListener('hashchange', () => { const h = location.hash.slice(1); if (HASHES().includes(h)) jump(h); });
   const start = location.hash.slice(1);
   if (HASHES().includes(start)) jump(start);
-  else if (JZ) { jump('intro'); guide(0); }
   else { jump('intro'); filmGate(() => guide(0)); }
 }
 

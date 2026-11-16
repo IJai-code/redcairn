@@ -298,6 +298,10 @@ function rng(seed) { return () => { seed = (seed * 16807) % 2147483647; return (
 
 export class Stage {
   constructor(canvas, pinRoot, data) {
+    // Each crater keeps its own inks (data/*/mission.json siteStyle): Gale's butterscotch sulfate slopes, Jezero's darker basalt floor.
+    const st = (data.mission && data.mission.siteStyle) || {};
+    for (const k of ['t0', 't1', 't2', 'paper', 'ink']) if (st[k]) PAL[k].set(st[k]);
+    this.rockPalette = st.rocks || null;
     this.canvas = canvas;
     this.pinRoot = pinRoot;
     this.data = data;
@@ -616,15 +620,15 @@ export class Stage {
   #buildSky() {
     const mat = new THREE.ShaderMaterial({
       side: THREE.BackSide, depthWrite: false, fog: false,
-      uniforms: { map: { value: null }, haze: { value: new THREE.Color(0xb48a6a) }, has: { value: 0 } },
+      uniforms: { map: { value: null }, haze: { value: new THREE.Color(0xb48a6a) }, has: { value: 0 }, paper: { value: PAL.paper } },
       vertexShader: 'varying vec3 vD; void main(){ vD = normalize(position); vec4 p = projectionMatrix * modelViewMatrix * vec4(position, 1.0); gl_Position = p.xyww; }',
-      fragmentShader: `uniform sampler2D map; uniform vec3 haze; uniform float has; varying vec3 vD;
+      fragmentShader: `uniform sampler2D map; uniform vec3 haze, paper; uniform float has; varying vec3 vD;
         void main(){
           vec3 d = normalize(vD);
           float u = atan(d.x, -d.z) / 6.2831853 + 0.5;
           float v = asin(clamp(d.y, -1.0, 1.0)) / 3.1415927 + 0.5;
           // The real horizon, drawn in ink by Blender from the MOLA + HRSC elevation (tools/blender_horizon_ink.py).
-          vec3 c = has > 0.5 ? texture2D(map, vec2(u, v)).rgb : vec3(0.89, 0.74, 0.55);
+          vec3 c = has > 0.5 ? texture2D(map, vec2(u, v)).rgb : mix(paper, vec3(1.0, 0.97, 0.92), smoothstep(0.5, 0.85, v));
           gl_FragColor = vec4(c, 1.0);
           #include <colorspace_fragment>
         }`,
@@ -750,7 +754,7 @@ export class Stage {
       }
       return null;
     };
-    const palette = [[0.2, 0.16, 0.15], [0.3, 0.2, 0.16], [0.42, 0.27, 0.19], [0.5, 0.38, 0.29], [0.58, 0.47, 0.37]];
+    const palette = this.rockPalette || [[0.2, 0.16, 0.15], [0.3, 0.2, 0.16], [0.42, 0.27, 0.19], [0.5, 0.38, 0.29], [0.58, 0.47, 0.37]];
     const lite = matchMedia('(pointer: coarse)').matches ? 0.5 : 1;
     const make = (geos, n, flat, sizeFn, clear, outline = 0) => {
       n = Math.round(n * lite);
